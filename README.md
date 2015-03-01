@@ -95,7 +95,7 @@ module.exports = function(client, db) {
             partial: {  // context for index.template
                 id: 'myid'
             }, title: 'Title'   // will be passed to layout.template
-        });                                     // if callback function as third param - no layout renderer
+        });                     // if callback function as third param - no layout renderer
         // return {};
     });
 
