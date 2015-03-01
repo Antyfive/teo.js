@@ -12,7 +12,7 @@ Please, meet yet another Node.js based web-framework.
 ## Setup
 #### Config
 So, how to create config, which will be applied to your app?
-In home directory of your application, just create `config` directory, and place inside your `js` file.
+In home directory of your application, just create `config` directory, and place inside your `*.js` file.
 ##### Here is default set of currently available properties:
 ```javascript
     protocol: "http",                       // as for version 0.1.0, only http is available
