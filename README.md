@@ -88,9 +88,9 @@ module.exports = function(client, db) {
      */
     client.get("/my/url/:id", function(req, res) {      
         // both variants available (it can return context and do res.end as well)
-        /*res.writeHead( 200, { 'Content-Type': 'text/plain' });
+        /*res.writeHead(200, { "Content-Type": "text/plain" });
          res.end( "Hello World" );*/
-        // render index.template fron views 
+        // render index.template from views 
         res.render("index", {
             partial: {  // context for index.template
                 id: "myid"
