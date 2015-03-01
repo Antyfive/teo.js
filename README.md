@@ -54,3 +54,15 @@ module.exports = {
     compressOutput: true    // compress output html in response for both modes
 };
 ```
+## Project structure
+```
+apps/-|
+      | your_app_dir/--|
+                       | config/
+                       | controllers/
+                       | models/
+                       | public/
+                       | views/
+node_modules/
+app.js
+```
