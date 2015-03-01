@@ -1,6 +1,6 @@
 {
-  "name": "teojs",
-  "description": "Teo is Node.js based web-framework",
+  "name": "teo.js",
+  "description": "Teo.js is Node.js based web-framework",
   "version": "0.1.0",
   "author": {
     "name": "Andrew Teologov",
@@ -60,7 +60,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:Antyfive/teo.git"
+    "url": "git@github.com:Antyfive/teo.js.git"
   },
   "engines": {
     "node": ">=0.10.6"
