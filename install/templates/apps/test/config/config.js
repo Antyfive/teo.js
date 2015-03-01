@@ -1,0 +1,23 @@
+module.exports = {
+    "production": {       // production
+        protocol: "http",
+        host: "localhost",
+        port: 3000,
+        cache: {
+            "static": true,     // cache static files
+            "response": true    // cache response by url
+        }
+    },
+    "development": {
+        protocol: "http",
+        host: "localhost",
+        port: 3100,
+        cache: {
+            "static": false,
+            "response": false
+        }
+    },
+    // common params could be without mode as well
+    delimiters: '{{ }}',
+    compressOutput: true
+};

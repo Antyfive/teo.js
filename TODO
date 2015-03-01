@@ -1,0 +1,7 @@
+GLOBAL TASKS:
+
+1. ORM layer ( both relational and non-relational )
+
+2. Modules (plugin system)
+    Should be available for apps live (framework.requireModule('my module'));
+3. Cluster

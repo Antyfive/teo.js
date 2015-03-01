@@ -1,0 +1,31 @@
+#!/usr/bin/env node
+
+var program = require("commander");
+var package = require("./../package.json");
+var childProcess = require('child_process');
+var homeDir = process.cwd().replace( /\\/g, '/' );
+var colors = require("colors");
+
+program
+    .version(package.version)
+    .command('setup [env]') //./teo setup dev
+    .description('run setup commands for all envs')
+    // .option("-s, --setup_mode [mode]", "Which setup mode to use")
+    .action(function(env, options){
+        env = env || 'all';
+
+        console.log('setup for %s env(s)', env);
+
+        if (env === "dev") {
+            childProcess.exec(homeDir + "/install/install.sh " + homeDir,
+                function(error, stdout, stderr) {
+                    stdout && console.log(stdout.green);
+                    stderr && console.log(stderr.red);
+                    if (error !== null) {
+                        console.log(error.red);
+                    }
+                });
+        }
+    });
+
+program.parse(process.argv);
