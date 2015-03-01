@@ -86,29 +86,30 @@ module.exports = function(client, db) {
      * client.patch('/:id', function( req, res ) {})
      * client.delete('/:id', function( req, res ) {})
      */
-    client.get('/my/url/:id', function(req, res) {      
+    client.get("/my/url/:id", function(req, res) {      
         // both variants available (it can return context and do res.end as well)
         /*res.writeHead( 200, { 'Content-Type': 'text/plain' });
          res.end( "Hello World" );*/
         // render index.template fron views 
-        res.render( 'index', {
+        res.render("index", {
             partial: {  // context for index.template
-                id: 'myid'
-            }, title: 'Title'   // will be passed to layout.template
-        });                     // if callback function as third param - no layout renderer
+                id: "myid"
+            }, 
+            title: "Title"   // will be passed to layout.template
+        }, function() {});                  // if callback function as third param - no rendering into layout, just compiled view
         // return {};
     });
 
-    client.get('/json/:id', function( req, res, next ) {     // send json
+    client.get("/json/:id", function(req, res, next) {     // send json
         res.json({ id: req.params.id, 'title': "title" });  // send json in your own format
     });
 
-    client.get('/:id/:title', function( req, res, next ) {     // next function - e.g. is used for handling async requests
-        next({ id: req.params.id, 'title': req.params.title });        // without rendering of the partial, data context goes direct to layout
+    client.get("/:id/:title", function(req, res, next) {     // next function - e.g. is used for handling async requests
+        next({ id: req.params.id, "title": req.params.title });     // without rendering of the partial, data context goes direct to layout
     });
 
     client.get("/get/news.json", function(req, res) {
-        res.send({ id: 1, 'title': "title" }); // send json in common format
+        res.send({ id: 1, title: "title" }); // send json in common format
     });
 
     client.get("/get/error/404", function(req, res) {
