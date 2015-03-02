@@ -130,8 +130,8 @@ res.render("index", {
     partial: {  // partial context will be passed into index.template
         id: "test"
     }, 
-    title: "Title",  // context will be passed to layout.template
-    }, function(err, output) { // if callback function as third argument - no layout rendering, just partial
+    title: "Title"  // context will be passed to layout.template
+}, function(err, output) { // if callback function as third argument - no layout rendering, just partial
     
 });                                     
 ```
