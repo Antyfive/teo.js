@@ -135,5 +135,12 @@ res.render("index", {
     
 });                                     
 ```
+With that said, if callback wasn't passed, framework will do `res.end` with compiled output (layout with partial).
+### res.json
+#### (obj)
+Ends response with json, in your **own format** of response. Otherwise, framework will provide standartized format of json response. We will discuss it in next chapters.
+```javascript
+res.json({test: "test"}); // Content-Type will be set to "application/json"
+```
 
 To be continued...
