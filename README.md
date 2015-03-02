@@ -9,7 +9,7 @@ Please, meet yet another Node.js based web-framework.
 #### Clone git repo
 `git clone https://github.com/Antyfive/teo.js.git`
 
-## Setup
+# Setup
 #### Config
 So, how to create config, which will be applied to your app?
 In home directory of your application, just create `config` directory, and place inside your `*.js` file.
@@ -54,7 +54,7 @@ module.exports = {
     compressOutput: true    // compress output html in response for both modes
 };
 ```
-## Project structure
+# Project structure
 ```
 apps/-|
       | your_app_dir/--|
@@ -68,10 +68,10 @@ node_modules/
 app.js
 ```
 
-### App structure explained
-#### Config
+# App structure explained
+## Config
 Place your *.js configs inside. Example of config you can see above.
-#### Controllers
+## Controllers
 Directory is used for controllers.
 
 Lets take a look what we can do inside the controller:
@@ -119,5 +119,21 @@ module.exports = function(client, db) {
 ```
 
 Basically, urls parsing is implemented in well-known `express` style.
+
+## res
+Let's go through current `res` mixins.
+
+### res.render
+#### (templateName, contextObj, [callback])
+```javascript
+res.render("index", { 
+    partial: {  // partial context will be passed into index.template
+        id: "test"
+    }, 
+    title: "Title",  // context will be passed to layout.template
+    }, function(err, output) { // if callback function as third argument - no layout rendering, just partial
+    
+});                                     
+```
 
 To be continued...
