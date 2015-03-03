@@ -173,7 +173,7 @@ It can be detected in next ways:
 ```javascript
 res.send(500, "My error message");
 ```
-Alternately, you can just send your response code. And response text will be matched in http.STATUS_CODES.
+Alternately, you can just send your response code. And response text will be matched in `http.STATUS_CODES`.
 ```javascript
 res.send(500);
 ```
