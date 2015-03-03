@@ -142,5 +142,39 @@ Ends response with json, in your **own format** of response. Otherwise, framewor
 ```javascript
 res.json({test: "test"}); // Content-Type will be set to "application/json"
 ```
+### res.send
+#### (repsonse) || (errCode, message)
+This method commonly used to end your response. If you want to send JSON, you don't need to use `JSON.stringify`. Just pass object:
+```javascript
+res.send({myVal: "1"});
+```
+Content-Type will be matched automatically inside.
 
+#### How Content-Type is set inside `res.send` method?
+It can be detected in next ways:
+* Based on `Accept` header from request.
+* Based on extension from the url. I.e. `/my/action.json` extension will be parsed as `json`, and then `MIME` type will be matched.
+* If object is passed, in this case `application/json` will be set.
+* Otherwise, if MIME type is not found, `text/html` will be set.
+
+#### Default response format using `res.send`
+
+```javascript
+// res.send({myVal: "1"}) // it will be sent in next format:
+{
+    code: code,     // response code
+    data: {         // response object
+        myVal: "1"
+    },
+    message: "string" // response message, based on http.STATUS_CODES
+}
+```
+#### Sending an error with `res.send`
+```javascript
+res.send(500, "My error message");
+```
+Alternately, you can just send your response code. And response text will be matched in http.STATUS_CODES.
+```javascript
+res.send(500);
+```
 To be continued...
