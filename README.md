@@ -155,7 +155,7 @@ It can be detected in next ways:
 * Based on `Accept` header from request.
 * Based on extension from the url. I.e. `/my/action.json` extension will be parsed as `json`, and then `MIME` type will be matched.
 * If object is passed, in this case `application/json` will be set.
-* Otherwise, if MIME type is not found, `text/html` will be set.
+* Otherwise, if `MIME` type is not found, `text/html` will be set.
 
 #### Default response format using `res.send`
 
