@@ -177,4 +177,27 @@ Alternately, you can just send your response code. And response text will be mat
 ```javascript
 res.send(500);
 ```
+## req
+Now, let's take a look on `req` mixins.
+### req.cookie
+Cookies are flavoured with https://github.com/pillarjs/cookies
+
+Feel free to use it's api via `req.cookie`.
+
+### req.session
+Currently session have simple api, which consists of two methods:
+
+#### req.session.set
+##### (key, val)
+Setter of value to the storage.
+```javascript
+req.session.set("myKey", "myVal");
+```
+#### req.session.get
+##### (key)
+Getter of value by key.
+```javascript
+var val = req.session.get("myKey");
+```
+
 To be continued...
