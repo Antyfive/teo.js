@@ -12,7 +12,7 @@ mkdir $1/apps/test/views
 mkdir $1/config
 
 echo "Copying code into the test app"
-cp $1/install/index.js $1/index.js
+cp $1/install/templates/index.js $1/index.js
 cp $1/install/templates/apps/test/config/config.js $1/apps/test/config/config.js
 cp $1/install/templates/config/config.js $1/config/config.js
 cp $1/install/templates/apps/test/controllers/index.js $1/apps/test/controllers/index.js
