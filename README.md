@@ -200,4 +200,22 @@ Getter of value by key.
 var val = req.session.get("myKey");
 ```
 
+### req.csrf
+Basically CSRF is handled out of the box, and everything will be set, and handlerd on the level of framework. But, API is available as well.
+#### req.csrf.genToken
+##### ()
+Generates token.
+
+#### req.csrf.getToken
+##### ()
+Getter of token.
+#### req.csrf.setToken
+##### (key)
+Setter of token.
+
+#### req.csrf.generateHash
+##### ()
+Generates new hash.
+
+
 To be continued...
