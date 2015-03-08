@@ -217,5 +217,22 @@ Setter of token.
 ##### ()
 Generates new hash.
 
+### req.params
+Object of parsed url params
+```javascript
+client.get('/get/:id', function(req, res) {
+    cosole.log("My id:" + req.params.id);
+});
+```
+### req.query
+Object of parsed GET parameters
+`http://localhost:3100/?myParam=1&myParam2=2`
+Will parse it to `req.query` object:
+```javascript
+{
+    "myParam": "1",
+    "myParam2": "2"
+}
+```
 
 To be continued...
