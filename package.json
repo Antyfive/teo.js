@@ -1,7 +1,7 @@
 {
   "name": "teo.js",
   "description": "Teo.js is Node.js based web-framework",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "author": {
     "name": "Andrew Teologov",
     "email": "teologov.and@gmail.com"
