@@ -8,7 +8,7 @@ var _ = require("./teo.utils"),
     crypto = require('crypto'),
     Base = require("./teo.base");
 
-exports = module.exports = Base.extend({
+module.exports = Base.extend({
     initialize: function(opts) {
         _.extend(this, {
             req: opts.req,
@@ -27,7 +27,7 @@ exports = module.exports = Base.extend({
         return token;
     },
     getToken: function() {
-        return this.req.cookie.get(this.keyName) || this[this.keyName];
+        return this[this.keyName] || this.req.cookie.get(this.keyName);
     },
     generateHash: function() {  // TODO: separate module for generation of tokens, or move to utils
         return crypto.createHmac('sha256', this.secret).update(Math.random().toString() + new Date).digest('hex');
@@ -36,7 +36,7 @@ exports = module.exports = Base.extend({
         // expires by session
         this.req.cookie.set(this.keyName, token);
         this[this.keyName] = token;
-        this.req.session.set("token", token);
+        this.req.session.set(this.keyName, token);
     },
     validate: function(token) {
         return this.getToken() === token;
