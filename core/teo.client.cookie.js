@@ -10,8 +10,7 @@ exports = module.exports = function Cookie(opts) {
     if (!(this instanceof Cookie))
         return new Cookie(opts);
 
-    // TODO: to config
-    this.gripKeys = ["signed key"];
+    this.keys = opts.config.keys;
 
-    return new Cookies(opts.req, opts.res, this.gripKeys);
+    return new Cookies(opts.req, opts.res, this.keys);
 };

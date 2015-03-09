@@ -237,8 +237,14 @@ function Client(opts) {
         },
 
         mixinReq: function() {
-            // currently, strict order here
-            this.req.cookie = new Cookie({req: this.req, res: this.res});
+            // currently, strict order of mixins here
+            this.req.cookie = new Cookie({
+                req: this.req,
+                res: this.res,
+                config: {
+                    keys: this.app.config.get("cookie").keys
+                }
+            });
             this.req.session = this.session.start({req: this.req, res: this.res});
             this.req.csrf = new Csrf({req: this.req, res: this.res});
 
