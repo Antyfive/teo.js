@@ -84,7 +84,6 @@ function Client(opts) {
                     var csrfToken = payload[this.req.csrf.keyName];
 
                     if (csrfToken !== this.req.csrf.getToken()) {
-                        debugger;
                         this.res.send(403, "Invalid CSRF token!");
                         return;
                     }
@@ -162,7 +161,7 @@ function Client(opts) {
                         callback(null, output);
                     }
                     else {  // otherwise, render layout
-                        var cached = this.app.cache.get(this.route);
+                        var cached = this.app.cache.get(this.route.path);
                         if (cached != null) {
                             this.res.send(cached);
                         }
@@ -176,7 +175,7 @@ function Client(opts) {
                                 if (this.app.config.get('compressOutput'))
                                     output = this.app.compressor.compressHTML(output);    // TODO: refactor usage of compressor
                                 if (Object.keys(this.req.params).length === 0 && this.app.config.get("cache").response === true) {       // TODO AT: make caching for routes with changeable params           // TODO AT: make caching for routes with changeable params
-                                    this.app.cache.add(this.route, output);     // todo: cache pathname!
+                                    this.app.cache.add(this.route.path, output);
                                 }
                                 this.res.send(output);
                             }.bind(this));
@@ -228,10 +227,11 @@ function Client(opts) {
 
                 this.res.writeHead(code, {'Content-Type': contentType}); // send content type
 
-                this.res.end(sendJson ?
+                var response = sendJson ?
                     this.buildRespObject(code, body) :
-                        (utils.isString(body) ? body : http.STATUS_CODES[code])
-                );
+                        (utils.isString(body) ? body : http.STATUS_CODES[code]);
+
+                this.res.end(response);
 
             }.bind(this);
         },
