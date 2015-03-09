@@ -19,7 +19,7 @@ var Core = Base.extend({
         this.bindProcessEvents();
         // mixture first core's app
         this._app = this.mixtureApp({ dir: this.appsDir, confDir: Path.normalize(__dirname + "/../config"), mode: this.mode }); // set flag, that it's core's app
-        this._app.loadConfigSync();     //  (!) load config synchronously TODO: it's not required any more
+        // this._app.loadConfigSync();     //  (!) load config synchronously TODO: it's not required any more
         this.prepareApps(function() {
             callback.call(this, this);
         }.bind(this));

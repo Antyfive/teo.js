@@ -33,16 +33,18 @@ var App = Base.extend({
             mode: options.mode,
             config: options.config  // default core config
         });
-        this.cache = new AppCache;
-        this.compressor = new Compressor();
-        // TODO: client instance on every call
-        this.client = new Client({app: this});
+
+        this.cache = new AppCache();
+
         async.series([
             this.loadConfig.bind(this), this.collectAppFiles.bind(this)
         ], function() {
-            util.extend(this.config, {
-
-            });
+            util.extend(this.config, {});
+            // ----
+            this.compressor = new Compressor();
+            // TODO: client instance on every call
+            this.client = new Client({app: this});
+            // ----
             process.nextTick(function(){
                 this.emit('app:ready', this);
                 util.isFunction(callback) ? callback() : null;

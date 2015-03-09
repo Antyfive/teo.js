@@ -29,7 +29,14 @@ describe("Testing App CSRF", function() {
                 app.client.routes.get("/aa", function(_req, _res) {
                     req = _req;
                     res = _res;
-                    csrf = new Csrf({req: req, res: res});
+                    csrf = new Csrf({
+                        req: req,
+                        res: res,
+                        config: {
+                            keyName: "_csrfToken",
+                            secret: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+                        }
+                    });
                     done();
                 });
                 request(app.server)
@@ -54,6 +61,7 @@ describe("Testing App CSRF", function() {
     });
 
     it('Should generate token', function() {
+        debugger;
         var token = csrf.genToken();
         assert.isTrue(typeof token === "string", "Token is not a string");
         assert.equal(csrf.getToken(), token, "Tokens are different");

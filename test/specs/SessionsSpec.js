@@ -30,7 +30,18 @@ describe('Testing Sessions', function() {
                 app.client.routes.get("/aa", function(_req, _res) {
                     req = _req;
                     res = _res;
-                    session = new Session({req: req, res: res});
+                    session = new Session({
+                        req: req,
+                        res: res,
+                        config: {
+                            sessionKeyName: "SID",
+                            secret: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
+                            lifetime: {
+                                session: 60 * 60 * 24 * 10 // in seconds, ten days by default
+                            },
+                            storageType: "memory" // only memory storage type at the moment
+                        }
+                    });
                     done();
                 });
                 request(app.server)

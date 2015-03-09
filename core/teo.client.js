@@ -31,7 +31,9 @@ mime.define({
 
 function Client(opts) {
     this.routes = new Routes();
-    this.session = new Session();
+    this.session = new Session({
+        config: opts.app.config.get("session")
+    });
 
     this.Factory = Base.extend(utils.extend(this.routes, {session: this.session}, {
         app: opts.app,
@@ -241,12 +243,17 @@ function Client(opts) {
             this.req.cookie = new Cookie({
                 req: this.req,
                 res: this.res,
-                config: {
-                    keys: this.app.config.get("cookie").keys
-                }
+                config: this.app.config.get("cookie")
             });
-            this.req.session = this.session.start({req: this.req, res: this.res});
-            this.req.csrf = new Csrf({req: this.req, res: this.res});
+            this.req.session = this.session.start({
+                req: this.req,
+                res: this.res
+            });
+            this.req.csrf = new Csrf({
+                req: this.req,
+                res: this.res,
+                config: this.app.config.get("csrf")
+            });
 
             if (this.route) {   // extracted from route parsed parameters object (e.g /route/:id )
                 this.req.params = this.route.params;
