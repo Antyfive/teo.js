@@ -1,4 +1,6 @@
 # Teo.js
+[![Travis Build Status](https://travis-ci.org/Antyfive/teo.js.svg)](https://travis-ci.org/Antyfive/teo.js)
+
 Please, meet yet another Node.js based web-framework.
 
 ## Installing the framework
