@@ -12,19 +12,16 @@ var Base = require("./teo.base"),
  * SID
  */
 var Sid = Base.extend({
-    req: null,
-    res: null,
-    sessionKeyName: "SID",
-    // TODO: to config
-    secret: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
-    lifetime: { // in seconds
-        session: 60 * 60 * 24 * 10
-    },
     httpOnly: true,
     initialize: function(opts) {
         _.isObject(opts) && _.extend(this, {
             req: opts.req,
-            res: opts.res
+            res: opts.res,
+            sessionKeyName: opts.sessionKeyName,
+            secret: opts.secret,
+            lifetime: {
+                session: opts.lifetime.session
+            }
         });
         this.setSid();
     },
