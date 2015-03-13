@@ -9,7 +9,8 @@ var fs = require('fs'),
     util = require('./teo.utils'),
     Base = require('./teo.base'),
     App = require('./teo.app'),
-    Path = require('path');
+    Path = require('path'),
+    logger = require("./teo.logger");
 
 var Core = Base.extend({
     apps: {},
@@ -33,7 +34,7 @@ var Core = Base.extend({
         var self = this;
         fs.readdir( this.appsDir, function( err, apps ) {
             if ( err ) {
-                console.error( err );
+                logger.error( err );
                 callback();
                 return;
             }
@@ -137,13 +138,14 @@ var Core = Base.extend({
     },
 
     exitHandler: function(options, err) {
-        if (options.cleanup) {
-            console.log('cleanup');
+        if (options.cleanup) {  // TODO: cleanup
+            logger.info('cleanup');
         }
         if (err) {
-            console.log(err.stack);
+            logger.error(err.message);
         }
         if (options.exit) {
+            logger.info("Closing Teo.js");
             process.exit(err ? 1 : 0);
         }
     }
