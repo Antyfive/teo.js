@@ -17,7 +17,8 @@ var Base = require("./teo.base"),
     Session = require("./teo.client.session"),
     Csrf = require("./teo.client.session.csrf"),
     streamer = require("./teo.client.streamer"),
-    Cookie = require("./teo.client.cookie");
+    Cookie = require("./teo.client.cookie"),
+    logger = require("./teo.logger");
 
 // ---- mime types additional settings
 mime.default_type = "text/html";
@@ -224,7 +225,7 @@ function Client(opts) {
                 var sendJson = (contentType.match(/json/) || utils.isObject(body));
 
                 if (contentType.match(/json/) && !utils.isObject(body)) {
-                    console.warn("Sending not a object as JSON body response:", body);
+                    logger.warn("Sending not a object as JSON body response:", body);
                 }
 
                 this.res.writeHead(code, {'Content-Type': contentType}); // send content type

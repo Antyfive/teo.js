@@ -10,29 +10,33 @@ var util = require("util");
 
 var logger = module.exports = {
     success: function(message) {
-        var message = parseMessage(message);
+        var message = parseMessage.apply(this, [].slice.call(arguments));
         console.log(format(util.format("Success: %s", message)).green);
     },
     info: function(message) {
-        var message = parseMessage(message);
+        var message = parseMessage.apply(this, [].slice.call(arguments));
         console.log(format(util.format("Info: %s", message)).blue);
     },
     warn: function(message) {
-        var message = parseMessage(message);
+        var message = parseMessage.apply(this, [].slice.call(arguments));
         console.log(format(util.format("Warn: %s", message)).yellow);
     },
     error: function(message) {
-        var message = parseMessage(message);
+        var message = parseMessage.apply(this, [].slice.call(arguments));
         console.log(format(util.format("Error: %s", message)).red);
     },
     fatal: function(message) {
-        var message = parseMessage(message);
+        var message = parseMessage.apply(this, [].slice.call(arguments));
         console.log(format(util.format("Fatal Error: %s", message)).red);
+    },
+    log: function(message) {
+        var message = parseMessage.apply(this, [].slice.call(arguments));
+        console.log(format(util.format("%s", message)));
     }
 };
 
 function parseMessage(message) {
-
+    var message = [].slice.call(arguments).join("|");
     try {
         var message = (typeof message === "string") ? message : JSON.stringify(message);
     } catch(e) {

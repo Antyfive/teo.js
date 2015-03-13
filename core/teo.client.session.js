@@ -5,7 +5,8 @@
  */
 
 var AppBase = require("./teo.base"),
-    Sid = require("./teo.client.sid");
+    Sid = require("./teo.client.sid"),
+    logger = require("./teo.logger");
 
 // sessions
 /**
@@ -42,7 +43,7 @@ var Session = AppBase.extend({
         try {
             storage = require("./teo.client.session.storage." + this.storageType);
         } catch(e) {
-            console.error("Error: cannot load session storage with type: " + this.storageType);
+            logger.error("Error: cannot load session storage with type: " + this.storageType);
         }
 
         return storage;

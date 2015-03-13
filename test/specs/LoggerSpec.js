@@ -79,4 +79,17 @@ describe("Testing Logger", function() {
 
     });
 
+    it("Should log multiple messages in arguments", function() {
+
+        logger.success("One", "two");
+
+        assert.equal(formatSpy.args[1][2], "Success: One|two", "Message should be formatted correctly");
+
+    });
+
+    it("Should just log message", function() {
+        logger.log("One", "two");
+        assert.equal(formatSpy.args[1][2], "One|two", "Message should be formatted correctly");
+    });
+
 });
