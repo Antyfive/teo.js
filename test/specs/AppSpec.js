@@ -7,7 +7,9 @@
 
 // TODO: cover with tests other methods of the App class
 var App = require(teoBase + '/teo.app'),
-    http = require("http");
+    Middleware = require(teoBase + "/teo.middleware"),
+    http = require("http"),
+    supertest = require("supertest");
 
 describe('Testing App', function() {
     var app,
@@ -101,4 +103,103 @@ describe('Testing App', function() {
 
         });
     });
+
+    describe("Testing Usage Of Middleware", function() {
+
+        var middlewareCountSpy, middlewareRunSpy, middlewareAddSpy,
+            clientProcessSpy, agent;
+
+        beforeEach(function(done) {
+
+            middlewareCountSpy = sinon.spy(Middleware.prototype, "count");
+            middlewareRunSpy = sinon.spy(Middleware.prototype, "run");
+            middlewareAddSpy = sinon.spy(Middleware.prototype, "add");
+            clientProcessSpy = sinon.spy(app.client.Factory.prototype, "process");
+
+            app.initServer();
+            app.server.on("listening", function() {
+
+                app.client.routes.get("/test/route", function(req, res) {
+
+                    res.writeHead(200, {"Content-Type": "text/plain"});
+                    res.end("okay");
+
+                });
+
+                agent = supertest.agent(app.server);
+
+                done();
+
+            });
+
+            app.listenServer();
+
+        });
+
+        afterEach(function(done) {
+
+            middlewareCountSpy.restore();
+            middlewareRunSpy.restore();
+            middlewareAddSpy.restore();
+            clientProcessSpy.restore();
+
+            app.stop(done);
+
+        });
+
+        it("Should not run middleware chain if it's empty", function(done) {
+
+            agent
+                .get('/test/route')
+                .expect('Content-Type', "text/plain")
+                .expect(200)
+                .end(function(err, res) {
+
+                    assert.isTrue(middlewareCountSpy.calledOnce, "Middleware count should be called once");
+                    assert.isFalse(middlewareRunSpy.called, "Middleware should not be called with if no functions were assigned");
+                    assert.isTrue(clientProcessSpy.calledOnce, "Client request process should be called");
+
+                    done(err);
+
+                });
+
+        });
+
+        it("Should add middleware", function() {
+
+            app.middleware(function(req, res, next) {
+                next();
+            });
+
+            assert.isTrue(middlewareAddSpy.calledOnce, "Middleware should be called");
+            assert.isFunction(middlewareAddSpy.args[0][0], "Middleware add should be called with correct arguments");
+
+
+        });
+
+        it("Should run middleware chain on request", function(done) {
+
+            app.middleware(function(req, res, next) {
+                next();
+            });
+
+            agent
+                .get('/test/route')
+                .expect('Content-Type', "text/plain")
+                .expect(200)
+                .end(function(err, res) {
+
+                    assert.isTrue(middlewareCountSpy.calledOnce, "Middleware count should be called once");
+                    assert.isTrue(middlewareRunSpy.calledOnce, "Middleware should not be called with if no functions were assigned");
+                    assert.isTrue(clientProcessSpy.calledOnce, "Client request process should be called");
+                    assert.deepEqual(clientProcessSpy.args[0], [], "Client process method should be called with correct arguments");
+
+                    done(err);
+
+                });
+
+        });
+
+    });
+
 });
