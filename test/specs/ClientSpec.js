@@ -165,4 +165,47 @@ describe("Testing Client Factory", function() {
         assert.isTrue(clientFactory.req.cookie instanceof Cookies, "Cookie mixin should be inside req object");
 
     });
+
+    describe("Testing Client 'process' method on request middleware", function() {
+
+        it("Should end request with passed code", function(done) {
+
+            app.middleware(function(req, res, next) {
+                next(403);
+            });
+
+            agent
+                .get('/test/route')
+                .expect(403)
+                .end(done);
+        });
+
+        it("Should end request with passed body and default middleware code", function(done) {
+
+            app.middleware(function(req, res, next) {
+                next("Message");
+            });
+
+            agent
+                .get('/test/route')
+                .expect(500, "Message")
+                .end(done);
+
+        });
+
+        it("Should end request with passed code and body message", function(done) {
+
+            app.middleware(function(req, res, next) {
+                next(404, "My message");
+            });
+
+            agent
+                .get('/test/route')
+                .expect(404, "My message")
+                .end(done);
+
+        });
+
+    });
+
 });

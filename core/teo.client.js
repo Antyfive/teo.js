@@ -18,7 +18,8 @@ var Base = require("./teo.base"),
     Csrf = require("./teo.client.session.csrf"),
     streamer = require("./teo.client.streamer"),
     Cookie = require("./teo.client.cookie"),
-    logger = require("./teo.logger");
+    logger = require("./teo.logger"),
+    querystring = require("querystring");
 
 // ---- mime types additional settings
 mime.default_type = "text/html";
@@ -52,15 +53,18 @@ function Client(opts) {
             // TODO: move mixins to the separate class
             this.mixinReq();
             this.mixinRes();
-            // ----
-            this.process();
         },
 
         /**
          * Process call
+         * Could be called with arguments. In this case immediate response with middleware error.
+         * Usage: .process() || .process(errCode) || process("Err msg") || process(code, err)
          * TODO: improve
          */
         process: function() {
+            if (arguments.length > 0) {
+                this.res.send.apply(this.res, this.parseProcessArgs.apply(this, arguments));
+            }
             if (this.req.method.toLowerCase() === "post") {
                 var body = "";
                 this.req.on("data", function(chunk) {
@@ -70,19 +74,14 @@ function Client(opts) {
                     // ----
                     var contentType = this.req.headers["content-type"], payload;
 
-                    if (contentType === "application/json") {
-                        try {
-                            payload = JSON.parse(body);
-                            this.setReqBody(payload);
-                        } catch(e) {
-                            this.res.send(500, e.message);
-                            return;
-                        }
-                    }
-                    else {
-                        payload = querystring.parse(body);
+                    try {
+                        payload = (contentType === "application/json") ? JSON.parse(body) : querystring.parse(body);
                         this.setReqBody(payload);
+                    } catch(e) {
+                        this.res.send(500, e.message);
+                        return;
                     }
+
                     // ----
                     var csrfToken = payload[this.req.csrf.keyName];
 
@@ -277,6 +276,31 @@ function Client(opts) {
          */
         setReqBody: function(body) {
             this.req.body = body;
+        },
+
+        /**
+         * Parse process method arguments
+         * @returns {Array}
+         */
+        parseProcessArgs: function() {
+            var err = 500;
+            var body;
+            // Only error body is set // e.g. next("My err") || next(400)
+            if (arguments.length === 1) {
+
+                if (!+arguments[0]) {
+                    body = arguments[0].toString();
+                } else {
+                    err = +arguments[0];
+                }
+            }
+            // e.g. next(500, "Msg")
+            else {
+                err = +arguments[0];
+                body = arguments[1].toString();
+            }
+
+            return [err, body];
         }
     }));
 

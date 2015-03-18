@@ -16,6 +16,7 @@ var fs = require('fs'),
     Client = require( './teo.client'),
     AppCache = require('./teo.app.cache'),
     logger = require("./teo.logger"),
+    Middleware = require("./teo.middleware"),
     http = require("http");
 
 /**
@@ -36,7 +37,7 @@ var App = Base.extend({
         });
 
         this.cache = new AppCache();
-
+        this._middleware = new Middleware();
         async.series([
             this.loadConfig.bind(this), this.collectAppFiles.bind(this)
         ], function() {
@@ -375,8 +376,24 @@ var App = Base.extend({
 
     _createContext: function() {
         return function(req, res) {
-            new this.client.Factory({req: req, res: res});
+            var client = new this.client.Factory({req: req, res: res});
+            if (this._middleware.count() > 0) {
+                this._middleware.run(client.req, client.res, function() {
+                    client.process.apply(client, arguments);
+                });
+            }
+            else {
+                client.process();
+            }
         }.bind(this);
+    },
+
+    /**
+     * Middleware wrapper
+     * @param {Function} func
+     */
+    middleware: function(func) {
+        this._middleware.add(func);
     }
 });
 
