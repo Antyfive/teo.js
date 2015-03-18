@@ -12,5 +12,4 @@
  */
 module.exports = function(app, client) {
     // app specific logic here, like middleware, etc.
-    debugger;
 };

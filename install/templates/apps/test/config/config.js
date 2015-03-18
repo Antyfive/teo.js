@@ -20,6 +20,9 @@ module.exports = {
     // common params could be without mode as well
     delimiters: '{{ }}',
     compressOutput: true,
+    cookie: {
+        keys: ["signed key"]    // default signed key
+    },
     session: {
         sessionKeyName: "SID",
         secret: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
