@@ -17,7 +17,9 @@ var Base = require("./teo.base"),
     Session = require("./teo.client.session"),
     Csrf = require("./teo.client.session.csrf"),
     streamer = require("./teo.client.streamer"),
-    Cookie = require("./teo.client.cookie");
+    Cookie = require("./teo.client.cookie"),
+    logger = require("./teo.logger"),
+    querystring = require("querystring");
 
 // ---- mime types additional settings
 mime.default_type = "text/html";
@@ -31,7 +33,9 @@ mime.define({
 
 function Client(opts) {
     this.routes = new Routes();
-    this.session = new Session();
+    this.session = new Session({
+        config: opts.app.config.get("session")
+    });
 
     this.Factory = Base.extend(utils.extend(this.routes, {session: this.session}, {
         app: opts.app,
@@ -49,15 +53,18 @@ function Client(opts) {
             // TODO: move mixins to the separate class
             this.mixinReq();
             this.mixinRes();
-            // ----
-            this.process();
         },
 
         /**
          * Process call
+         * Could be called with arguments. In this case immediate response with middleware error.
+         * Usage: .process() || .process(errCode) || process("Err msg") || process(code, err)
          * TODO: improve
          */
         process: function() {
+            if (arguments.length > 0) {
+                this.res.send.apply(this.res, this.parseProcessArgs.apply(this, arguments));
+            }
             if (this.req.method.toLowerCase() === "post") {
                 var body = "";
                 this.req.on("data", function(chunk) {
@@ -67,24 +74,18 @@ function Client(opts) {
                     // ----
                     var contentType = this.req.headers["content-type"], payload;
 
-                    if (contentType === "application/json") {
-                        try {
-                            payload = JSON.parse(body);
-                            this.setReqBody(payload);
-                        } catch(e) {
-                            this.res.send(500, e.message);
-                            return;
-                        }
-                    }
-                    else {
-                        payload = querystring.parse(body);
+                    try {
+                        payload = (contentType === "application/json") ? JSON.parse(body) : querystring.parse(body);
                         this.setReqBody(payload);
+                    } catch(e) {
+                        this.res.send(500, e.message);
+                        return;
                     }
+
                     // ----
                     var csrfToken = payload[this.req.csrf.keyName];
 
                     if (csrfToken !== this.req.csrf.getToken()) {
-                        debugger;
                         this.res.send(403, "Invalid CSRF token!");
                         return;
                     }
@@ -162,7 +163,7 @@ function Client(opts) {
                         callback(null, output);
                     }
                     else {  // otherwise, render layout
-                        var cached = this.app.cache.get(this.route);
+                        var cached = this.app.cache.get(this.route.path);
                         if (cached != null) {
                             this.res.send(cached);
                         }
@@ -176,7 +177,7 @@ function Client(opts) {
                                 if (this.app.config.get('compressOutput'))
                                     output = this.app.compressor.compressHTML(output);    // TODO: refactor usage of compressor
                                 if (Object.keys(this.req.params).length === 0 && this.app.config.get("cache").response === true) {       // TODO AT: make caching for routes with changeable params           // TODO AT: make caching for routes with changeable params
-                                    this.app.cache.add(this.route, output);     // todo: cache pathname!
+                                    this.app.cache.add(this.route.path, output);
                                 }
                                 this.res.send(output);
                             }.bind(this));
@@ -223,24 +224,36 @@ function Client(opts) {
                 var sendJson = (contentType.match(/json/) || utils.isObject(body));
 
                 if (contentType.match(/json/) && !utils.isObject(body)) {
-                    console.warn("Sending not a object as JSON body response:", body);
+                    logger.warn("Sending not a object as JSON body response:", body);
                 }
 
                 this.res.writeHead(code, {'Content-Type': contentType}); // send content type
 
-                this.res.end(sendJson ?
+                var response = sendJson ?
                     this.buildRespObject(code, body) :
-                        (utils.isString(body) ? body : http.STATUS_CODES[code])
-                );
+                        (utils.isString(body) ? body : http.STATUS_CODES[code]);
+
+                this.res.end(response);
 
             }.bind(this);
         },
 
         mixinReq: function() {
-            // currently, strict order here
-            this.req.cookie = new Cookie({req: this.req, res: this.res});
-            this.req.session = this.session.start({req: this.req, res: this.res});
-            this.req.csrf = new Csrf({req: this.req, res: this.res});
+            // currently, strict order of mixins here
+            this.req.cookie = new Cookie({
+                req: this.req,
+                res: this.res,
+                config: this.app.config.get("cookie")
+            });
+            this.req.session = this.session.start({
+                req: this.req,
+                res: this.res
+            });
+            this.req.csrf = new Csrf({
+                req: this.req,
+                res: this.res,
+                config: this.app.config.get("csrf")
+            });
 
             if (this.route) {   // extracted from route parsed parameters object (e.g /route/:id )
                 this.req.params = this.route.params;
@@ -263,6 +276,31 @@ function Client(opts) {
          */
         setReqBody: function(body) {
             this.req.body = body;
+        },
+
+        /**
+         * Parse process method arguments
+         * @returns {Array}
+         */
+        parseProcessArgs: function() {
+            var err = 500;
+            var body;
+            // Only error body is set // e.g. next("My err") || next(400)
+            if (arguments.length === 1) {
+
+                if (!+arguments[0]) {
+                    body = arguments[0].toString();
+                } else {
+                    err = +arguments[0];
+                }
+            }
+            // e.g. next(500, "Msg")
+            else {
+                err = +arguments[0];
+                body = arguments[1].toString();
+            }
+
+            return [err, body];
         }
     }));
 

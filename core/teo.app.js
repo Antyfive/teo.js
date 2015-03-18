@@ -15,6 +15,8 @@ var fs = require('fs'),
     Base = require('./teo.base'),
     Client = require( './teo.client'),
     AppCache = require('./teo.app.cache'),
+    logger = require("./teo.logger"),
+    Middleware = require("./teo.middleware"),
     http = require("http");
 
 /**
@@ -33,16 +35,18 @@ var App = Base.extend({
             mode: options.mode,
             config: options.config  // default core config
         });
-        this.cache = new AppCache;
-        this.compressor = new Compressor();
-        // TODO: client instance on every call
-        this.client = new Client({app: this});
+
+        this.cache = new AppCache();
+        this._middleware = new Middleware();
         async.series([
             this.loadConfig.bind(this), this.collectAppFiles.bind(this)
         ], function() {
-            util.extend(this.config, {
-
-            });
+            util.extend(this.config, {});
+            // ----
+            this.compressor = new Compressor();
+            // TODO: client instance on every call
+            this.client = new Client({app: this});
+            // ----
             process.nextTick(function(){
                 this.emit('app:ready', this);
                 util.isFunction(callback) ? callback() : null;
@@ -134,19 +138,19 @@ var App = Base.extend({
     runScript: function(fileName, args, callback) {
         this.getScript(fileName, function(err, script) {
             if (err) {
-                console.error(err.message);
+                logger.error(err.message);
                 callback();
                 return;
             }
             if (typeof script !== 'function') {
-                console.error('Trying to run not a script');
+                logger.error('Trying to run not a script');
                 callback();
                 return;
             }
             var d = domain.create(); // TODO AT: Domains
             var self = this;
             d.on('error', function(err) {
-                console.error('Domain error', err.stack);
+                logger.error('Domain error', err.stack);
             });
             d.run(function() {
                 script.apply(self, args);
@@ -194,7 +198,7 @@ var App = Base.extend({
                 if ( exists ) {
                     fs.readFile( absPath, function( err, data ) {
                         if ( err ) {
-                            console.error( err.message );
+                            logger.error(err.message);
                             callback( err.message, absPath );
                         } else {
                             if (self.config.get("cache").static === true) { // add to cache, if file exists
@@ -246,7 +250,7 @@ var App = Base.extend({
             functs.push( function( next ) {
                 fs.readdir( self.dir + '/' + d , function( err, files ) {
                     if ( err ) {
-                        console.error(err.message);
+                        logger.error(err.message);
                         next( err );
                         return;
                     }
@@ -291,12 +295,12 @@ var App = Base.extend({
                         var file = self.dir + "/" + file;
                         fs.lstat(file, function(err, stat) {
                             if (err) {
-                                console.error(err);
+                                logger.error(err);
                                 next(null, err);
                                 return;
                             }
                             if (!stat.isFile()) {
-                                console.error('Error: not a file was found!');
+                                logger.error('Error: not a file was found!');
                                 next(null);
                             }
                             self.getScript(file, function(err, context) {
@@ -354,7 +358,7 @@ var App = Base.extend({
             try {
                 this.server._connections = 0;
                 this.server.close(function () {
-                    console.log('Connection closed, port: ' + config.get('port') + ' host: ' + config.get('host'));
+                    logger.info('Connection closed, port: ' + config.get('port') + ' host: ' + config.get('host'));
                     callback && callback();
                 });
             } catch (e) {
@@ -372,8 +376,24 @@ var App = Base.extend({
 
     _createContext: function() {
         return function(req, res) {
-            new this.client.Factory({req: req, res: res});
+            var client = new this.client.Factory({req: req, res: res});
+            if (this._middleware.count() > 0) {
+                this._middleware.run(client.req, client.res, function() {
+                    client.process.apply(client, arguments);
+                });
+            }
+            else {
+                client.process();
+            }
         }.bind(this);
+    },
+
+    /**
+     * Middleware wrapper
+     * @param {Function} func
+     */
+    middleware: function(func) {
+        this._middleware.add(func);
     }
 });
 

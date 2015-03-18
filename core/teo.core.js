@@ -9,7 +9,8 @@ var fs = require('fs'),
     util = require('./teo.utils'),
     Base = require('./teo.base'),
     App = require('./teo.app'),
-    Path = require('path');
+    Path = require('path'),
+    logger = require("./teo.logger");
 
 var Core = Base.extend({
     apps: {},
@@ -19,7 +20,7 @@ var Core = Base.extend({
         this.bindProcessEvents();
         // mixture first core's app
         this._app = this.mixtureApp({ dir: this.appsDir, confDir: Path.normalize(__dirname + "/../config"), mode: this.mode }); // set flag, that it's core's app
-        this._app.loadConfigSync();     //  (!) load config synchronously TODO: it's not required any more
+        // this._app.loadConfigSync();     //  (!) load config synchronously TODO: it's not required any more
         this.prepareApps(function() {
             callback.call(this, this);
         }.bind(this));
@@ -33,7 +34,7 @@ var Core = Base.extend({
         var self = this;
         fs.readdir( this.appsDir, function( err, apps ) {
             if ( err ) {
-                console.error( err );
+                logger.error( err );
                 callback();
                 return;
             }
@@ -137,13 +138,14 @@ var Core = Base.extend({
     },
 
     exitHandler: function(options, err) {
-        if (options.cleanup) {
-            console.log('cleanup');
+        if (options.cleanup) {  // TODO: cleanup
+            logger.info('cleanup');
         }
         if (err) {
-            console.log(err.stack);
+            logger.error(err.message);
         }
         if (options.exit) {
+            logger.info("Closing Teo.js");
             process.exit(err ? 1 : 0);
         }
     }

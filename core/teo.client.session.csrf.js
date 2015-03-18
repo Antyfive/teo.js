@@ -4,21 +4,18 @@
  * @date 10/25/14
  */
 
-var Sid = require("./teo.client.sid"),
-    _ = require("./teo.utils");
+var _ = require("./teo.utils"),
+    crypto = require('crypto'),
+    Base = require("./teo.base");
 
-/**
- * CSRF module
- * @extend {Sid}
- * @type {*}
- */
-exports = module.exports = Sid.extend({
-    req: null,
-    res: null,
-    keyName: "_csrfToken",
-    // ---- ---- ---- ----
+module.exports = Base.extend({
     initialize: function(opts) {
-        _.extend(this, opts);
+        _.extend(this, {
+            req: opts.req,
+            res: opts.res,
+            keyName: opts.config.keyName,
+            secret: opts.config.secret
+        });
         this.genToken();
     },
     genToken: function() {
@@ -30,12 +27,16 @@ exports = module.exports = Sid.extend({
         return token;
     },
     getToken: function() {
-        return this.req.cookie.get(this.keyName) || this[this.keyName];
+        return this[this.keyName] || this.req.cookie.get(this.keyName);
+    },
+    generateHash: function() {  // TODO: separate module for generation of tokens, or move to utils
+        return crypto.createHmac('sha256', this.secret).update(Math.random().toString() + new Date).digest('hex');
     },
     setToken: function(token) {
+        // expires by session
         this.req.cookie.set(this.keyName, token);
         this[this.keyName] = token;
-        this.req.session.set("token", token);
+        this.req.session.set(this.keyName, token);
     },
     validate: function(token) {
         return this.getToken() === token;

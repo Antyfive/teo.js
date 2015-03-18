@@ -18,8 +18,10 @@ describe('Testing Core', function() {
         'mode': 'development'
     };
 
-    beforeEach(function() {
-        core = new Core(params);
+    beforeEach(function(done) {
+        core = new Core(params, function() {
+            done();
+        });
     });
     afterEach(function() {
         core = null;

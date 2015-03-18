@@ -5,7 +5,8 @@
  */
 
 var AppBase = require("./teo.base"),
-    Sid = require("./teo.client.sid");
+    Sid = require("./teo.client.sid"),
+    logger = require("./teo.logger");
 
 // sessions
 /**
@@ -17,11 +18,18 @@ var AppBase = require("./teo.base"),
  * TODO: expires
  **/
 var Session = AppBase.extend({
-    // default storage type
-    storageType: "memory",
     initialize: function(opts) {
+        // ---- configs
+        // only memory storage type at the moment
+        this.storageType = opts.config.storageType;
+        this.sessionKeyName = opts.config.sessionKeyName;
+        this.secret = opts.config.secret;
+        this.lifetime = opts.config.lifetime;
+        // ----
         var Storage = this._loadStorage();
-        this._setStorage(Storage);
+        if (Storage) {
+            this._setStorage(Storage);
+        }
     },
 
     /**
@@ -35,7 +43,7 @@ var Session = AppBase.extend({
         try {
             storage = require("./teo.client.session.storage." + this.storageType);
         } catch(e) {
-            console.error("Error: cannot load session storage with type: " + this.storageType);
+            logger.error("Error: cannot load session storage with type: " + this.storageType);
         }
 
         return storage;
@@ -61,7 +69,13 @@ var Session = AppBase.extend({
      * @returns {*}
      */
     start: function(opts) {
-        return this.constructor.start({req: opts.req, res: opts.res});
+        return this.constructor.start({
+            req: opts.req,
+            res: opts.res,
+            sessionKeyName: this.sessionKeyName,
+            secret: this.secret,
+            lifetime: this.lifetime
+        });
     }
 }, {
     storage: null,
@@ -71,7 +85,7 @@ var Session = AppBase.extend({
      * @returns {{}}
      */
     start: function(opts) {
-        var sid = new Sid({req: opts.req, res: opts.res});
+        var sid = new Sid(opts);
         var _sid = sid.getSid();
         var storage = this.storage;
         var api = {};

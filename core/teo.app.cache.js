@@ -4,6 +4,8 @@
  * @date 9/7/14
  */
 
+var logger = require("./teo.logger");
+
 exports = module.exports = AppCache;
 
 function AppCache() {
@@ -23,7 +25,7 @@ AppCache.prototype.add = function(key, context) {
     if ((context !== void 0) && !(this.cache.hasOwnProperty(key))) {
         this.cache[key] = context;
     } else {
-        console.error('Cannot add to cache: ' + key + ', val: ' + '\n' + context);
+        logger.error('Cannot add to cache: ' + key + ', val: ' + '\n' + context);
     }
     return context;
 };

@@ -4,7 +4,8 @@
  * @date 12/18/14
  */
 
-var fs = require('fs');
+var fs = require("fs"),
+    logger = require("./teo.logger");
 
 // Middleware to stream video, audio with support for different formats and device request for chunks
 
@@ -33,7 +34,7 @@ exports.stream = function(req, res, filePath, contentType) {
         var start = parseInt(partialstart, 10);
         var end = partialend ? parseInt(partialend, 10) : total - 1;
         var chunksize = (end - start) + 1;
-        console.log('RANGE: ' + start + ' - ' + end + ' = ' + chunksize);
+        logger.log('RANGE: ' + start + ' - ' + end + ' = ' + chunksize);
 
         file = fs.createReadStream(streamPath, {
             start: start,
@@ -48,7 +49,7 @@ exports.stream = function(req, res, filePath, contentType) {
         res.openedFile = file;
         file.pipe(res);
     } else {
-        console.log('ALL: ' + total);
+        logger.log('ALL: ' + total);
         file = fs.createReadStream(streamPath);
         res.writeHead(200, {
             'Content-Length': total,
@@ -59,7 +60,7 @@ exports.stream = function(req, res, filePath, contentType) {
     }
 
     res.on('close', function() {
-        console.log('response closed');
+        logger.log('response closed');
         if (res.openedFile) {
             res.openedFile.unpipe(this);
             if (this.openedFile.fd) {

@@ -19,5 +19,17 @@ module.exports = {
     },
     // common params could be without mode as well
     delimiters: '{{ }}',
-    compressOutput: true
+    compressOutput: true,
+    session: {
+        sessionKeyName: "SID",
+        secret: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
+        lifetime: {
+            session: 60 * 60 * 24 * 10 // in seconds, ten days by default
+        },
+        storageType: "memory" // only memory storage type at the moment
+    },
+    csrf: {
+        keyName: "_csrfToken",
+        secret: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+    }
 };
