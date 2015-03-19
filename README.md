@@ -274,8 +274,8 @@ module.exports = function(client) {
 * `info(msg)`
 * `warn(msg)`
 * `error(msg)`
-* `fatal:(msg)`
-* `log:(msg)`
+* `fatal(msg)`
+* `log(msg)`
 
 Each log message type has it's own output color.
 
