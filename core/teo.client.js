@@ -5,6 +5,8 @@
  * TODO: handle different types of protocols    ( http, https, websockets(?) etc. )
  */
 
+/* global logger */
+
 var Base = require("./teo.base"),
     Routes = require("./teo.client.routes"),
     helper = require('./teo.helper'),
@@ -18,7 +20,6 @@ var Base = require("./teo.base"),
     Csrf = require("./teo.client.session.csrf"),
     streamer = require("./teo.client.streamer"),
     Cookie = require("./teo.client.cookie"),
-    logger = require("./teo.logger"),
     querystring = require("querystring");
 
 // ---- mime types additional settings

@@ -7,9 +7,8 @@
 
 /**
  * App main controller
- * @param {Object} app :: instance of this app
  * @param {Object} client :: client API
  */
-module.exports = function(app, client) {
+module.exports = function(client) {
     // app specific logic here, like middleware, etc.
 };

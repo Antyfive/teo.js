@@ -3,14 +3,16 @@
  * @author Andrew Teologov <teologov.and@gmail.com>
  * @date {13.03.14}
  */
+
+/* global logger */
+
 var fs = require('fs'),
     async = require('async'),
     Compressor = require('./teo.compressor'),
     util = require('./teo.utils'),
     Base = require('./teo.base'),
     App = require('./teo.app'),
-    Path = require('path'),
-    logger = require("./teo.logger");
+    Path = require('path');
 
 var Core = Base.extend({
     apps: {},

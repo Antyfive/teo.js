@@ -3,9 +3,7 @@
  * @author Andrew Teologov <teologov.and@gmail.com>
  * @date 9/7/14
  */
-
-var logger = require("./teo.logger");
-
+/* global logger */
 exports = module.exports = AppCache;
 
 function AppCache() {

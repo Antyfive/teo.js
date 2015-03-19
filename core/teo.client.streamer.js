@@ -4,8 +4,9 @@
  * @date 12/18/14
  */
 
-var fs = require("fs"),
-    logger = require("./teo.logger");
+/* global logger */
+
+var fs = require("fs");
 
 // Middleware to stream video, audio with support for different formats and device request for chunks
 

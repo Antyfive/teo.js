@@ -4,9 +4,10 @@
  * @date 8/2/14
  */
 
+/* global logger */
+
 var AppBase = require("./teo.base"),
-    Sid = require("./teo.client.sid"),
-    logger = require("./teo.logger");
+    Sid = require("./teo.client.sid");
 
 // sessions
 /**

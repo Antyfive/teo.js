@@ -15,6 +15,7 @@ echo "Copying code into the test app"
 cp $1/install/templates/index.js $1/index.js
 cp $1/install/templates/apps/test/config/config.js $1/apps/test/config/config.js
 cp $1/install/templates/config/config.js $1/config/config.js
+cp $1/install/templates/apps/test/app.js $1/apps/test/app.js
 cp $1/install/templates/apps/test/controllers/index.js $1/apps/test/controllers/index.js
 cp $1/install/templates/apps/test/models/index.js $1/apps/test/models/index.js
 cp $1/install/templates/apps/test/public/css/main.css $1/apps/test/public/css/main.css

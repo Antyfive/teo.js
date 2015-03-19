@@ -4,7 +4,7 @@
  * @date 8/7/14
  */
 
-/* global copyright, version  */
+/* global copyright, version, logger  */
 
 var fs = require('fs'),
     domain = require('domain'),
@@ -15,7 +15,6 @@ var fs = require('fs'),
     Base = require('./teo.base'),
     Client = require( './teo.client'),
     AppCache = require('./teo.app.cache'),
-    logger = require("./teo.logger"),
     Middleware = require("./teo.middleware"),
     http = require("http");
 

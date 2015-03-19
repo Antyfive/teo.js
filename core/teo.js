@@ -5,12 +5,12 @@
  */
 
 var utils = require('./teo.utils'),
-    events = require('events'),
     Base = require('./teo.base');
 
 // ----
 global.version = require( '../package.json' ).version;
 global.copyright = 'Powered by Teo.js';
+global.logger = require("./teo.logger");
 // ----
 /**
  * Framework's entry point
