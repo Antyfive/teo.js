@@ -252,7 +252,7 @@ Will parse it to `req.query` object:
 }
 ```
 
-##middleware
+##Middleware
 Middleware is implemented in `express` style.
 Considering, you have `./apps/your_app/app.js` file:
 ```javascript
@@ -268,5 +268,18 @@ module.exports = function(client) {
 }
 ```
 **Attention!** Default status code is set to **500**.
+
+## Logger
+* `success(msg)`
+* `info(msg)`
+* `warn(msg)`
+* `error(msg)`
+* `fatal:(msg)`
+* `log:(msg)`
+
+Each log message type has it's own output color.
+
+`logger.log("Message")` outputs in format:
+`[Thu Mar 19 2015 10:11:12 GMT] Success: Message`
 
 To be continued...
