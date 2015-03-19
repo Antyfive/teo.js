@@ -27,7 +27,22 @@ In home directory of your application, just create `config` directory, and place
         "response": false                   // cache response by url
     },
     appDirs: ["models", "controllers"],     // app's directories to read and collect files inside, on system start
-    appFiles: ["app.js"]                    // app's additional files to read and cache on system start
+    appFiles: ["app.js"],                    // app's additional files to read and cache on system start
+    cookie: {
+        keys: ["signed key"]    // default signed key
+    },
+    session: {
+        sessionKeyName: "SID",
+        secret: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
+        lifetime: {
+            session: 60 * 60 * 24 * 10 // in seconds, ten days by default
+        },
+        storageType: "memory" // only memory storage type at the moment
+    },
+    csrf: {
+        keyName: "_csrfToken",
+        secret: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+    }
 ```
 Also, config is allowed to be splitted into development & production modes. Here is example of config for the test application:
 ```javascript
@@ -236,5 +251,35 @@ Will parse it to `req.query` object:
     "myParam2": "2"
 }
 ```
+
+##Middleware
+Middleware is implemented in `express` style.
+Considering, you have `./apps/your_app/app.js` file:
+```javascript
+module.exports = function(client) {
+    // you'll receive app context here
+    this.middleware(function(req, res, next) {
+        // examples of next() usage
+        // next(403); // ends response with code 403
+        // next("Body message"); // ends response with passed message, and 500 code (default)
+        // next(403, "Not authorized"); // ends response with code, and error message
+        // next(); // everything is fine
+    });
+}
+```
+**Attention!** Default status code is set to **500**.
+
+## Logger
+* `success(msg)`
+* `info(msg)`
+* `warn(msg)`
+* `error(msg)`
+* `fatal:(msg)`
+* `log:(msg)`
+
+Each log message type has it's own output color.
+
+`logger.log("Message")` outputs in format:
+`[Thu Mar 19 2015 10:11:12 GMT] Success: Message`
 
 To be continued...
