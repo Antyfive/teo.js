@@ -237,4 +237,21 @@ Will parse it to `req.query` object:
 }
 ```
 
+##middleware
+Middleware is implemented in `express` style.
+Considering, you have `./apps/your_app/app.js` file:
+```javascript
+module.exports = function(client) {
+    // you'll receive app context here
+    this.middleware(function(req, res, next) {
+        // examples of next() usage
+        // next(403); // ends response with code 403
+        // next("Body message"); // ends response with passed message, and 500 code (default)
+        // next(403, "Not authorized"); // ends response with code, and error message
+        // next(); // everything is fine
+    });
+}
+```
+**Attention!** Default status code is set to **500**.
+
 To be continued...
