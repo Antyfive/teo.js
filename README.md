@@ -4,6 +4,8 @@
 [![npm version](https://badge.fury.io/js/teo.js.svg)](http://badge.fury.io/js/teo.js)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/Antyfive/teo.js/master/LICENSE)
 
+[![NPM](https://nodei.co/npm/teo.js.png?downloads=true&stars=true)](https://nodei.co/npm/teo.js/)
+
 Please, meet yet another Node.js based web-framework.
 
 ## Installing the framework
