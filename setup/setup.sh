@@ -11,7 +11,7 @@ mkdir $3/apps/$1/public/js
 mkdir $3/apps/$1/views
 mkdir $3/config
 
-echo "Copying code into the"
+echo "Creating" $1 "app."
 cp $2/app.js $3/app.js
 cp $2/apps/$1/config/config.js $3/apps/$1/config/config.js
 cp $2/config/config.js $3/config/config.js

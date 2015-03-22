@@ -2,7 +2,7 @@
 module.exports = {
     protocol: "http",
     host: "localhost",
-    port: 3100,
+    port: 3000,
     delimiters: '{{ }}',
     compressOutput: false,
     cache: {
