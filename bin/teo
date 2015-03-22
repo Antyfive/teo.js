@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 var program = require("commander");
-var package = require("./../package.json");
-var childProcess = require('child_process');
-var homeDir = process.cwd().replace( /\\/g, '/' );
+var package = require(__dirname + "/../package.json");
+var childProcess = require("child_process");
+var homeDir = process.cwd().replace( /\\/g, "/" );
 var colors = require("colors");
 
 program
@@ -17,7 +17,7 @@ program
         console.log('setup for %s env(s)', env);
 
         if (env === "dev") {
-            childProcess.exec(homeDir + "/install/install.sh " + homeDir,
+            childProcess.exec(__dirname + "/../install/install.sh" + " " + __dirname + "/../install" + " " + homeDir,
                 function(error, stdout, stderr) {
                     stdout && console.log(stdout.green);
                     stderr && console.log(stderr.red);

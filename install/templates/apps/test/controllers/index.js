@@ -4,7 +4,7 @@
  * @date {22.03.14}
  */
 
-exports = module.exports = function( client, db ) {         // TDDO receive db client as third argument
+exports = module.exports = function(client, db) {         // TODO: receive db client as third argument
     console.log( 'Index controller was initialized' );
     // client.addNamespace( '/index', [ '/', '/:id']);      // example of adding namespace to the route
     /**
@@ -44,9 +44,3 @@ exports = module.exports = function( client, db ) {         // TDDO receive db c
     //    res.send(500);
     //});
 };
-/**
- *
- * function(app) {
- *  app.get(/.../)
- * }
- **/
