@@ -5,6 +5,6 @@ node_js:
   - "0.10"
 install:
   - npm install
-before_script: "./bin/teo setup dev"
+before_script: "./bin/teo setup test"
 script:
   - npm test
