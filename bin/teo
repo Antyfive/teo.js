@@ -12,12 +12,12 @@ program
     .description('run setup commands for all envs')
     // .option("-s, --setup_mode [mode]", "Which setup mode to use")
     .action(function(env, options){
-        env = env || 'all';
+        env = env || "all";
 
-        console.log('setup for %s env(s)', env);
+        console.log("setup for %s env(s)", env);
 
-        if (env === "dev") {
-            childProcess.exec(__dirname + "/../setup/setup.sh" + " " + __dirname + "/../setup" + " " + homeDir,
+        if (env === "dev" || env === "test") {
+            childProcess.exec(__dirname + "/../setup/setup.sh" + " " + env + " " + __dirname + "/../setup/templates/" + env + " " + homeDir,
                 function(error, stdout, stderr) {
                     stdout && console.log(stdout.green);
                     stderr && console.log(stderr.red);

@@ -2,5 +2,5 @@
 .idea/
 node_modules/
 coverage*
-/apps/test
-/index.js
+/apps/*
+/app.js

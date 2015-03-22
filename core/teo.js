@@ -52,6 +52,7 @@ var Teo = Base.extend({
      */
     start: function(callback) {
         var callback = typeof callback === 'function' ? callback : function(){};
+        debugger;
         this.core.start(function(app) {
             this.isRunning = true;
             callback(app);
