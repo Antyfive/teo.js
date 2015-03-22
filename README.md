@@ -16,6 +16,16 @@ Please, meet yet another Node.js based web-framework.
 #### Clone git repo
 `git clone https://github.com/Antyfive/teo.js.git`
 
+#### Create test project
+* `mkdir myproject`
+* `cd myproject/`
+* `npm install teo.js` (or alternatevly, `npm install teo.js -g` to setup package globally )
+* `teo setup dev` (will setup, and generate new project)
+
+If `teo` executable is not working, update your PATH variable:
+
+`export PATH="$PATH:./node_modules/.bin"`
+
 # Setup
 #### Config
 So, how to create config, which will be applied to your app?
