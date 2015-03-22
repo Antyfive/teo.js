@@ -2,7 +2,6 @@
  * Application entry point
  * @author Andrew Teologov <teologov.and@gmail.com>
  * @date 11/8/14
- * TODO: implement usage of app.js
  */
 
 /**
