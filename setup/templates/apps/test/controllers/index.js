@@ -1,7 +1,7 @@
-/**
+/*!
  * Index controller
  * @author Andrew Teologov <teologov.and@gmail.com>
- * @date {22.03.14}
+ * @date 3/22/15
  */
 
 exports = module.exports = function(client, db) {         // TODO: receive db client as third argument
