@@ -22,7 +22,9 @@ Please, meet yet another Node.js based web-framework.
 * `npm install teo.js` (or alternatevly, `npm install teo.js -g` to setup package globally )
 * `teo setup dev` (will setup, and generate new project)
 
-If `teo` executable is not working, update your PATH with `export PATH="$PATH:./node_modules/.bin"`. 
+If `teo` executable is not working, update your PATH variable:
+
+`export PATH="$PATH:./node_modules/.bin"`
 
 # Setup
 #### Config
