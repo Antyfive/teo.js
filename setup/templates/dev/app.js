@@ -5,10 +5,10 @@
  */
 
 var Teo = require("teo.js"),
-    app = new Teo({ dirname: __dirname });
+    app = new Teo({dirname: __dirname});
 
-app.on('ready', function() {
-    app.start( function( app ) {
+app.on("ready", function() {
+    app.start(function(err, apps) {
         console.log("Teo.js server has started");
     });
 });

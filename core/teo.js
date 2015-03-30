@@ -40,7 +40,7 @@ var Teo = Base.extend({
         }, function(core) {
             callback && callback.call(this, this);
             process.nextTick(function() {
-                self.emit('ready', self);
+                self.emit("ready", self);
             }.bind(this));
         }.bind(this));
         // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
@@ -52,10 +52,9 @@ var Teo = Base.extend({
      */
     start: function(callback) {
         var callback = typeof callback === 'function' ? callback : function(){};
-        debugger;
-        this.core.start(function(app) {
+        this.core.start(function(err, apps) {
             this.isRunning = true;
-            callback(app);
+            callback(err, apps);
         }.bind(this));
     },
 

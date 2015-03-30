@@ -1,37 +1,62 @@
-/*
-describe('spec', function () {
-	it('should fail', function () {
-		expect(1).to.equal(0);
-	});
-});*/
+/*!
+ * Framework entry point spec
+ * @author Andrew Teologov <teologov.and@gmail.com>
+ * @date 3/31/2015
+ */
+
 /* global define, describe, beforeEach, afterEach, it, assert, sinon  */
-var TeoJS = require('../../core');
 
-describe('Testing Teo.js framework', function() {
-    var app,
-        spy,
-        readyCallback = function(){};
+var TeoJS = require("../../core");
 
-    beforeEach(function(done) {
-        spy = sinon.spy();
-        app = new TeoJS(function(){ spy(); done();});
-    });
+describe("Testing Teo.js Framework", function() {
+    var app, emitSpy;
 
-    afterEach(function() {
-        app = null;
-        spy = null;
-    });
+    describe("Testing Framework Initialization", function() {
 
-    it('Should be function', function() {
-        assert.isTrue(typeof TeoJS === "function", "TeoJS not a function");
-    });
+        beforeEach(function(done) {
+            app = new TeoJS(function(){
+                // emit of "ready" event is called on process.nextTick
+                process.nextTick(function() {
 
-    it('Should be initialised', function() {
-        // assert.equal(spy.args[0][0], "ready", "Framework should fire ready event");
-        assert.equal(spy.calledOnce, true, "Framework should call callback function on initialise");
-    });
+                    emitSpy = sinon.spy(app, "emit");
+                    done();
 
-    it('Should have applications prepared', function() {
-        assert.equal(Object.keys(app.core.getApps()).length > 0, true, "Applications should be prepared");
+                });
+
+            });
+
+        });
+
+        afterEach(function() {
+
+            app = null;
+            emitSpy = null;
+
+        });
+
+        it("Should be a function", function() {
+
+            assert.isTrue(typeof TeoJS === "function", "TeoJS not a function");
+
+        });
+
+        it("Should be initialised", function() {
+
+            process.nextTick(function() {
+
+                assert.equal(emitSpy.args[0][0], "ready", "Framework should fire ready event");
+                assert.deepEqual(emitSpy.args[0][1], app, "Framework instance should be passed as argument");
+                assert.equal(emitSpy.calledOnce, true, "Framework should call callback function on initialise");
+
+            });
+
+        });
+
+        it("Should have applications prepared", function() {
+
+            assert.equal(Object.keys(app.core.getApps()).length > 0, true, "Applications should be prepared");
+
+        });
+
     });
 });

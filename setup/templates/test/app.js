@@ -5,12 +5,12 @@
  * Used to run test app
  */
 
-var Teo = require( './core/teo'),
+var Teo = require("./core/teo"),
     app = new Teo();
 
-app.on('ready', function() {
+app.on("ready", function() {
     console.log("App is ready to start.");
-    app.start(function(app) {
+    app.start(function(err, apps) {
         console.log("Teo.js dev app has started");
     });
 });

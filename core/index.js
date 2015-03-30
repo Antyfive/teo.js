@@ -8,6 +8,6 @@
  * Start point
  * @type {exports}
  */
-var Teo = require( './teo' );
+var Teo = require("./teo");
 module.exports = Teo;
 module.exports.Teo = Teo;
