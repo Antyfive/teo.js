@@ -37,7 +37,7 @@ var Teo = Base.extend({
             dir: this.dir,
             appsDir: this.appsDir,
             confDir: this.confDir
-        }, function(core) {
+        }, function(err, core) {
             callback && callback.call(this, this);
             process.nextTick(function() {
                 self.emit("ready", self);
@@ -48,14 +48,15 @@ var Teo = Base.extend({
 
     /**
      * Start framework
-     * @param callback
+     * @param {String} [name] :: name of the application to run
+     * @param {Function} [callback]
      */
-    start: function(callback) {
-        var callback = typeof callback === 'function' ? callback : function(){};
-        this.core.start(function(err, apps) {
-            this.isRunning = true;
-            callback(err, apps);
-        }.bind(this));
+    start: function(name, callback) {
+        this.core.start.apply(this.core, arguments);
+    },
+
+    stop: function(callback) {
+        this.core.stop(callback);
     },
 
     _parseParams: function(params) {

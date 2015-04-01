@@ -248,13 +248,13 @@ var App = Base.extend({
         dirs.forEach( function( d ) {
             functs.push( function( next ) {
                 fs.readdir( self.dir + '/' + d , function( err, files ) {
-                    if ( err ) {
+                    if (err) {
                         logger.error(err.message);
-                        next( err );
+                        next(err);
                         return;
                     }
-                    if ( !files.length ) {
-                        next( null, true );
+                    if (!files.length) {
+                        next(null, true);
                         return;
                     }
                     var functs = [];
@@ -336,8 +336,12 @@ var App = Base.extend({
     },
     start: function(callback) {
         // ---- ---- ---- ---- ----
-        this.runAppScripts(callback);   // TODO: prepare common object for each app controller
-        this.initServer(true);
+        // this.runAppScripts(callback);   // TODO: prepare common object for each app controller
+        this.runAppScripts(function() {
+            var withListen = true;
+            this.initServer(withListen);
+            this.server.once("listening", callback.bind(this, null, this));
+        }.bind(this));
     },
 
     initServer: function(withListen) {
@@ -348,7 +352,7 @@ var App = Base.extend({
     },
 
     listenServer: function() {
-        this.server && this.server.listen(this.config.get('port'), this.config.get('host'));
+        this.server && this.server.listen(this.config.get("port"), this.config.get("host"));
     },
 
     stop: function(callback) {

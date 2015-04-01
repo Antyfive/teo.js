@@ -14,6 +14,18 @@ describe("Testing Logger", function() {
         consoleLogStub,
         message = "my message";
 
+    before(function() {
+
+        // special case. Restore logger methods for testing themselves
+        logger.info.restore();
+        logger.warn.restore();
+        logger.error.restore();
+        logger.fatal.restore();
+        logger.success.restore();
+        logger.log.restore();
+
+    });
+
     beforeEach(function() {
 
         formatSpy = sinon.spy(util, "format");
@@ -27,6 +39,17 @@ describe("Testing Logger", function() {
 
         formatSpy.restore();
         consoleLogStub.restore();
+
+    });
+
+    after(function() {
+
+        sinon.stub(logger, "info", function() {});
+        sinon.stub(logger, "warn", function() {});
+        sinon.stub(logger, "error", function() {});
+        sinon.stub(logger, "fatal", function() {});
+        sinon.stub(logger, "success", function() {});
+        sinon.stub(logger, "log", function() {});
 
     });
 
@@ -88,8 +111,10 @@ describe("Testing Logger", function() {
     });
 
     it("Should just log message", function() {
+
         logger.log("One", "two");
         assert.equal(formatSpy.args[1][2], "One|two", "Message should be formatted correctly");
+
     });
 
 });

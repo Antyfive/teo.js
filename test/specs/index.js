@@ -30,7 +30,7 @@ describe("Testing Teo.js Framework", function() {
         afterEach(function() {
 
             app = null;
-            emitSpy = null;
+            emitSpy.restore();
 
         });
 
@@ -55,6 +55,30 @@ describe("Testing Teo.js Framework", function() {
         it("Should have applications prepared", function() {
 
             assert.equal(Object.keys(app.core.getApps()).length > 0, true, "Applications should be prepared");
+
+        });
+
+        it("Should start applications", function() {
+
+            var coreStartStub = sinon.stub(app.core, "start", function() {});
+
+            app.start();
+
+            assert.isTrue(coreStartStub.calledOnce, "Core start method should be called");
+
+            coreStartStub.restore();
+
+        });
+
+        it("Should stop applications", function() {
+
+            var coreStopStub = sinon.stub(app.core, "stop", function() {});
+
+            app.stop();
+
+            assert.isTrue(coreStopStub.calledOnce, "Core stop method should be called");
+
+            coreStopStub.restore();
 
         });
 
