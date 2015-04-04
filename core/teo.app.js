@@ -141,15 +141,15 @@ var App = Base.extend({
                 callback();
                 return;
             }
-            if (typeof script !== 'function') {
-                logger.error('Trying to run not a script');
+            if (typeof script !== "function") {
+                logger.error("Trying to run not a script");
                 callback();
                 return;
             }
             var d = domain.create(); // TODO AT: Domains
             var self = this;
-            d.on('error', function(err) {
-                logger.error('Domain error', err.stack);
+            d.on("error", function(err) {
+                logger.error("Domain error", err);
             });
             d.run(function() {
                 script.apply(self, args);

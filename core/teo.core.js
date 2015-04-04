@@ -23,8 +23,8 @@ var Core = Base.extend({
         // mixture first core's app
         this._app = this.mixtureApp({ dir: this.appsDir, confDir: Path.normalize(__dirname + "/../config"), mode: this.mode }); // set flag, that it's core's app
         // this._app.loadConfigSync();     //  (!) load config synchronously TODO: it's not required any more
-        this.prepareApps(function() {
-            callback.call(this, null, this);
+        this.prepareApps(function(err) {
+            callback.call(this, err, this);
         }.bind(this));
     },
 
@@ -32,15 +32,15 @@ var Core = Base.extend({
         return new App(options);
     },
 
-    prepareApps: function( callback ) {
+    prepareApps: function(callback) {
         var self = this;
         fs.readdir(this.appsDir, function(err, apps) {
             if (err) {
                 logger.error(err);
-                callback();
+                callback(err);
                 return;
             }
-            var appsCount = Object.keys( apps ).length,
+            var appsCount = Object.keys(apps).length,
                 cbCount = 0;
 
             for (var k in apps) {
@@ -81,7 +81,7 @@ var Core = Base.extend({
             callback(app);
         });
 
-        application.on("error", function(err){
+        application.on("error", function(err) {
             this.exitHandler({exit: true}, err);
         }.bind(this));
     },
@@ -179,7 +179,7 @@ var Core = Base.extend({
             logger.info("cleanup");
         }
         if (err) {
-            logger.error(err.stack);
+            logger.error(err);
         }
         if (options.exit) {
             logger.info("Closing Teo.js");

@@ -85,6 +85,16 @@ describe("Testing Logger", function() {
 
     });
 
+    it("Should parse error object and log error stack", function() {
+
+        var error = new Error("My error");
+
+        logger.error(error);
+
+        assert.deepEqual(formatSpy.args[0], ["Error: %s", error.stack], "Error message should be formatted correctly");
+
+    });
+
     it("Should log fatal error message", function() {
 
         logger.fatal(message);
