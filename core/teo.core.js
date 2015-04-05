@@ -21,10 +21,17 @@ var Core = Base.extend({
         util.extend(this, params);
         this.bindProcessEvents();
         // mixture first core's app
-        this._app = this.mixtureApp({ dir: this.appsDir, confDir: Path.normalize(__dirname + "/../config"), mode: this.mode }); // set flag, that it's core's app
-        // this._app.loadConfigSync();     //  (!) load config synchronously TODO: it's not required any more
-        this.prepareApps(function(err) {
-            callback.call(this, err, this);
+        this._app = this.mixtureApp({
+            dir: this.appsDir,
+            confDir: Path.normalize(__dirname + "/../config"),
+            mode: this.mode
+        });
+
+        this._app.on("app:ready", function() {
+            this.config = this._app.config;
+            this.prepareApps(function(err) {
+                callback.call(this, err, this);
+            }.bind(this));
         }.bind(this));
     },
 

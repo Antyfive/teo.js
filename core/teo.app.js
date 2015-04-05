@@ -46,8 +46,8 @@ var App = Base.extend({
             // TODO: client instance on every call
             this.client = new Client({app: this});
             // ----
-            process.nextTick(function(){
-                this.emit('app:ready', this);
+            process.nextTick(function() {
+                this.emit("app:ready", this);
                 util.isFunction(callback) ? callback() : null;
             }.bind(this));
         }.bind(this));
