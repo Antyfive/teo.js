@@ -61,12 +61,16 @@ describe("Testing Teo.js Framework", function() {
         it("Should start applications", function() {
 
             var coreStartStub = sinon.stub(app.core, "start", function() {});
-
+            var configStub = sinon.stub(app.core.config, "get");
+            configStub.withArgs("cluster").returns({
+                enabled: false
+            });
             app.start();
 
             assert.isTrue(coreStartStub.calledOnce, "Core start method should be called");
 
             coreStartStub.restore();
+            configStub.restore();
 
         });
 
