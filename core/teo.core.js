@@ -28,7 +28,7 @@ var Core = Base.extend({
             mode: this.mode
         });
 
-        this._app.on("app:ready", function() {
+        this._app.once("app:ready", function() {
             this.config = this._app.config;
 
             if (this.config.get("cluster").enabled) {
