@@ -4,11 +4,17 @@
  * @date 3/22/15
  */
 
+/* global logger */
+
 var Teo = require("teo.js"),
-    app = new Teo({dirname: __dirname});
+    app = new Teo({
+        // pass dirname, in case app will be started by linux daemon, this parameter is required
+        dirname: __dirname
+    });
 
 app.on("ready", function() {
-    app.start(function(err, apps) {
-        console.log("Teo.js server has started");
+    // start particular app
+    app.start("dev", function(err, app) {   // alternatively, to start all apps: app.start(function(err, apps) {})
+        logger.log("Teo.js is running. Host: " + app.config.get("host") + ", port: " + app.config.get("port"));
     });
 });

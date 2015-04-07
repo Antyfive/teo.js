@@ -2,16 +2,18 @@
  * Index
  * @author Andrew Teologov <teologov.and@gmail.com>
  * @date 2/24/15
- * Used to run test app
+ * Is used to run test app
  */
+
+/* global logger */
 
 var Teo = require("./core/teo"),
     app = new Teo();
 
 app.on("ready", function() {
-    console.log("App is ready to start.");
-    app.start(function(err, apps) {
-        console.log("Teo.js dev app has started");
+    // start particular app
+    app.start("test", function(err, app) { // alternatively, to start all apps: app.start(function(err, apps) {})
+        logger.log("Teo.js test is running. Host: " + app.config.get("host") + ", port: " + app.config.get("port"));
     });
 });
 

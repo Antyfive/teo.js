@@ -25,5 +25,8 @@ module.exports = {
     csrf: {
         keyName: "_csrfToken",
         secret: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+    },
+    cluster: {
+        enabled: true
     }
 };
