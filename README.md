@@ -58,6 +58,9 @@ In home directory of your application, just create `config` directory, and place
     csrf: {
         keyName: "_csrfToken",
         secret: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+    },
+    cluster: {  // enable usage of cluster
+        enabled: true
     }
 ```
 Also, config is allowed to be splitted into development & production modes. Here is example of config for the test application:
