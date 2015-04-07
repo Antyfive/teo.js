@@ -7,36 +7,37 @@
 var moment = require("moment");
 var colors = require("colors");
 var util = require("util");
+var cluster = require("cluster");
 
 var logger = module.exports = {
     success: function(message) {
         var message = _parseMessage.apply(this, [].slice.call(arguments));
-        console.log(format(util.format("Success: %s", message)).green);
+        _log(util.format("Success: %s", message).green);
     },
     info: function(message) {
         var message = _parseMessage.apply(this, [].slice.call(arguments));
-        console.log(format(util.format("Info: %s", message)).blue);
+        _log(util.format("Info: %s", message).blue);
     },
     warn: function(message) {
         var message = _parseMessage.apply(this, [].slice.call(arguments));
-        console.log(format(util.format("Warn: %s", message)).yellow);
+        _log(util.format("Warn: %s", message).yellow);
     },
     error: function() {
         try {
             var errors = _parseErrors.apply(this, [].slice.call(arguments));
             var message = _parseMessage.apply(this, errors);
-            console.log(format(util.format("Error: %s", message)).red);
+            _log(util.format("Error: %s", message).red);
         } catch(e) {
             console.error(e.stack);
         }
     },
     fatal: function(message) {
         var message = _parseMessage.apply(this, [].slice.call(arguments));
-        console.log(format(util.format("Fatal Error: %s", message)).red);
+        _log(util.format("Fatal Error: %s", message).red);
     },
     log: function(message) {
         var message = _parseMessage.apply(this, [].slice.call(arguments));
-        console.log(format(util.format("%s", message)));
+        _log(util.format("%s", message));
     }
 };
 
@@ -74,6 +75,29 @@ function _parseMessage(message) {
     return message;
 }
 
-function format(message) {
+function _format(message) {
     return util.format("[%s] %s", moment(), message);
+}
+
+/**
+ * Logs message. Forwards message from child process to master
+ * @param {String} message
+ * @private
+ */
+function _log(message) {
+    if (cluster.isMaster) {
+        // write directly to the log file
+        console.log(_format(message));
+    }
+    else {
+        // send to master
+        cluster.worker.process.send({
+            type: "logging",
+            data: {
+                message: message,
+                workerID: cluster.worker.id,
+                pid: cluster.worker.process.pid
+            }
+        });
+    }
 }

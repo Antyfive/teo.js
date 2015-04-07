@@ -4,12 +4,13 @@
  * @date {13.03.14}
  */
 
-var utils = require('./teo.utils'),
-    Base = require('./teo.base');
+var utils = require("./teo.utils"),
+    Base = require("./teo.base"),
+    Cluster = require("./teo.cluster");
 
 // ----
-global.version = require( '../package.json' ).version;
-global.copyright = 'Powered by Teo.js';
+global.version = require("../package.json").version;
+global.copyright = "Powered by Teo.js";
 global.logger = require("./teo.logger");
 // ----
 /**
@@ -28,7 +29,7 @@ var Teo = Base.extend({
      * @param {Function} [callback]
      */
     initialize: function(params, callback) {
-        var Core = require('./teo.core'),
+        var Core = require("./teo.core"),
             callback = utils.isFunction(callback) ? callback : null,
             self = this;
         this._parseParams(params);
@@ -52,7 +53,15 @@ var Teo = Base.extend({
      * @param {Function} [callback]
      */
     start: function(name, callback) {
-        this.core.start.apply(this.core, arguments);
+        var args = [].slice.call(arguments);
+        if (this.core.config.get("cluster").enabled) {
+            var cluster = new Cluster(function() {
+                this.core.start.apply(this.core, args);
+            }.bind(this));
+        }
+        else {
+            this.core.start.apply(this.core, args);
+        }
     },
 
     stop: function(callback) {

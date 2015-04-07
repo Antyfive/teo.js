@@ -108,7 +108,7 @@ describe("Testing Logger", function() {
         logger.success(message);
 
         assert.equal(formatSpy.args[1][0], "[%s] %s", "Format of final message should be correct");
-        assert.equal(formatSpy.args[1][2], "Success: " + message, "Message should be formatted correctly");
+        assert.equal(formatSpy.args[1][2], "\u001b[32mSuccess: " + message +"\u001b[39m", "Message should be formatted correctly");
 
     });
 
@@ -116,7 +116,7 @@ describe("Testing Logger", function() {
 
         logger.success("One", "two");
 
-        assert.equal(formatSpy.args[1][2], "Success: One|two", "Message should be formatted correctly");
+        assert.equal(formatSpy.args[1][2], "\u001b[32mSuccess: One|two\u001b[39m", "Message should be formatted correctly");
 
     });
 

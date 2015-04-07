@@ -12,7 +12,8 @@ var fs = require("fs"),
     util = require("./teo.utils"),
     Base = require("./teo.base"),
     App = require("./teo.app"),
-    Path = require("path");
+    Path = require("path"),
+    cluster = require("cluster");
 
 var Core = Base.extend({
     apps: {},
@@ -21,10 +22,21 @@ var Core = Base.extend({
         util.extend(this, params);
         this.bindProcessEvents();
         // mixture first core's app
-        this._app = this.mixtureApp({ dir: this.appsDir, confDir: Path.normalize(__dirname + "/../config"), mode: this.mode }); // set flag, that it's core's app
-        // this._app.loadConfigSync();     //  (!) load config synchronously TODO: it's not required any more
-        this.prepareApps(function(err) {
-            callback.call(this, err, this);
+        this._app = this.mixtureApp({
+            dir: this.appsDir,
+            confDir: Path.normalize(__dirname + "/../config"),
+            mode: this.mode
+        });
+
+        this._app.on("app:ready", function() {
+            this.config = this._app.config;
+
+            if (this.config.get("cluster").enabled) {
+                this.setupWorkersLogging();
+            }
+            this.prepareApps(function(err) {
+                callback.call(this, err, this);
+            }.bind(this));
         }.bind(this));
     },
 
@@ -184,6 +196,19 @@ var Core = Base.extend({
         if (options.exit) {
             logger.info("Closing Teo.js");
             process.exit(err ? 1 : 0);
+        }
+    },
+
+    setupWorkersLogging: function() {
+        if (cluster.isMaster) {
+            cluster.on("online", function (worker) {
+                worker.on('message', function (msg) {
+                    if (msg.type === "logging") {
+                        var message = "WorkerID: " + msg.data.workerID + " | " + msg.data.message;
+                        logger.log(message);
+                    }
+                });
+            });
         }
     }
 });
