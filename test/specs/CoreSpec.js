@@ -6,7 +6,7 @@
  */
 /* global define, describe, beforeEach, afterEach, it, assert, sinon, teoBase  */
 // TODO: can add more specific tests of core properties, like core config etc.
-var Core = require(teoBase + '/teo.core');
+var Core = require(teoBase + "/teo.core");
 
 describe('Testing Core', function() {
     var core,
@@ -22,6 +22,7 @@ describe('Testing Core', function() {
 
         // prevent message about memory leak (default max of 10 listeners or use emitter.setMaxListeners instead)
         sinon.stub(process, "on", function() {});
+        sinon.stub(Core.prototype, "setupWorkersLogging", function() {});
 
         core = new Core(params, function() {
             done();
@@ -33,7 +34,8 @@ describe('Testing Core', function() {
 
         core = null;
         process.on.restore();
-
+        Core.prototype.setupWorkersLogging.restore();
+        
     });
 
     it('Should create new core instance', function() {
@@ -97,7 +99,7 @@ describe('Testing Core', function() {
                 assert.isUndefined(err, "Error shouldn't exist");
                 assert.deepEqual(core.apps.test, app[0], "App should be equal");
 
-                core.stop(done)
+                core.stop(done);
 
             });
 
