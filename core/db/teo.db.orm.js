@@ -17,6 +17,7 @@ exports = module.exports = Base.extend({
         this.parseConfig(config);
         this.loadAdapter();
     },
+
     parseConfig: function(config) {
         _.extend(this, {
             adapterPath: "./adapters",
@@ -28,6 +29,7 @@ exports = module.exports = Base.extend({
             }
         }, config);
     },
+
     loadOrm: function() {
         try {
             // require third party ORM
@@ -37,6 +39,7 @@ exports = module.exports = Base.extend({
             throw new Error(e.message);
         }
     },
+
     loadAdapter: function() {
         try {
             this.loadedAdapter = require(this.adapterPath + "/" + this.adapterName);
@@ -45,26 +48,26 @@ exports = module.exports = Base.extend({
             throw new Error(e.message);
         }
     },
-    createAdapter: function() { // TODO:
 
+    createAdapter: function() {
+        this[this.adapterName] = new this.loadedAdapter(_.extend({}, this.adapterConfig, {
+            orm: this.getOrm()
+        }));
     },
-    createOrm: function() { // TODO:
 
+    /**
+     * Orm getter
+     * @returns {*}
+     */
+    getOrm: function() {
+        return this[this.ormName];
     },
-    addCollection: function() { // TODO: load passed objects into orm
-        /*var Pet = Waterline.Collection.extend({
 
-            identity: 'pet',
-            connection: 'myLocalMySql',
-
-            attributes: {
-                name: 'string',
-                breed: 'string'
-            }
-        });
-
-        // Load the Models into the ORM
-        orm.loadCollection(User);
-        orm.loadCollection(Pet);*/
+    /**
+     * Adapter getter
+     * @returns {*}
+     */
+    getAdapter: function() {
+        return this[this.adapterName];
     }
 });
