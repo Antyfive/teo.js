@@ -2,17 +2,16 @@
  * Waterline adapter
  * @author Andrew Teologov <teologov.and@gmail.com>
  * @date 4/8/15
+ * TODO: tests
  */
 
 var Base = require("../../teo.base"),
     _ = require("underscore");
 
 var WaterlineAdapter = Base.extend({
-    collections: [],
-    adapters: [],
-    connections: [],
     initialize: function(config) {
         this.Waterline = config.orm;
+        this.collections = {};
         this.adapters = config.adapters;
         this.connections = config.connections;
 
@@ -31,13 +30,13 @@ var WaterlineAdapter = Base.extend({
 
         // Fold object of collection definitions into an array
         // of extended Waterline collections.
-        this.collections.push(this.Waterline.Collection.extend(collection));
+        this.collections[collection.identity] = this.Waterline.Collection.extend(collection);
     },
 
     /**
      * Prepare adapters
      */
-    prepareAdapters: function() {
+    prepareAdapters: function() {   // TODO:
         _(this.adapters).each(function (def, identity) {
             // Make sure our adapter defs have `identity` properties
             def.identity = def.identity || identity;
@@ -48,8 +47,8 @@ var WaterlineAdapter = Base.extend({
      * Loads collections into orm
      */
     loadCollections: function() {
-        this.collections.forEach(function (collection) {
-            this.waterline.loadCollection(collection);
+        Object.keys(this.collections).forEach(function (name) {
+            this.waterline.loadCollection(this.collections[name]);
         }.bind(this));
     },
 

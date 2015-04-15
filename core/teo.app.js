@@ -37,8 +37,10 @@ var App = Base.extend({
 
         this.cache = new AppCache();
         this._middleware = new Middleware();
-        async.series([
-            this.loadConfig.bind(this), this.collectAppFiles.bind(this)
+        async.series(options.coreApp ?
+                [this.loadConfig.bind(this)] :
+                    [
+                        this.loadConfig.bind(this), this.collectAppFiles.bind(this), this.initOrm.bind(this)
         ], function() {
             util.extend(this.config, {});
             // ----
@@ -143,7 +145,7 @@ var App = Base.extend({
             }
             if (typeof script !== "function") {
                 logger.error("Trying to run not a script");
-                callback();
+                callback(err, script);
                 return;
             }
             var d = domain.create(); // TODO AT: Domains
@@ -155,6 +157,35 @@ var App = Base.extend({
                 script.apply(self, args);
                 callback();
             });
+        }.bind(this));
+    },
+
+    /**
+     * Runs model script
+     * @param {String} fileName
+     * @param {Function} callback
+     * TODO: tests
+     */
+    runModel: function(fileName, callback) {
+        this.getScript(fileName, function(err, collection) {
+            if (err) {
+                logger.error(err.message);
+                callback(err, collection);
+                return;
+            }
+            if (!(collection instanceof Object)) {
+                logger.error("Trying to run not an object as model");
+                callback(err, collection);
+                return;
+            }
+            var d = domain.create();
+            d.on("error", function(err) {
+                logger.error("Domain error", err);
+            });
+            d.run(function() {
+                this.orm.getAdapter().addCollection(collection);
+                callback();
+            }.bind(this));
         }.bind(this));
     },
 
@@ -254,35 +285,35 @@ var App = Base.extend({
                         return;
                     }
                     if (!files.length) {
-                        next(null, true);
+                        next(null);
                         return;
                     }
                     var functs = [];
-                    files.forEach( function( f ) {      // TODO: new series here (!)
-                        !function( f ) {
-                            functs.push( function( next ) {
+                    files.forEach(function(f) {      // TODO: new series here (!)
+                        !function(f) {
+                            functs.push( function(next) {
                                 var item = self.dir + '/' + d + '/' + f;
-                                fs.lstat( item, function( err, stat ) {
-                                    if ( err ) {
-                                        next( err );
+                                fs.lstat(item, function(err, stat) {
+                                    if (err) {
+                                        next(err);
                                         return;
                                     }
-                                    if ( !stat.isFile()) {
-                                        next( 'Not a file was found!' );
+                                    if (!stat.isFile()) {
+                                        next("Not a file was found!");
                                     }
-                                    self.getScript( item, function( err, context ) {
-                                        if ( err ) {
-                                            next( err );
+                                    self.getScript(item, function(err, context) {
+                                        if (err) {
+                                            next(err);
                                             return;
                                         }
-                                        self.cache.add( item, context );   // TODO: refactor
-                                        next( null, item );
+                                        self.cache.add(item, context);   // TODO: refactor
+                                        next(null, item);
                                     });
                                 });
                             });
-                        }.bind( this )( f );
-                    }.bind( this ));
-                    async.series( functs, next );
+                        }.bind(this)(f);
+                    }.bind(this));
+                    async.series(functs, next);
                     // TODO AT: create controller script & inspect models
                 }.bind( this ));
             });
@@ -317,6 +348,26 @@ var App = Base.extend({
 
         async.series(functs, callback);
     },
+
+    /**
+     * Creates new ORM instance
+     * @param callback
+     */
+    initOrm: function(callback) {
+        var Orm,
+            // TODO: all orms should be moved to separate packages after plugin system
+            ormName = "./db/orm/teo.db.orm." + this.config.get("db").ormName;
+
+        try {
+            Orm = require(ormName);
+            this.orm = new Orm(this.config.get("db"));
+            callback(null);
+        } catch(e) {
+            logger.error(e);
+            throw new Error(e.message);
+        }
+    },
+
     /**
      * Run previously loaded scripts
      * @param {Function} callback
@@ -327,20 +378,46 @@ var App = Base.extend({
             cbCount = 0;
 
         for (var i = 0; i < l; i++) {
-            this.runScript(scripts[ i ], [this.client.routes], function() { // pass app, and client APIs as arguments
-                if (++cbCount >= l && callback) {
-                    callback();
-                }
-            });
+            if (scripts[i].match(/controllers/)) {
+                this.runScript(scripts[i], [this.client.routes], function () { // pass app, and client APIs as arguments
+                    if (++cbCount >= l && callback) {   // TODO: get rid of this
+                        callback();
+                    }
+                });
+            }
+            else if (scripts[i].match(/models/)) {
+                this.runModel(scripts[i], function() {
+                    if (++cbCount >= l && callback) { // TODO: get rid of this
+                        callback();
+                    }
+                });
+            }
+            else { // TODO: do allow execute other scripts?
+                this.runScript(scripts[i], [this.client.routes], function () { // pass app, and client APIs as arguments
+                    if (++cbCount >= l && callback) {   // TODO: get rid of this
+                        callback();
+                    }
+                });
+            }
         }
     },
+
     start: function(callback) {
         // ---- ---- ---- ---- ----
         // this.runAppScripts(callback);   // TODO: prepare common object for each app controller
         this.runAppScripts(function() {
             var withListen = true;
-            this.initServer(withListen);
-            this.server.once("listening", callback.bind(this, null, this));
+            this.orm.getAdapter().connect(function(err, models) {
+                debugger;
+                if (err) {
+                    throw err;
+                }
+
+                this.orm.models = models.collections;
+                this.orm.connections = models.connections;
+                this.initServer(withListen);
+                this.server.once("listening", callback.bind(this, null, this));
+            }.bind(this));
         }.bind(this));
     },
 

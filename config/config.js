@@ -27,7 +27,7 @@ module.exports = {
         secret: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
     },
     cluster: {
-        enabled: true
+        enabled: false
     },
     db: {
         // as default adapter. it should check "./appName/db/adapters", if not found in framework

@@ -25,7 +25,8 @@ var Core = Base.extend({
         this._app = this.mixtureApp({
             dir: this.appsDir,
             confDir: Path.normalize(__dirname + "/../config"),
-            mode: this.mode
+            mode: this.mode,
+            coreApp: true
         });
 
         this._app.once("app:ready", function() {

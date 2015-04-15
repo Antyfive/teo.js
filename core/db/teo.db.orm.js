@@ -4,7 +4,7 @@
  * @date 4/13/15
  */
 
-var Base = require("../../teo.base"),
+var Base = require("../teo.base"),
     _ = require("underscore");
 
 /**
@@ -15,7 +15,14 @@ var Base = require("../../teo.base"),
 exports = module.exports = Base.extend({
     initialize: function(config) {
         this.parseConfig(config);
+        this.loadOrm();
         this.loadAdapter();
+        try {
+            this.createAdapter();
+        } catch(e) {
+            debugger;
+            logger.error(e);
+        }
     },
 
     parseConfig: function(config) {
@@ -23,11 +30,12 @@ exports = module.exports = Base.extend({
             adapterPath: "./adapters",
             ormName: config.ormName,
             adapterConfig: {
-                adapters: config.adapterConfig.adapters,
+                adapters: this.loadAdapterDependencies(config.adapterConfig.adapters),
                 // Setup connections using the named adapter configs
                 connections: config.adapterConfig.connections
-            }
-        }, config);
+            },
+            adapterName: config.adapterName
+        });
     },
 
     loadOrm: function() {
@@ -69,5 +77,16 @@ exports = module.exports = Base.extend({
      */
     getAdapter: function() {
         return this[this.adapterName];
+    },
+    loadAdapterDependencies: function(adapters) {
+        var result = {};
+
+        _.each(adapters, function(adapter, k) {
+            // TODO:
+            // require third party dependencies
+            result[k] = require(adapter);
+        });
+
+        return result;
     }
 });
