@@ -407,9 +407,9 @@ var App = Base.extend({
         // this.runAppScripts(callback);   // TODO: prepare common object for each app controller
         this.runAppScripts(function() {
             var withListen = true;
-            this.orm.getAdapter().connect(function(err, models) {
-                debugger;
+            this.orm.getAdapter().connect(function(err, models) {   // TODO: connect via orm: orm.connect();
                 if (err) {
+                    callback(err);
                     throw err;
                 }
 
