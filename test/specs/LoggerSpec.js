@@ -17,12 +17,12 @@ describe("Testing Logger", function() {
     before(function() {
 
         // special case. Restore logger methods for testing themselves
-        logger.info.restore();
-        logger.warn.restore();
-        logger.error.restore();
-        logger.fatal.restore();
-        logger.success.restore();
-        logger.log.restore();
+        //logger.info.restore();
+        //logger.warn.restore();
+        //logger.error.restore();
+        //logger.fatal.restore();
+        //logger.success.restore();
+        //logger.log.restore();
 
     });
 
@@ -44,12 +44,12 @@ describe("Testing Logger", function() {
 
     after(function() {
 
-        sinon.stub(logger, "info", function() {});
-        sinon.stub(logger, "warn", function() {});
-        sinon.stub(logger, "error", function() {});
-        sinon.stub(logger, "fatal", function() {});
-        sinon.stub(logger, "success", function() {});
-        sinon.stub(logger, "log", function() {});
+        //sinon.stub(logger, "info", function() {});
+        //sinon.stub(logger, "warn", function() {});
+        //sinon.stub(logger, "error", function() {});
+        //sinon.stub(logger, "fatal", function() {});
+        //sinon.stub(logger, "success", function() {});
+        //sinon.stub(logger, "log", function() {});
 
     });
 
