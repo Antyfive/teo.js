@@ -9,7 +9,6 @@
 var fs = require('fs'),
     domain = require('domain'),
     renderer = require('hogan.js'),
-    Compressor = require('./teo.compressor'),
     async = require('async'),
     util = require('./teo.utils'),
     Base = require('./teo.base'),
@@ -24,7 +23,6 @@ var fs = require('fs'),
  * @constructor
  */
 var App = Base.extend({
-    compressor: null,
     cache: null,
     initialize: function(options, callback) {
         util.extend(this, {
@@ -37,14 +35,8 @@ var App = Base.extend({
 
         this.cache = new AppCache();
         this._middleware = new Middleware();
-        async.series(options.coreApp ?
-                [this.loadConfig.bind(this)] :
-                    [
-                        this.loadConfig.bind(this), this.collectAppFiles.bind(this), this.initOrm.bind(this)
-        ], function() {
-            util.extend(this.config, {});
-            // ----
-            this.compressor = new Compressor();
+
+        this.initApp(options, function() {
             // TODO: client instance on every call
             this.client = new Client({app: this});
             // ----
@@ -53,6 +45,24 @@ var App = Base.extend({
                 util.isFunction(callback) ? callback() : null;
             }.bind(this));
         }.bind(this));
+    },
+
+    /**
+     * Run required initialize methods
+     * @param {Object} options
+     * @param {Function} callback
+     */
+    initApp: function(options, callback) {
+        var functs = [];
+
+        functs.push(this.loadConfig.bind(this));
+
+        if (!options.coreApp) {
+            functs.push(this.collectAppFiles.bind(this));
+            functs.push(this.initOrm.bind(this));
+        }
+
+        async.series(functs, callback);
     },
     /**
      * Config loader
@@ -314,7 +324,6 @@ var App = Base.extend({
                         }.bind(this)(f);
                     }.bind(this));
                     async.series(functs, next);
-                    // TODO AT: create controller script & inspect models
                 }.bind( this ));
             });
         });
@@ -354,10 +363,13 @@ var App = Base.extend({
      * @param callback
      */
     initOrm: function(callback) {
+        if (!this.config.get("db").enabled) {
+            callback();
+            return;
+        }
         var Orm,
             // TODO: all orms should be moved to separate packages after plugin system
             ormName = "./db/orm/teo.db.orm." + this.config.get("db").ormName;
-
         try {
             Orm = require(ormName);
             this.orm = new Orm(this.config.get("db"));
@@ -369,55 +381,60 @@ var App = Base.extend({
     },
 
     /**
-     * Run previously loaded scripts
+     * Run previously loaded app's scripts
      * @param {Function} callback
      */
     runAppScripts: function(callback) {
-        var scripts = Object.keys(this.cache.get('*')),
-            l = scripts.length,
-            cbCount = 0;
+        var scripts = Object.keys(this.cache.get("*")),
+            functs;
 
-        for (var i = 0; i < l; i++) {
-            if (scripts[i].match(/controllers/)) {
-                this.runScript(scripts[i], [this.client.routes], function () { // pass app, and client APIs as arguments
-                    if (++cbCount >= l && callback) {   // TODO: get rid of this
-                        callback();
+        functs = util.map(scripts, function(scriptPath) {
+            return async.apply(function(script, next) {
+                if (script.match(/\/controllers\//)) {
+                    this.runScript(script, [this.client.routes], next); // pass app, and client APIs as arguments
+
+                }
+                else if (script.match(/\/models\//)) {
+                    if (this.config.get("db").enabled) {
+                        this.runModel(script, next);
                     }
-                });
-            }
-            else if (scripts[i].match(/models/)) {
-                this.runModel(scripts[i], function() {
-                    if (++cbCount >= l && callback) { // TODO: get rid of this
-                        callback();
+                    else {  // continue chain
+                        next();
                     }
-                });
-            }
-            else { // TODO: do allow execute other scripts?
-                this.runScript(scripts[i], [this.client.routes], function () { // pass app, and client APIs as arguments
-                    if (++cbCount >= l && callback) {   // TODO: get rid of this
-                        callback();
-                    }
-                });
-            }
-        }
+                }
+                else { // TODO: do allow execute other scripts?
+                    this.runScript(script, [this.client.routes], next); // pass app, and client APIs as arguments
+                }
+            }.bind(this), scriptPath);
+        }.bind(this));
+
+        async.series(functs, callback);
     },
 
     start: function(callback) {
         // ---- ---- ---- ---- ----
-        // this.runAppScripts(callback);   // TODO: prepare common object for each app controller
-        this.runAppScripts(function() {
+        // TODO: prepare common object for each app controller
+        this.runAppScripts(function(err, res) {
             var withListen = true;
-            this.orm.getAdapter().connect(function(err, models) {   // TODO: connect via orm: orm.connect();
-                if (err) {
-                    callback(err);
-                    throw err;
-                }
+            // with usage of db
+            if ((this.config.get("db").enabled === true) && this.orm) {
+                this.orm.getAdapter().connect(function(err, models) {   // TODO: connect via orm: orm.connect();
+                    if (err) {
+                        callback(err);
+                        throw err;
+                    }
 
-                this.orm.models = models.collections;
-                this.orm.connections = models.connections;
+                    this.orm.models = models.collections;
+                    this.orm.connections = models.connections;
+
+                    this.initServer(withListen);
+                    this.server.once("listening", callback.bind(this, null, this));
+                }.bind(this));
+            }
+            else {
                 this.initServer(withListen);
                 this.server.once("listening", callback.bind(this, null, this));
-            }.bind(this));
+            }
         }.bind(this));
     },
 

@@ -20,6 +20,7 @@ var Base = require("./teo.base"),
     Csrf = require("./teo.client.session.csrf"),
     streamer = require("./teo.client.streamer"),
     Cookie = require("./teo.client.cookie"),
+    Compressor = require('./teo.compressor'),
     querystring = require("querystring");
 
 // ---- mime types additional settings
@@ -37,8 +38,9 @@ function Client(opts) {
     this.session = new Session({
         config: opts.app.config.get("session")
     });
+    this.compressor = new Compressor();
 
-    this.Factory = Base.extend(utils.extend(this.routes, {session: this.session}, {
+    this.Factory = Base.extend(utils.extend(this.routes, {session: this.session, compressor: this.compressor}, {
         app: opts.app,
         // routes: this.routes,
         initialize: function(opts) {
@@ -176,7 +178,7 @@ function Client(opts) {
                                     return;
                                 }
                                 if (this.app.config.get('compressOutput'))
-                                    output = this.app.compressor.compressHTML(output);    // TODO: refactor usage of compressor
+                                    output = this.compressor.compressHTML(output);    // TODO: refactor usage of compressor
                                 if (Object.keys(this.req.params).length === 0 && this.app.config.get("cache").response === true) {       // TODO AT: make caching for routes with changeable params           // TODO AT: make caching for routes with changeable params
                                     this.app.cache.add(this.route.path, output);
                                 }

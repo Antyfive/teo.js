@@ -30,6 +30,7 @@ module.exports = {
         enabled: false
     },
     db: {
+        enabled: true,
         // as default adapter. it should check "./appName/db/adapters", if not found in framework
         // all adapters should be placed into separate modules, when plugin (extension system) will be presented
         // basic algorithm should work before extension system will be finished
