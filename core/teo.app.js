@@ -360,7 +360,7 @@ var App = Base.extend({
 
     /**
      * Creates new ORM instance
-     * @param callback
+     * @param {Function} callback
      */
     initOrm: function(callback) {
         if (!this.config.get("db").enabled) {
@@ -380,6 +380,14 @@ var App = Base.extend({
         }
     },
 
+    _runAppScripts: function() {
+        async.auto({
+            runModels: function() {
+
+            }
+        })
+    },
+
     /**
      * Run previously loaded app's scripts
      * @param {Function} callback
@@ -391,19 +399,19 @@ var App = Base.extend({
         functs = util.map(scripts, function(scriptPath) {
             return async.apply(function(script, next) {
                 if (script.match(/\/controllers\//)) {
-                    this.runScript(script, [this.client.routes], next); // pass app, and client APIs as arguments
+                    this.runScript(script, [this.client.routes, this.orm], next); // pass app, and client APIs as arguments
 
                 }
-                else if (script.match(/\/models\//)) {
-                    if (this.config.get("db").enabled) {
-                        this.runModel(script, next);
-                    }
-                    else {  // continue chain
+                else if (script.match(/\/models\//)) {      // TODO: improve
+                    //if (this.config.get("db").enabled) {
+                    //    this.runModel(script, next);
+                    //}
+                    //else {  // continue chain
                         next();
-                    }
+                    //}
                 }
                 else { // TODO: do allow execute other scripts?
-                    this.runScript(script, [this.client.routes], next); // pass app, and client APIs as arguments
+                    this.runScript(script, [this.client.routes, this.orm], next); // pass app, and client APIs as arguments
                 }
             }.bind(this), scriptPath);
         }.bind(this));
@@ -411,31 +419,55 @@ var App = Base.extend({
         async.series(functs, callback);
     },
 
+    /**
+     * Collects app models
+     * @param {Function} callback
+     */
+    collectAppModels: function(callback) {
+        var scripts = Object.keys(this.cache.get("*"));
+        var functs = [];
+
+        util.each(scripts, function(scriptPath) {
+            if (scriptPath.match(/\/models\//))
+            functs.push(async.apply(function(script, next) {
+                    this.runModel(script, next);
+            }.bind(this), scriptPath));
+        }.bind(this));
+
+        async.series(functs, callback);
+    },
+
     start: function(callback) {
-        // ---- ---- ---- ---- ----
         // TODO: prepare common object for each app controller
-        this.runAppScripts(function(err, res) {
-            var withListen = true;
-            // with usage of db
-            if ((this.config.get("db").enabled === true) && this.orm) {
-                this.orm.getAdapter().connect(function(err, models) {   // TODO: connect via orm: orm.connect();
+        var functs = [];
+        if ((this.config.get("db").enabled === true) && this.orm) {
+            // run models
+            functs.push(this.collectAppModels.bind(this), function(next) {
+                this.orm.connect(function(err) {
                     if (err) {
-                        callback(err);
+                        next(err);
                         throw err;
                     }
-
-                    this.orm.models = models.collections;
-                    this.orm.connections = models.connections;
-
-                    this.initServer(withListen);
-                    this.server.once("listening", callback.bind(this, null, this));
+                    else {
+                        next();
+                    }
                 }.bind(this));
-            }
-            else {
+            }.bind(this))
+        }
+        functs.push.apply(functs, [
+            async.apply(this.runAppScripts.bind(this)),
+            async.apply(function(next) {
+                var withListen = true;
                 this.initServer(withListen);
-                this.server.once("listening", callback.bind(this, null, this));
-            }
-        }.bind(this));
+                this.server.once("listening", next.bind(this, null, this));
+            }.bind(this))
+        ]);
+
+        async.series(functs, callback);
+    },
+
+    runDbScripts: function() {
+
     },
 
     initServer: function(withListen) {

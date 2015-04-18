@@ -20,7 +20,6 @@ exports = module.exports = Base.extend({
         try {
             this.createAdapter();
         } catch(e) {
-            debugger;
             logger.error(e);
         }
     },
@@ -78,6 +77,7 @@ exports = module.exports = Base.extend({
     getAdapter: function() {
         return this[this.adapterName];
     },
+
     loadAdapterDependencies: function(adapters) {
         var result = {};
 
@@ -88,5 +88,40 @@ exports = module.exports = Base.extend({
         });
 
         return result;
+    },
+
+    /**
+     * Connects DB
+     * @param {Function} callback
+     */
+    connect: function(callback) {
+        this.getAdapter().connect(function(err, models) {
+            if (err) {
+                logger.error(err);
+            }
+            else {
+                this.collections = models.collections;
+                this.connections = models.connections;
+                logger.success("DB is connected!");
+            }
+            callback(err);
+        }.bind(this));
+    },
+
+    /**
+     * Returns collections list
+     * @returns {collections|*|Array}
+     */
+    collections: function() {
+        return this.collections;
+    },
+
+    /**
+     * Returns collection with passed name
+     * @param {String} name
+     * @returns {*}
+     */
+    collection: function(name) {
+        return this.collections[name];
     }
 });
