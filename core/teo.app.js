@@ -220,6 +220,7 @@ var App = Base.extend({
             return app.config[ app.mode ] && app.config[ app.mode ][key] || app.config[key];
         };
     },
+
     /**
      * Serve of static files
      * @param {String} path :: path to static
@@ -253,6 +254,7 @@ var App = Base.extend({
             });
         }
     },
+
     /**
      * Simple renderer
      * @param {String} templateName
@@ -275,6 +277,7 @@ var App = Base.extend({
             callback( null, output );
         }.bind( this ));
     },
+
     /**
      * Read all scripts, cache them and prepare to further execution
      * Currently only controllers are used
@@ -368,7 +371,7 @@ var App = Base.extend({
             return;
         }
         var Orm,
-            // TODO: all orms should be moved to separate packages after plugin system
+        // TODO: all ORMs should be moved to separate packages after plugin system will be implemented
             ormName = "./db/orm/teo.db.orm." + this.config.get("db").ormName;
         try {
             Orm = require(ormName);
@@ -390,18 +393,13 @@ var App = Base.extend({
             functs;
 
         functs = util.map(scripts, function(scriptPath) {
+            //  TODO: should dynamically check with config for allowed directories or files (appDirs, appFiles) to run
             return async.apply(function(script, next) {
                 if (script.match(/\/controllers\//)) {
                     this.runScript(script, [this.client.routes, this.orm], next); // pass app, and client APIs as arguments
-
                 }
-                else if (script.match(/\/models\//)) {      // TODO: improve
-                    //if (this.config.get("db").enabled) {
-                    //    this.runModel(script, next);
-                    //}
-                    //else {  // continue chain
-                        next();
-                    //}
+                else if (script.match(/\/models\//)) {
+                    this.runModel(script, next);
                 }
                 else { // TODO: do allow execute other scripts?
                     this.runScript(script, [this.client.routes, this.orm], next); // pass app, and client APIs as arguments
@@ -413,53 +411,29 @@ var App = Base.extend({
     },
 
     /**
-     * Collects app models
+     * Start app server
      * @param {Function} callback
      */
-    collectAppModels: function(callback) {
-        var scripts = Object.keys(this.cache.get("*"));
-        var functs = [];
-
-        util.each(scripts, function(scriptPath) {
-            if (scriptPath.match(/\/models\//))
-            functs.push(async.apply(function(script, next) {
-                    this.runModel(script, next);
-            }.bind(this), scriptPath));
-        }.bind(this));
-
-        async.series(functs, callback);
-    },
-
     start: function(callback) {
         var functs = [];
-        if ((this.config.get("db").enabled === true) && this.orm) {
-            // run models
-            functs.push(this.collectAppModels.bind(this), function(next) {
-                this.orm.connect(function(err) {
-                    if (err) {
-                        logger.error(err);
-                        next(err);
-                        throw err;
-                    }
-                    else {
-                        next();
-                    }
-                }.bind(this));
-            }.bind(this))
-        }
 
-        functs.push.apply(functs, [
+        functs.push(
+            async.apply(this._connectOrm.bind(this)),
             async.apply(this.runAppScripts.bind(this)),
             async.apply(function(next) {
                 var withListen = true;
                 this.initServer(withListen);
                 this.server.once("listening", next.bind(this, null, this));
             }.bind(this))
-        ]);
+        );
 
         async.series(functs, callback);
     },
 
+    /**
+     * Inits server
+     * @param {Boolean} withListen :: immediately listen to server
+     */
     initServer: function(withListen) {
         this.server = http.createServer(this.getDispatcher());
         if (withListen) {
@@ -471,6 +445,11 @@ var App = Base.extend({
         this.server && this.server.listen(this.config.get("port"), this.config.get("host"));
     },
 
+    /**
+     * Stops server
+     * @param {Function} callback
+     * TODO: disconnect DB
+     */
     stop: function(callback) {
         var config = this.config;
         if (this.server) {
@@ -489,10 +468,27 @@ var App = Base.extend({
         }
     },
 
+    /**
+     * Dispatcher getter
+     * @returns {*|function(this:App)}
+     */
     getDispatcher: function() {
         return this._createContext();
     },
 
+    /**
+     * Middleware wrapper
+     * @param {Function} func
+     */
+    middleware: function(func) {
+        this._middleware.add(func);
+    },
+
+    /**
+     * Creates new context for handling requests
+     * @returns {function(this:App)}
+     * @private
+     */
     _createContext: function() {
         return function(req, res) {
             var client = new this.client.Factory({req: req, res: res});
@@ -508,11 +504,25 @@ var App = Base.extend({
     },
 
     /**
-     * Middleware wrapper
-     * @param {Function} func
+     * Connects created earlier ORM
+     * @param {Function} callback
+     * @private
      */
-    middleware: function(func) {
-        this._middleware.add(func);
+    _connectOrm: function(callback) {
+        if (!(this.config.get("db").enabled === true) || !this.orm) {
+            callback();
+            return;
+        }
+        this.orm.connect(function (err) {
+            if (err) {
+                logger.error(err);
+                callback(err);
+                throw err;
+            }
+            else {
+                callback();
+            }
+        }.bind(this));
     }
 });
 
