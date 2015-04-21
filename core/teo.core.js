@@ -203,7 +203,7 @@ var Core = Base.extend({
     setupWorkersLogging: function() {
         if (cluster.isMaster) {
             cluster.on("online", function (worker) {
-                worker.on('message', function (msg) {
+                worker.on("message", function (msg) {
                     if (msg.type === "logging") {
                         var message = "WorkerID: " + msg.data.workerID + " | " + msg.data.message;
                         logger.log(message);

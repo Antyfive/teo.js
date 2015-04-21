@@ -373,19 +373,12 @@ var App = Base.extend({
         try {
             Orm = require(ormName);
             this.orm = new Orm(this.config.get("db"));
-            callback(null);
+            callback();
         } catch(e) {
             logger.error(e);
-            throw new Error(e.message);
+            callback(e);
+            throw e;
         }
-    },
-
-    _runAppScripts: function() {
-        async.auto({
-            runModels: function() {
-
-            }
-        })
     },
 
     /**
@@ -438,13 +431,13 @@ var App = Base.extend({
     },
 
     start: function(callback) {
-        // TODO: prepare common object for each app controller
         var functs = [];
         if ((this.config.get("db").enabled === true) && this.orm) {
             // run models
             functs.push(this.collectAppModels.bind(this), function(next) {
                 this.orm.connect(function(err) {
                     if (err) {
+                        logger.error(err);
                         next(err);
                         throw err;
                     }
@@ -454,6 +447,7 @@ var App = Base.extend({
                 }.bind(this));
             }.bind(this))
         }
+
         functs.push.apply(functs, [
             async.apply(this.runAppScripts.bind(this)),
             async.apply(function(next) {
@@ -464,10 +458,6 @@ var App = Base.extend({
         ]);
 
         async.series(functs, callback);
-    },
-
-    runDbScripts: function() {
-
     },
 
     initServer: function(withListen) {

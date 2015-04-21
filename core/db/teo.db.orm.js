@@ -82,7 +82,6 @@ exports = module.exports = Base.extend({
         var result = {};
 
         _.each(adapters, function(adapter, k) {
-            // TODO:
             // require third party dependencies
             result[k] = require(adapter);
         });
