@@ -177,6 +177,11 @@ var App = Base.extend({
      * TODO: tests
      */
     runModel: function(fileName, callback) {
+        if (!this._canUseDb()) {
+            logger.warn("Cannot run model " + fileName + ", as DB usage is disabled in config, or ORM wasn't initialized properly.");
+            callback();
+            return;
+        }
         this.getScript(fileName, function(err, collection) {
             if (err) {
                 logger.error(err.message);
@@ -509,7 +514,7 @@ var App = Base.extend({
      * @private
      */
     _connectOrm: function(callback) {
-        if (!(this.config.get("db").enabled === true) || !this.orm) {
+        if (!this._canUseDb()) {
             callback();
             return;
         }
@@ -523,6 +528,9 @@ var App = Base.extend({
                 callback();
             }
         }.bind(this));
+    },
+    _canUseDb: function() {
+        return (this.config.get("db").enabled === true) && this.orm;
     }
 });
 
