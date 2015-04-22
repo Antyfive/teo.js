@@ -15,6 +15,7 @@ var fs = require('fs'),
     Client = require( './teo.client'),
     AppCache = require('./teo.app.cache'),
     Middleware = require("./teo.middleware"),
+    Db = require("./db/teo.db"),
     http = require("http");
 
 /**
@@ -59,11 +60,12 @@ var App = Base.extend({
 
         if (!options.coreApp) {
             functs.push(this.collectAppFiles.bind(this));
-            functs.push(this.initOrm.bind(this));
+            functs.push(this.initDb.bind(this));
         }
 
         async.series(functs, callback);
     },
+
     /**
      * Config loader
      * @param {Function} callback
@@ -198,7 +200,7 @@ var App = Base.extend({
                 logger.error("Domain error", err);
             });
             d.run(function() {
-                this.orm.getAdapter().addCollection(collection);
+                this.db.getOrm().getAdapter().addCollection(collection);
                 callback();
             }.bind(this));
         }.bind(this));
@@ -367,25 +369,17 @@ var App = Base.extend({
     },
 
     /**
-     * Creates new ORM instance
-     * @param {Function} callback
+     * Init database
+     * @param callback
      */
-    initOrm: function(callback) {
-        if (!this.config.get("db").enabled) {
-            callback();
-            return;
-        }
-        var Orm,
-        // TODO: all ORMs should be moved to separate packages after plugin system will be implemented
-            ormName = "./db/orm/teo.db.orm." + this.config.get("db").ormName;
+    initDb: function(callback) {
         try {
-            Orm = require(ormName);
-            this.orm = new Orm(this.config.get("db"));
+            this.db = new Db(this.config.get("db"));
             callback();
-        } catch(e) {
-            logger.error(e);
-            callback(e);
-            throw e;
+        } catch (err) {
+            logger.error(err);
+            callback(err);
+            throw err;
         }
     },
 
@@ -401,13 +395,14 @@ var App = Base.extend({
             //  TODO: should dynamically check with config for allowed directories or files (appDirs, appFiles) to run
             return async.apply(function(script, next) {
                 if (script.match(/\/controllers\//)) {
-                    this.runScript(script, [this.client.routes, this.orm], next); // pass app, and client APIs as arguments
+                    this.runScript(script, [this.client.routes, this.db.getOrm()], next); // pass app, and client APIs as arguments
                 }
                 else if (script.match(/\/models\//)) {
                     this.runModel(script, next);
                 }
                 else { // TODO: do allow execute other scripts?
-                    this.runScript(script, [this.client.routes, this.orm], next); // pass app, and client APIs as arguments
+                    debugger;
+                    this.runScript(script, [this.client.routes, this.db.getOrm()], next); // pass app, and client APIs as arguments
                 }
             }.bind(this), scriptPath);
         }.bind(this));
@@ -446,6 +441,9 @@ var App = Base.extend({
         }
     },
 
+    /**
+     * Start listening of server
+     */
     listenServer: function() {
         this.server && this.server.listen(this.config.get("port"), this.config.get("host"));
     },
@@ -461,7 +459,7 @@ var App = Base.extend({
             try {
                 this.server._connections = 0;
                 this.server.close(function () {
-                    logger.info('Connection closed, port: ' + config.get('port') + ' host: ' + config.get('host'));
+                    logger.info("Connection closed, port: " + config.get("port") + " host: " + config.get("host"));
                     callback && callback();
                 });
             } catch (e) {
@@ -518,7 +516,7 @@ var App = Base.extend({
             callback();
             return;
         }
-        this.orm.connect(function (err) {
+        this.db.connect(function (err) {
             if (err) {
                 logger.error(err);
                 callback(err);
@@ -529,8 +527,14 @@ var App = Base.extend({
             }
         }.bind(this));
     },
+
+    /**
+     * Check if DB can be used
+     * @returns {boolean}
+     * @private
+     */
     _canUseDb: function() {
-        return (this.config.get("db").enabled === true) && this.orm;
+        return (this.config.get("db").enabled === true) && this.db;
     }
 });
 
