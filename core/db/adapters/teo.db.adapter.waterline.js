@@ -59,6 +59,10 @@ var WaterlineAdapter = Base.extend({
             adapters: this.adapters,
             connections: this.connections
         }, callback);
+    },
+
+    disconnect: function(callback) {
+        this.waterline.teardown(callback);
     }
 });
 

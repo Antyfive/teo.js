@@ -401,7 +401,6 @@ var App = Base.extend({
                     this.runModel(script, next);
                 }
                 else { // TODO: do allow execute other scripts?
-                    debugger;
                     this.runScript(script, [this.client.routes, this.db.getOrm()], next); // pass app, and client APIs as arguments
                 }
             }.bind(this), scriptPath);

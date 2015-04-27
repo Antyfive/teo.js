@@ -20,10 +20,10 @@ module.exports = Base.extend({
             // parse adapter config
             adapterConfig: {
                 // adapters
-                adapters: _.extend({}, config.adapters),
+                adapters: _.extend({}, config.adapterConfig.adapters),
                 // Connections Config
                 // Setup connections using the named adapter configs
-                connections: _.extend({}, config.connections)
+                connections: _.extend({}, config.adapterConfig.connections)
             }
         });
 
@@ -74,5 +74,13 @@ module.exports = Base.extend({
      */
     connect: function(callback) {
         this.getOrm().connect(callback);
+    },
+
+    /**
+     * Disconnect db
+     * @param callback
+     */
+    disconnect: function(callback) {
+        this.getOrm().disconnect(callback);
     }
 });

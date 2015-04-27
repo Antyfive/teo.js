@@ -122,5 +122,9 @@ exports = module.exports = Base.extend({
      */
     collection: function(name) {
         return this.collections[name];
+    },
+
+    disconnect: function(callback) {
+        this.getAdapter().disconnect();
     }
 });
