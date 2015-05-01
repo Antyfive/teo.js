@@ -4,7 +4,7 @@
  * @date 4/13/15
  */
 
-var Base = require("../teo.base"),
+var Base = require("../../teo.base"),
     _ = require("underscore");
 
 /**
@@ -26,7 +26,7 @@ exports = module.exports = Base.extend({
 
     parseConfig: function(config) {
         _.extend(this, {
-            adapterPath: "./adapters",
+            adapterPath: "../adapters",
             ormName: config.ormName,
             adapterConfig: {
                 adapters: this.loadAdapterDependencies(config.adapterConfig.adapters),

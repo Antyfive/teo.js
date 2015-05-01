@@ -4,7 +4,7 @@
  * @date 4/13/15
  */
 
-var Orm = require("../teo.db.orm");
+var Orm = require("./teo.db.orm");
 
 var WaterlineOrm = Orm.extend({
     initialize: function(config) {
