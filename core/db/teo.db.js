@@ -9,10 +9,21 @@ var Base = require("../teo.base"),
 
 module.exports = Base.extend({
     initialize: function(config) {
-        _.extend(this, {
-            ormPath: "./orm",
-            ormPrefix: "teo.db.orm."
-        }, {
+        this._parseConfig(config);
+        // if usage of db is enabled
+        if (this.enabled) {
+            try {
+                this._loadOrm();
+                this._createOrm();
+            } catch(e) {
+                logger.error(e);
+                throw new Error(e.message);
+            }
+        }
+    },
+
+    _parseConfig: function(config) {
+        var config = {
             enabled: config.enabled,
             ormName: config.ormName,
             // teo.js orm adapter
@@ -25,13 +36,14 @@ module.exports = Base.extend({
                 // Setup connections using the named adapter configs
                 connections: _.extend({}, config.adapterConfig.connections)
             }
-        });
+        };
 
-        // if usage of db is enabled
-        if (this.enabled) {
-            this._loadOrm();
-            this._createOrm();
-        }
+        _.extend(this, {
+            ormPath: "./orm",
+            ormPrefix: "teo.db.orm."
+        }, config);
+
+        return config;
     },
 
     /**
@@ -39,13 +51,8 @@ module.exports = Base.extend({
      * @private
      */
     _loadOrm: function() {
-        try {
-            // TODO: all ORMs should be moved to separate packages after plugin system will be implemented
-            this[this.ormName] = require(this.ormPath + "/" + this.ormPrefix + this.ormName.toLowerCase());
-        } catch(e) {
-            logger.error(e);
-            throw e;
-        }
+        // TODO: all ORMs should be moved to separate packages after plugin system will be implemented
+        this[this.ormName] = require(this.ormPath + "/" + this.ormPrefix + this.ormName.toLowerCase());
     },
 
     /**

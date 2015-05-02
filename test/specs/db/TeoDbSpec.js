@@ -139,4 +139,40 @@ describe("Testing Db Client", function() {
 
     });
 
+    it("Should connect DB", function() {
+
+        loadOrmStub.restore();
+        createOrmStub.restore();
+
+        db._loadOrm();
+        db._createOrm();
+
+        var connectStub = sinon.stub(db.getOrm(), "connect", function() {});
+
+        db.connect();
+
+        assert.isTrue(connectStub.calledOnce, "Connect method should be called");
+
+        connectStub.restore();
+
+    });
+
+    it("Should connect DB", function() {
+
+        loadOrmStub.restore();
+        createOrmStub.restore();
+
+        db._loadOrm();
+        db._createOrm();
+
+        var disconnectStub = sinon.stub(db.getOrm(), "disconnect", function() {});
+
+        db.disconnect();
+
+        assert.isTrue(disconnectStub.calledOnce, "Disconnect method should be called");
+
+        disconnectStub.restore();
+
+    });
+
 });

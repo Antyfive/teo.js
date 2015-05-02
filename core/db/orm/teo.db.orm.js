@@ -14,18 +14,19 @@ var Base = require("../../teo.base"),
  */
 exports = module.exports = Base.extend({
     initialize: function(config) {
-        this.parseConfig(config);
-        this.loadOrm();
-        this.loadAdapter();
         try {
+            this.parseConfig(config);
+            this.loadOrm();
+            this.loadAdapter();
             this.createAdapter();
         } catch(e) {
             logger.error(e);
+            throw new Error(e.message);
         }
     },
 
     parseConfig: function(config) {
-        _.extend(this, {
+        var config = {
             adapterPath: "../adapters",
             ormName: config.ormName,
             adapterConfig: {
@@ -34,26 +35,20 @@ exports = module.exports = Base.extend({
                 connections: config.adapterConfig.connections
             },
             adapterName: config.adapterName
-        });
+        };
+
+        _.extend(this, config);
+
+        return config;
     },
 
     loadOrm: function() {
-        try {
-            // require third party ORM
-            this[this.ormName] = require(this.ormName);
-        } catch(e) {
-            logger.error(e.message, e.stack);
-            throw new Error(e.message);
-        }
+        // require third party ORM
+        this[this.ormName] = require(this.ormName);
     },
 
     loadAdapter: function() {
-        try {
-            this.loadedAdapter = require(this.adapterPath + "/" + this.adapterName);
-        } catch(e) {
-            logger.error(e.message, e.stack);
-            throw new Error(e.message);
-        }
+        this.loadedAdapter = require(this.adapterPath + "/" + this.adapterName);
     },
 
     createAdapter: function() {
@@ -97,13 +92,14 @@ exports = module.exports = Base.extend({
         this.getAdapter().connect(function(err, models) {
             if (err) {
                 logger.error(err);
+                throw new Error(err.message);
             }
             else {
-                this.collections = models.collections;
-                this.connections = models.connections;
+                this._collections = models.collections;
+                this._connections = models.connections;
                 logger.success("DB is connected!");
             }
-            callback(err);
+            callback();
         }.bind(this));
     },
 
@@ -112,7 +108,7 @@ exports = module.exports = Base.extend({
      * @returns {collections|*|Array}
      */
     collections: function() {
-        return this.collections;
+        return this._collections;
     },
 
     /**
@@ -121,10 +117,19 @@ exports = module.exports = Base.extend({
      * @returns {*}
      */
     collection: function(name) {
-        return this.collections[name];
+        return this._collections[name];
     },
 
+    /**
+     * Disconnect DB
+     * @param {Function} callback
+     */
     disconnect: function(callback) {
-        this.getAdapter().disconnect();
+        this.getAdapter().disconnect(function(err) {
+            if (err) {
+                logger.error(err);
+            }
+            callback(err);
+        });
     }
 });
