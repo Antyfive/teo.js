@@ -300,8 +300,70 @@ Will parse it to `req.query` object:
     "myParam2": "2"
 }
 ```
+## Database
+Config example:
 
-##Middleware
+```javascript
+db: {
+        enabled: true,
+        ormName: "waterline",
+        // teo.js orm adapter
+        adapterName: "teo.db.adapter.waterline",
+        // Build adapter config
+        adapterConfig: {
+            // each teo.js ORM can have each own adapters related to the particular third party ORM
+            adapters: {
+                // adapters should be installed as packages via npm
+                "default": "sails-disk",
+                disk: "sails-disk",
+                mysql: "sails-mysql"
+            },
+            // Connections Config
+            // Setup connections using the named adapter configs
+            connections: {
+                myLocalDisk: {
+                    adapter: "disk"
+                },
+                myLocalMySql: {
+                    adapter: "mysql",
+                    host: "localhost",
+                    database: "foobar"
+                }
+            }
+        }
+    }
+```
+Scheme how ORM works:
+`DB client -> ORM wrapper for particular external ORM -> Teo.js ORM Adapter`
+All DB-related work is done by framework in background. Models will be loaded, and DB will be connected on Application start.
+
+Db client is available in every controller, and in your app.js  (Considering, you have `./apps/your_app/app.js` file).
+
+### Example of controller with usage of db
+```javascript
+// model (./apps/your_app/models/users.js)
+module.exports = {
+    identity: 'users',
+    connection: 'myLocalDisk',
+
+    attributes: {
+        first_name: 'string',
+        last_name: 'string'
+    }
+};
+// controller (./apps/your_app/controllers/users.js) 
+module.exports = function(client, db) { // client, and db
+    client.get('/users', function(req, res) {
+        db.collection("users").find().exec(function(err, models) {
+            if (err) {
+                return res.send(500, err.message);
+            }
+            res.send(models.toJSON());
+        });
+    });
+}
+```
+## Middleware
 Middleware is implemented in `express` style.
 Considering, you have `./apps/your_app/app.js` file:
 ```javascript
