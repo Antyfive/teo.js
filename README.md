@@ -337,6 +337,8 @@ Scheme how ORM works:
 `DB client -> ORM wrapper for particular external ORM -> Teo.js ORM Adapter`
 All DB-related work is done by framework in background. Models will be loaded, and DB will be connected on Application start.
 
+The only thing you need, is to manually **install** external ORM, and adapters.
+
 Db client is available in every controller, and in your app.js  (Considering, you have `./apps/your_app/app.js` file).
 
 ### Example of controller with usage of db
@@ -353,7 +355,7 @@ module.exports = {
 };
 // controller (./apps/your_app/controllers/users.js) 
 module.exports = function(client, db) { // client, and db
-    client.get('/users', function(req, res) {
+    client.get("/users", function(req, res) {
         db.collection("users").find().exec(function(err, models) {
             if (err) {
                 return res.send(500, err.message);
@@ -363,6 +365,7 @@ module.exports = function(client, db) { // client, and db
     });
 }
 ```
+As for now, the fist ORM wrapper, and adapter is implemented for **Waterline**
 ## Middleware
 Middleware is implemented in `express` style.
 Considering, you have `./apps/your_app/app.js` file:
