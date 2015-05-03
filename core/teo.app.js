@@ -56,11 +56,14 @@ var App = Base.extend({
     initApp: function(options, callback) {
         var functs = [];
 
+        // TODO: load config before collectAppFiles & initDb
         functs.push(this.loadConfig.bind(this));
 
         if (!options.coreApp) {
             functs.push(this.collectAppFiles.bind(this));
-            functs.push(this.initDb.bind(this));
+            if (this.config.get("db").enabled === true) {
+                functs.push(this.initDb.bind(this));
+            }
         }
 
         async.series(functs, callback);
@@ -339,30 +342,30 @@ var App = Base.extend({
         });
 
         files.forEach(function(file) {
-                functs.push(function(next) {
-                    !function(file) {
-                        var file = self.dir + "/" + file;
-                        fs.lstat(file, function(err, stat) {
+            functs.push(function(next) {
+                !function(file) {
+                    var file = self.dir + "/" + file;
+                    fs.lstat(file, function(err, stat) {
+                        if (err) {
+                            logger.error(err);
+                            next(null, err);
+                            return;
+                        }
+                        if (!stat.isFile()) {
+                            logger.error('Error: not a file was found!');
+                            next(null);
+                        }
+                        self.getScript(file, function(err, context) {
                             if (err) {
-                                logger.error(err);
-                                next(null, err);
+                                next(err);
                                 return;
                             }
-                            if (!stat.isFile()) {
-                                logger.error('Error: not a file was found!');
-                                next(null);
-                            }
-                            self.getScript(file, function(err, context) {
-                                if (err) {
-                                    next(err);
-                                    return;
-                                }
-                                self.cache.add(file, context);
-                                next(null, file);
-                            });
+                            self.cache.add(file, context);
+                            next(null, file);
                         });
-                    }(file);
-                }.bind(this));
+                    });
+                }(file);
+            }.bind(this));
         });
 
         async.series(functs, callback);
@@ -395,13 +398,13 @@ var App = Base.extend({
             //  TODO: should dynamically check with config for allowed directories or files (appDirs, appFiles) to run
             return async.apply(function(script, next) {
                 if (script.match(/\/controllers\//)) {
-                    this.runScript(script, [this.client.routes, this.db.getOrm()], next); // pass app, and client APIs as arguments
+                    this.runScript(script, [this.client.routes, this._canUseDb() && this.db.getOrm()], next); // pass app, and client APIs as arguments
                 }
                 else if (script.match(/\/models\//)) {
                     this.runModel(script, next);
                 }
                 else { // TODO: do allow execute other scripts?
-                    this.runScript(script, [this.client.routes, this.db.getOrm()], next); // pass app, and client APIs as arguments
+                    this.runScript(script, [this.client.routes, this._canUseDb() && this.db.getOrm()], next); // pass app, and client APIs as arguments
                 }
             }.bind(this), scriptPath);
         }.bind(this));
