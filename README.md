@@ -61,6 +61,36 @@ In home directory of your application, just create `config` directory, and place
     },
     cluster: {  // enable usage of cluster
         enabled: true
+    },
+    db: {   // DB config
+        enabled: false,
+        // name of external ORM module
+        ormName: "waterline",
+        // teo.js ORM adapter
+        // currently, all adapters are placed inside framework
+        adapterName: "teo.db.adapter.waterline",
+        // Build adapter config
+        adapterConfig: {
+            // each teo.js ORM can have each own adapters related to the particular third party ORM
+            adapters: {
+                // adapters should be installed as packages via npm
+                "default": "sails-disk",
+                disk: "sails-disk",
+                mysql: "sails-mysql"
+            },
+            // Connections Config
+            // Setup connections using the named adapter configs
+            connections: {
+                myLocalDisk: {
+                    adapter: "disk"
+                },
+                myLocalMySql: {
+                    adapter: "mysql",
+                    host: "localhost",
+                    database: "foobar"
+                }
+            }
+        }
     }
 ```
 Also, config is allowed to be splitted into development & production modes. Here is example of config for the test application:
