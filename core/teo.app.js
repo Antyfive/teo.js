@@ -401,13 +401,13 @@ var App = Base.extend({
             //  TODO: should dynamically check with config for allowed directories or files (appDirs, appFiles) to run
             return async.apply(function(script, next) {
                 if (script.match(/\/controllers\//)) {
-                    this.runScript(script, [this.client.routes, this._canUseDb() && this.db.getOrm()], next); // pass app, and client APIs as arguments
+                    this.runScript(script, [this.client.routes, (this._canUseDb() && this.db.getOrm() || undefined)], next); // pass app, and client APIs as arguments
                 }
                 else if (script.match(/\/models\//)) {
                     this.runModel(script, next);
                 }
                 else { // TODO: do allow execute other scripts?
-                    this.runScript(script, [this.client.routes, this._canUseDb() && this.db.getOrm()], next); // pass app, and client APIs as arguments
+                    this.runScript(script, [this.client.routes, (this._canUseDb() && this.db.getOrm() || undefined)], next); // pass app, and client APIs as arguments
                 }
             }.bind(this), scriptPath);
         }.bind(this));
@@ -423,8 +423,9 @@ var App = Base.extend({
         var functs = [];
 
         functs.push(
-            async.apply(this._connectOrm.bind(this)),
+            // scripts should be run before db is connected (as models should be collected as well)
             async.apply(this.runAppScripts.bind(this)),
+            async.apply(this._connectOrm.bind(this)),
             async.apply(function(next) {
                 var withListen = true;
                 this.initServer(withListen);
