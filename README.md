@@ -365,7 +365,28 @@ module.exports = function(client, db) { // client, and db
     });
 }
 ```
-As for now, the fist ORM wrapper, and adapter is implemented for **Waterline**
+As for now, the fist ORM wrapper, and adapter is implemented for **Waterline**.
+
+## Main API methods of DB client
+
+#### db.collection
+##### (stringName)
+Getter of collection by it's name.
+
+#### db.collections
+##### ()
+Getter of all loaded collections hash.
+
+#### db.connect
+##### (callbackFn)
+
+Connect to DB.
+
+#### db.disconnect
+##### (callbackFn)
+
+Disconnect from DB.
+
 ## Middleware
 Middleware is implemented in `express` style.
 Considering, you have `./apps/your_app/app.js` file:
