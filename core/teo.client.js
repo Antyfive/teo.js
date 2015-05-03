@@ -191,14 +191,15 @@ function Client(opts) {
 
             this.res.json = function(obj) {
                 this.res.setHeader('Content-Type', 'application/json');
-                this.res.send(obj);
+                this.res.send(200, obj, "json");
             }.bind(this);
 
 
             /**
              * Expects one or two arguments, if one argument is passed, then it's going to be a response body
-             * res.end(body)
-             * res.end(500, 'errMsg')
+             * res.send(body)
+             * res.send(500, 'errMsg')
+             * res.send(200, body, "json") -- to set force header
              */
             this.res.send = function() {
                 var args = [].slice.call(arguments);
@@ -206,7 +207,7 @@ function Client(opts) {
                 var body;
 
                 var extension = helper.getExtension(this.pathname);
-                var contentType = mime.lookup(extension || this.req.headers.accept || "html") ;
+                var contentType = mime.lookup(args[2] || extension || this.req.headers.accept || "html") ;
 
                 if (args.length === 1) {
                     code = +args[0];

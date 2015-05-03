@@ -428,6 +428,21 @@ describe("Testing App HTTP", function() {
                         });
                 });
 
+                it("Should send json with set Content-Type in a force way", function(done) {
+
+                    app.client.routes.get("/test/seven", function(req, res) {
+                        res.send(200, {one: "two"}, "json");
+                    });
+                    agent
+                        .get('/test/seven')
+                        .set('Accept', 'text/html')
+                        .send({_csrfToken: token, myField: true})
+                        .expect('Content-Type', /json/)
+                        .expect(200, {"code":200,"data": {one: "two"},"message":"OK"})
+                        .end(done);
+
+                });
+
             });
 
         });
