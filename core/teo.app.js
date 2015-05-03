@@ -54,19 +54,22 @@ var App = Base.extend({
      * @param {Function} callback
      */
     initApp: function(options, callback) {
-        var functs = [];
+        var queue = {
+            "_loadConfig": this.loadConfig.bind(this),
+            "_collectAppFiles": ["_loadConfig", function(callback, config) {
+                this.collectAppFiles(callback);
+            }.bind(this)],
+            "_initDb": ["_collectAppFiles", function(callback) {
+                if (this.config.get("db").enabled === true) {
+                    this.initDb(callback);
+                }
+                else {
+                    callback();
+                }
+            }.bind(this)]
+        };
 
-        // TODO: load config before collectAppFiles & initDb
-        functs.push(this.loadConfig.bind(this));
-
-        if (!options.coreApp) {
-            functs.push(this.collectAppFiles.bind(this));
-            if (this.config.get("db").enabled === true) {
-                functs.push(this.initDb.bind(this));
-            }
-        }
-
-        async.series(functs, callback);
+        async.auto(queue, callback);
     },
 
     /**
