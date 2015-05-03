@@ -39,7 +39,7 @@ module.exports = {
         adapterName: "teo.db.adapter.waterline",
         // Build adapter config
         adapterConfig: {
-            // each teo.js ORM adapter can have each own adapters related to the particular third party ORM
+            // each teo.js ORM can have each own adapters related to the particular third party ORM
             adapters: {
                 // adapters should be installed as packages via npm
                 "default": "sails-disk",
