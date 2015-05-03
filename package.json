@@ -1,7 +1,7 @@
 {
   "name": "teo.js",
   "description": "Teo.js is Node.js based web-framework",
-  "version": "0.2.13",
+  "version": "0.2.23",
   "author": {
     "name": "Andrew Teologov",
     "email": "teologov.and@gmail.com"
@@ -57,7 +57,10 @@
     "mocha": "~1.20.1",
     "chai": "~1.9.1",
     "supertest": "~0.14.0",
-    "semver": "~4.1.0"
+    "semver": "~4.1.0",
+    "waterline": "0.10.x",
+    "sails-disk": "0.10.x",
+    "sails-mysql": "0.10.x"
   },
   "repository": {
     "type": "git",

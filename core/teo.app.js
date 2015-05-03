@@ -9,13 +9,13 @@
 var fs = require('fs'),
     domain = require('domain'),
     renderer = require('hogan.js'),
-    Compressor = require('./teo.compressor'),
     async = require('async'),
     util = require('./teo.utils'),
     Base = require('./teo.base'),
     Client = require( './teo.client'),
     AppCache = require('./teo.app.cache'),
     Middleware = require("./teo.middleware"),
+    Db = require("./db/teo.db"),
     http = require("http");
 
 /**
@@ -24,7 +24,6 @@ var fs = require('fs'),
  * @constructor
  */
 var App = Base.extend({
-    compressor: null,
     cache: null,
     initialize: function(options, callback) {
         util.extend(this, {
@@ -37,12 +36,8 @@ var App = Base.extend({
 
         this.cache = new AppCache();
         this._middleware = new Middleware();
-        async.series([
-            this.loadConfig.bind(this), this.collectAppFiles.bind(this)
-        ], function() {
-            util.extend(this.config, {});
-            // ----
-            this.compressor = new Compressor();
+
+        this.initApp(options, function() {
             // TODO: client instance on every call
             this.client = new Client({app: this});
             // ----
@@ -52,6 +47,25 @@ var App = Base.extend({
             }.bind(this));
         }.bind(this));
     },
+
+    /**
+     * Run required initialize methods
+     * @param {Object} options
+     * @param {Function} callback
+     */
+    initApp: function(options, callback) {
+        var functs = [];
+
+        functs.push(this.loadConfig.bind(this));
+
+        if (!options.coreApp) {
+            functs.push(this.collectAppFiles.bind(this));
+            functs.push(this.initDb.bind(this));
+        }
+
+        async.series(functs, callback);
+    },
+
     /**
      * Config loader
      * @param {Function} callback
@@ -143,7 +157,7 @@ var App = Base.extend({
             }
             if (typeof script !== "function") {
                 logger.error("Trying to run not a script");
-                callback();
+                callback(err, script);
                 return;
             }
             var d = domain.create(); // TODO AT: Domains
@@ -155,6 +169,40 @@ var App = Base.extend({
                 script.apply(self, args);
                 callback();
             });
+        }.bind(this));
+    },
+
+    /**
+     * Runs model script
+     * @param {String} fileName
+     * @param {Function} callback
+     * TODO: tests
+     */
+    runModel: function(fileName, callback) {
+        if (!this._canUseDb()) {
+            logger.warn("Cannot run model " + fileName + ", as DB usage is disabled in config, or ORM wasn't initialized properly.");
+            callback();
+            return;
+        }
+        this.getScript(fileName, function(err, collection) {
+            if (err) {
+                logger.error(err.message);
+                callback(err, collection);
+                return;
+            }
+            if (!(collection instanceof Object)) {
+                logger.error("Trying to run not an object as model");
+                callback(err, collection);
+                return;
+            }
+            var d = domain.create();
+            d.on("error", function(err) {
+                logger.error("Domain error", err);
+            });
+            d.run(function() {
+                this.db.getOrm().getAdapter().addCollection(collection);
+                callback();
+            }.bind(this));
         }.bind(this));
     },
 
@@ -179,6 +227,7 @@ var App = Base.extend({
             return app.config[ app.mode ] && app.config[ app.mode ][key] || app.config[key];
         };
     },
+
     /**
      * Serve of static files
      * @param {String} path :: path to static
@@ -212,6 +261,7 @@ var App = Base.extend({
             });
         }
     },
+
     /**
      * Simple renderer
      * @param {String} templateName
@@ -234,6 +284,7 @@ var App = Base.extend({
             callback( null, output );
         }.bind( this ));
     },
+
     /**
      * Read all scripts, cache them and prepare to further execution
      * Currently only controllers are used
@@ -254,36 +305,35 @@ var App = Base.extend({
                         return;
                     }
                     if (!files.length) {
-                        next(null, true);
+                        next(null);
                         return;
                     }
                     var functs = [];
-                    files.forEach( function( f ) {      // TODO: new series here (!)
-                        !function( f ) {
-                            functs.push( function( next ) {
+                    files.forEach(function(f) {      // TODO: new series here (!)
+                        !function(f) {
+                            functs.push( function(next) {
                                 var item = self.dir + '/' + d + '/' + f;
-                                fs.lstat( item, function( err, stat ) {
-                                    if ( err ) {
-                                        next( err );
+                                fs.lstat(item, function(err, stat) {
+                                    if (err) {
+                                        next(err);
                                         return;
                                     }
-                                    if ( !stat.isFile()) {
-                                        next( 'Not a file was found!' );
+                                    if (!stat.isFile()) {
+                                        next("Not a file was found!");
                                     }
-                                    self.getScript( item, function( err, context ) {
-                                        if ( err ) {
-                                            next( err );
+                                    self.getScript(item, function(err, context) {
+                                        if (err) {
+                                            next(err);
                                             return;
                                         }
-                                        self.cache.add( item, context );   // TODO: refactor
-                                        next( null, item );
+                                        self.cache.add(item, context);   // TODO: refactor
+                                        next(null, item);
                                     });
                                 });
                             });
-                        }.bind( this )( f );
-                    }.bind( this ));
-                    async.series( functs, next );
-                    // TODO AT: create controller script & inspect models
+                        }.bind(this)(f);
+                    }.bind(this));
+                    async.series(functs, next);
                 }.bind( this ));
             });
         });
@@ -317,33 +367,72 @@ var App = Base.extend({
 
         async.series(functs, callback);
     },
+
     /**
-     * Run previously loaded scripts
+     * Init database
+     * @param callback
+     */
+    initDb: function(callback) {
+        try {
+            this.db = new Db(this.config.get("db"));
+            callback();
+        } catch (err) {
+            logger.error(err);
+            callback(err);
+            throw err;
+        }
+    },
+
+    /**
+     * Run previously loaded app's scripts
      * @param {Function} callback
      */
     runAppScripts: function(callback) {
-        var scripts = Object.keys(this.cache.get('*')),
-            l = scripts.length,
-            cbCount = 0;
+        var scripts = Object.keys(this.cache.get("*")),
+            functs;
 
-        for (var i = 0; i < l; i++) {
-            this.runScript(scripts[ i ], [this.client.routes], function() { // pass app, and client APIs as arguments
-                if (++cbCount >= l && callback) {
-                    callback();
+        functs = util.map(scripts, function(scriptPath) {
+            //  TODO: should dynamically check with config for allowed directories or files (appDirs, appFiles) to run
+            return async.apply(function(script, next) {
+                if (script.match(/\/controllers\//)) {
+                    this.runScript(script, [this.client.routes, this.db.getOrm()], next); // pass app, and client APIs as arguments
                 }
-            });
-        }
-    },
-    start: function(callback) {
-        // ---- ---- ---- ---- ----
-        // this.runAppScripts(callback);   // TODO: prepare common object for each app controller
-        this.runAppScripts(function() {
-            var withListen = true;
-            this.initServer(withListen);
-            this.server.once("listening", callback.bind(this, null, this));
+                else if (script.match(/\/models\//)) {
+                    this.runModel(script, next);
+                }
+                else { // TODO: do allow execute other scripts?
+                    this.runScript(script, [this.client.routes, this.db.getOrm()], next); // pass app, and client APIs as arguments
+                }
+            }.bind(this), scriptPath);
         }.bind(this));
+
+        async.series(functs, callback);
     },
 
+    /**
+     * Start app server
+     * @param {Function} callback
+     */
+    start: function(callback) {
+        var functs = [];
+
+        functs.push(
+            async.apply(this._connectOrm.bind(this)),
+            async.apply(this.runAppScripts.bind(this)),
+            async.apply(function(next) {
+                var withListen = true;
+                this.initServer(withListen);
+                this.server.once("listening", next.bind(this, null, this));
+            }.bind(this))
+        );
+
+        async.series(functs, callback);
+    },
+
+    /**
+     * Inits server
+     * @param {Boolean} withListen :: immediately listen to server
+     */
     initServer: function(withListen) {
         this.server = http.createServer(this.getDispatcher());
         if (withListen) {
@@ -351,17 +440,25 @@ var App = Base.extend({
         }
     },
 
+    /**
+     * Start listening of server
+     */
     listenServer: function() {
         this.server && this.server.listen(this.config.get("port"), this.config.get("host"));
     },
 
+    /**
+     * Stops server
+     * @param {Function} callback
+     * TODO: disconnect DB
+     */
     stop: function(callback) {
         var config = this.config;
         if (this.server) {
             try {
                 this.server._connections = 0;
                 this.server.close(function () {
-                    logger.info('Connection closed, port: ' + config.get('port') + ' host: ' + config.get('host'));
+                    logger.info("Connection closed, port: " + config.get("port") + " host: " + config.get("host"));
                     callback && callback();
                 });
             } catch (e) {
@@ -373,10 +470,27 @@ var App = Base.extend({
         }
     },
 
+    /**
+     * Dispatcher getter
+     * @returns {*|function(this:App)}
+     */
     getDispatcher: function() {
         return this._createContext();
     },
 
+    /**
+     * Middleware wrapper
+     * @param {Function} func
+     */
+    middleware: function(func) {
+        this._middleware.add(func);
+    },
+
+    /**
+     * Creates new context for handling requests
+     * @returns {function(this:App)}
+     * @private
+     */
     _createContext: function() {
         return function(req, res) {
             var client = new this.client.Factory({req: req, res: res});
@@ -392,11 +506,34 @@ var App = Base.extend({
     },
 
     /**
-     * Middleware wrapper
-     * @param {Function} func
+     * Connects created earlier ORM
+     * @param {Function} callback
+     * @private
      */
-    middleware: function(func) {
-        this._middleware.add(func);
+    _connectOrm: function(callback) {
+        if (!this._canUseDb()) {
+            callback();
+            return;
+        }
+        this.db.connect(function (err) {
+            if (err) {
+                logger.error(err);
+                callback(err);
+                throw err;
+            }
+            else {
+                callback();
+            }
+        }.bind(this));
+    },
+
+    /**
+     * Check if DB can be used
+     * @returns {boolean}
+     * @private
+     */
+    _canUseDb: function() {
+        return (this.config.get("db").enabled === true) && this.db;
     }
 });
 
