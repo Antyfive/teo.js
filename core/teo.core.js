@@ -35,7 +35,7 @@ var Core = Base.extend({
             if (this.config.get("cluster").enabled) {
                 this.setupWorkersLogging();
             }
-            this.prepareApps(function(err) {
+            this.loadApps(function(err) {
                 callback.call(this, err, this);
             }.bind(this));
         }.bind(this));
@@ -45,35 +45,37 @@ var Core = Base.extend({
         return new App(options);
     },
 
-    prepareApps: function(callback) {
-        var self = this;
-        fs.readdir(this.appsDir, function(err, apps) {
+    /**
+     * Load apps
+     * @param {Function }callback
+     */
+    loadApps: function(callback) {
+        var self = this,
+            appsDir = this.appsDir;
+
+        fs.readdir(appsDir, function(err, apps) {
             if (err) {
                 logger.error(err);
                 callback(err);
                 return;
             }
-            var appsCount = Object.keys(apps).length,
-                cbCount = 0;
 
-            for (var k in apps) {
-                var app = apps[k],
-                    appDir = this.appsDir + "/" + app,
-                    stat = fs.lstatSync(appDir);
+            var functs = util.map(apps, function(appName) {
+                return async.apply(function(app, next) {
+                    var appDir = appsDir + "/" + app,
+                        stat = fs.lstatSync(appDir);
 
-                if (stat.isDirectory()) {
-                    self.registerApp(app, function() {
-                        if (++cbCount >= appsCount && callback) {
-                            callback();
-                        }
-                    });
-                }
-                else if (++cbCount >= appsCount && callback) {
-                    callback();
-                    return;
-                }
-            }
-        }.bind(this));
+                    if (stat.isDirectory()) {
+                        self.registerApp(app, next);
+                    }
+                    else {
+                        next();
+                    }
+                }, appName);
+            });
+
+            async.series(functs, callback);
+        });
     },
 
     registerApp: function(appName, callback) {

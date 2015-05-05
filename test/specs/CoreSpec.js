@@ -52,7 +52,7 @@ describe('Testing Core', function() {
 
     it('Should prepare available apps', function(done) {
 
-        core.prepareApps(function() {
+        core.loadApps(function() {
             assert.equal(Object.keys(core.apps).length, 1, 'Core test app should be loaded');
             done();
         });
