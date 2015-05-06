@@ -354,6 +354,7 @@ function Client(opts) {
          * @param {Object} context
          * @param {Function} callback
          * @private
+         * TODO: move to view helpers
          */
         _render: function(templateName, context, callback) { // TODO AT: temporal solution get rid of this here
             this.serveStatic("/views/" + templateName + ".template", function(err, absPath, res) {
