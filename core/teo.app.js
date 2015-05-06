@@ -56,10 +56,8 @@ var App = Base.extend({
     initApp: function(options, callback) {
         var queue = {
             "_loadConfig": this.loadConfig.bind(this),
-            "_collectAppFiles": ["_loadConfig", function(callback, config) {
-                this.collectAppFiles(callback);
-            }.bind(this)],
-            "_initDb": ["_collectAppFiles", function(callback) {
+            "_collectExecutableFiles": ["_loadConfig", this._collectAppExecutableFiles.bind(this)],
+            "_initDb": ["_collectExecutableFiles", function(callback) {
                 if (this.config.get("db").enabled === true) {
                     this.initDb(callback);
                 }
@@ -132,18 +130,18 @@ var App = Base.extend({
      * @param {Function} [callback]
      * @returns {*}
      */
-    getScript: function( filePath, callback ) {
-        var context = this.cache.get( filePath ),
-            callback = callback || function(){};
-        if ( context ) {
-            callback( null, context );
+    getScript: function(filePath, callback) {
+        var context = this.cache.get(filePath),
+            callback = callback || function() {};
+        if (context) {
+            callback(null, context);
             return context;
         }
         try {
-            context = require( filePath );
-            callback( null, context );
-        } catch( e ) {
-            callback( e );
+            context = require(filePath);
+            callback(null, context);
+        } catch(e) {
+            callback(e);
         }
         return context;
     },
@@ -292,86 +290,99 @@ var App = Base.extend({
     },
 
     /**
-     * Read all scripts, cache them and prepare to further execution
-     * Currently only controllers are used
+     * Collect all executable files for the app
      * @param {Function} callback
+     * @private
      */
-    collectAppFiles: function(callback) {
-        var dirs = this.config.get("appDirs") || [], // TODO AT: check if not js script - than just read, add to cache and do not exec.
-            files = this.config.get("appFiles") || [],
-            functs = [],
-            self = this;
+    _collectAppExecutableFiles: function(callback) {
+        var queue = {
+            // collect files in app directories (models, controllers)
+            "_readDirs": this._readAppDirs.bind(this),
+            // collect other executable files set in config (appFiles)
+            "_readFiles": ["_readDirs", this._readAppFiles.bind(this)]
+        };
 
-        dirs.forEach( function( d ) {
-            functs.push( function( next ) {
-                fs.readdir( self.dir + '/' + d , function( err, files ) {
-                    if (err) {
-                        logger.error(err.message);
-                        next(err);
-                        return;
-                    }
-                    if (!files.length) {
-                        next(null);
-                        return;
-                    }
-                    var functs = [];
-                    files.forEach(function(f) {      // TODO: new series here (!)
-                        !function(f) {
-                            functs.push( function(next) {
-                                var item = self.dir + '/' + d + '/' + f;
-                                fs.lstat(item, function(err, stat) {
-                                    if (err) {
-                                        next(err);
-                                        return;
-                                    }
-                                    if (!stat.isFile()) {
-                                        next("Not a file was found!");
-                                    }
-                                    self.getScript(item, function(err, context) {
-                                        if (err) {
-                                            next(err);
-                                            return;
-                                        }
-                                        self.cache.add(item, context);   // TODO: refactor
-                                        next(null, item);
-                                    });
-                                });
-                            });
-                        }.bind(this)(f);
-                    }.bind(this));
-                    async.series(functs, next);
-                }.bind( this ));
-            });
-        });
+        async.auto(queue, callback);
+    },
 
-        files.forEach(function(file) {
-            functs.push(function(next) {
-                !function(file) {
-                    var file = self.dir + "/" + file;
-                    fs.lstat(file, function(err, stat) {
-                        if (err) {
-                            logger.error(err);
-                            next(null, err);
-                            return;
-                        }
-                        if (!stat.isFile()) {
-                            logger.error('Error: not a file was found!');
-                            next(null);
-                        }
-                        self.getScript(file, function(err, context) {
-                            if (err) {
-                                next(err);
-                                return;
-                            }
-                            self.cache.add(file, context);
-                            next(null, file);
-                        });
-                    });
-                }(file);
-            }.bind(this));
-        });
+    /**
+     * Read app directories, and find executable files
+     * @param {Function} callback
+     * @private
+     */
+    _readAppDirs: function(callback) {
+        var dirs = this.config.get("appDirs");
+        var functs = util.map(dirs, function(currentDir) {
+            return async.apply(this.__collectAppDirFiles.bind(this), this.dir + '/' + currentDir);
+        }.bind(this));
 
         async.series(functs, callback);
+    },
+
+    /**
+     * Reads other executable files, provided in config (e.g. app.js)
+     * @param {Function} callback
+     * @private
+     */
+    _readAppFiles: function(callback) {
+        var files = this.config.get("appFiles");
+        var functs = util.map(files, function(file) {
+            return async.apply(this.__loadFile.bind(this), this.dir + "/" + file);
+        }.bind(this));
+
+        async.series(functs, callback);
+    },
+
+    /**
+     * Collects found executable files in provided directory
+     * @param {String} dir
+     * @param {Function} callback
+     * @private
+     */
+    __collectAppDirFiles: function(dir, callback) {
+        fs.readdir(dir, function(err, files) {
+            if (err) {
+                logger.error(err);
+                callback(err);
+                return;
+            }
+            if (!files.length) {
+                callback(null);
+                return;
+            }
+            var functs = util.map(files, function(file) {
+                return async.apply(this.__loadFile.bind(this), dir + "/" + file);
+            }.bind(this));
+
+            async.series(functs, callback);
+        }.bind( this ));
+    },
+
+    /**
+     * Loads file into the system
+     * @param {String} path
+     * @param {Function} callback
+     * @private
+     */
+    __loadFile: function(path, callback) {
+        fs.lstat(path, function(err, stat) {
+            if (err) {
+                callback(err);
+                return;
+            }
+            if (!stat.isFile()) {
+                callback("Not a file was found!");
+            }
+            this.getScript(path, function(err, context) {
+                if (err) {
+                    logger.error(err);
+                    callback(err);
+                    return;
+                }
+                this.cache.add(path, context);   // TODO: refactor
+                callback(null, path);
+            }.bind(this));
+        }.bind(this));
     },
 
     /**
