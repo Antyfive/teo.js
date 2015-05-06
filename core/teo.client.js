@@ -14,14 +14,16 @@ var Base = require("./teo.base"),
     path = require('path'),
     mime = require('mime'),
     http = require("http"),
+    querystring = require("querystring"),
+    fs = require("fs"),
+    renderer = require('hogan.js'),
     utils = require("./teo.utils"),
     // ClientContext = require("./teo.client.context"),
     Session = require("./teo.client.session"),
     Csrf = require("./teo.client.session.csrf"),
     streamer = require("./teo.client.streamer"),
     Cookie = require("./teo.client.cookie"),
-    Compressor = require('./teo.compressor'),
-    querystring = require("querystring");
+    Compressor = require('./teo.compressor');
 
 // ---- mime types additional settings
 mime.default_type = "text/html";
@@ -117,25 +119,59 @@ function Client(opts) {
                 }
             }
             else if (this.extension != null) {
-                if (this.req.headers['range']) {
+                if (this.req.headers["range"]) {
                     var extension = helper.getExtension(this.pathname);
                     var contentType = mime.lookup(extension || this.req.headers.accept || "html") ;
                     streamer.stream(this.req, this.res, this.app.dir + this.pathname, contentType);
                 } else {
-                    this.app.serveStatic(this.pathname.match(/\/public/) ?
+                    this.serveStatic(this.pathname.match(/\/public/) ?
                         this.pathname :
-                        path.join('/public', this.pathname), function(err, filepath, content) {
+                        path.join("/public", this.pathname), function(err, filepath, content) {
                         if (!err && content) {
                             this.res.send(content);
                         }
                         else {
-                            this.res.send(404);
+                            this.res.send(err, filepath);
                         }
-                    }.bind( this ));
+                    }.bind(this));
                 }
             }
             else
                 this.res.send(404);
+        },
+
+        /**
+         * Serve of static files
+         * @param {String} path :: path to static
+         * @param {Function} callback
+         */
+        serveStatic: function(path, callback) {
+            var path = String(path),
+                absPath = this.app.dir + path,
+                cached = this.app.cache.get(absPath),
+                self = this;
+
+            if (cached != null) {
+                callback(null, absPath, cached);
+            } else {
+                fs.exists(absPath, function(exists) {
+                    if (exists) {
+                        fs.readFile(absPath, function(err, data) {
+                            if ( err ) {
+                                logger.error(err.message);
+                                callback(err.message, absPath);
+                            } else {
+                                if (self.app.config.get("cache").static === true) { // add to cache, if file exists
+                                    self.app.cache.add(absPath, data);
+                                }
+                                callback(null, absPath, data);
+                            }
+                        });
+                    } else {
+                        callback(404, "Requested file does not exists");
+                    }
+                });
+            }
         },
 
         mixinRes: function() {
@@ -152,7 +188,7 @@ function Client(opts) {
                 }.bind(this);
                 var context = context || {};
 
-                this.app.render(tpl, context.partial || {}, function(err, output) {
+                this._render(tpl, context.partial || {}, function(err, output) {
                     if (err) {
                         if (util.isFunction(callback)) {
                             callback(err);
@@ -177,7 +213,7 @@ function Client(opts) {
                         }
                         else {
                             _mixinContextObj(obj);
-                            this.app.render('layout', obj, function (err, output) { // TODO: mixin render only in the res.
+                            this._render("layout", obj, function(err, output) { // TODO: mixin render only in the res.
                                 if (err) {
                                     this.res.send(500);
                                     return;
@@ -310,6 +346,34 @@ function Client(opts) {
             }
 
             return [err, body];
+        },
+
+        /**
+         * Simple renderer
+         * @param {String} templateName
+         * @param {Object} context
+         * @param {Function} callback
+         * @private
+         */
+        _render: function(templateName, context, callback) { // TODO AT: temporal solution get rid of this here
+            this.serveStatic("/views/" + templateName + ".template", function(err, absPath, res) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                var partial = context.partial || {};
+                delete context.partial;
+
+                // copyright
+                context.copyright = copyright;
+                context.version = version;
+
+                var compiled  = renderer.compile(res.toString(), {delimiters:  this.app.config.get("delimiters")}),
+                    output = compiled.render(context, partial);
+
+                callback(null, output);
+            }.bind( this ));
         }
     }));
 

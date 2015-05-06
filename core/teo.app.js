@@ -233,63 +233,6 @@ var App = Base.extend({
     },
 
     /**
-     * Serve of static files
-     * @param {String} path :: path to static
-     * @param {Function} callback
-     */
-    serveStatic: function( path, callback ) {
-        var path = String( path ),
-            absPath = this.dir + path,
-            cached = this.cache.get( absPath ),
-            self = this;
-
-        if ( cached != null ) {
-            callback( null, absPath, cached );
-        } else {
-            fs.exists( absPath, function( exists ) {
-                if ( exists ) {
-                    fs.readFile( absPath, function( err, data ) {
-                        if ( err ) {
-                            logger.error(err.message);
-                            callback( err.message, absPath );
-                        } else {
-                            if (self.config.get("cache").static === true) { // add to cache, if file exists
-                                self.cache.add(absPath, data);
-                            }
-                            callback( null, absPath, data );
-                        }
-                    });
-                } else {
-                    callback( 'Error 404: Requested file does not exists', absPath );
-                }
-            });
-        }
-    },
-
-    /**
-     * Simple renderer
-     * @param {String} templateName
-     * @param {Object} context
-     * @param {Function} callback
-     */
-    render: function( templateName, context, callback ) { // TODO AT: temporal solution get rid of this
-        this.serveStatic('/views/' + templateName + '.template', function( err, absPath, res ) {
-            if ( err ) {
-                callback( err );
-                return;
-            }
-            var partial = context.partial || {};
-            delete context.partial;
-            // copyright
-            context.copyright = copyright;
-            context.version = version;
-            var compiled  = renderer.compile( res.toString(), { delimiters:  this.config.get( 'delimiters' )}),
-                output = compiled.render( context, partial );
-            callback( null, output );
-        }.bind( this ));
-    },
-
-    /**
      * Collect all executable files for the app
      * @param {Function} callback
      * @private
@@ -471,20 +414,21 @@ var App = Base.extend({
      * TODO: disconnect DB
      */
     stop: function(callback) {
-        var config = this.config;
+        var config = this.config,
+            callback = util.isFunction(callback) ? callback : function() {};
         if (this.server) {
             try {
                 this.server._connections = 0;
                 this.server.close(function () {
                     logger.info("Connection closed, port: " + config.get("port") + " host: " + config.get("host"));
-                    callback && callback();
+                    callback();
                 });
             } catch (e) {
-                callback && callback(e);
+                callback(e);
             }
         }
         else {
-            callback && callback();
+            callback();
         }
     },
 

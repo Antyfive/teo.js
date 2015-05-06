@@ -54,12 +54,6 @@ describe('Testing App', function() {
 //        assert.equal((config.get('development') instanceof Object), true, 'Config should have development parameters');
     });
     // TODO: refactor to more describes
-    it('Should render output html', function(done) {
-        app.render('index', {}, function(err, output) {
-            assert.equal((typeof output === 'string' && err == null), true, 'Template should be rendered');
-            done();
-        });
-    });
 
     it("Should create http server", function(done) {
         app.initServer();
@@ -68,40 +62,6 @@ describe('Testing App', function() {
             app.stop(done);
         });
         app.listenServer();
-    });
-
-    it("Should load static file without adding to cache", function(done) {
-        var addToCacheSpy = sinon.spy(app.cache, "add");
-
-        app.serveStatic("/views/index.template", function(err, absPath, data) {
-
-            assert.isNull(err, "It should not be any error");
-            assert.isFalse(addToCacheSpy.called, "Add to cache method should not be called");
-
-            addToCacheSpy.restore();
-            done();
-
-        });
-    });
-
-    it("Should load static file with adding to cache", function(done) {
-
-        var addToCacheSpy = sinon.spy(app.cache, "add");
-
-        app.config.development.cache.static = true; // set to true, to allow check caching
-        app.serveStatic("/views/index.template", function(err, absPath, data) {
-
-            assert.isNull(err, "It should not be any error");
-            assert.isTrue((app.cache.get(appDir + '/views/index.template') instanceof Buffer), true, 'Template buffer should be in the cache.');
-            assert.isTrue(addToCacheSpy.calledOnce, "Add to cache method should be called once");
-
-            addToCacheSpy.restore();
-            // revert change
-            app.config.development.cache.static = false;
-
-            done();
-
-        });
     });
 
     describe("Testing Usage Of Middleware", function() {
