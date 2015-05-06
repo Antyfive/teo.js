@@ -284,7 +284,7 @@ describe("Testing App HTTP", function() {
                 app.client.routes.get("/test/seven", function(req, res) {
 
                     sendSpy = sinon.spy(res, "send");
-                    appRenderSpy = sinon.spy(app, "render");
+                    appRenderSpy = sinon.spy(app.client.Factory.prototype, "_render");
 
                     res.render( 'index', { partial: {
                             id: 'testme'
@@ -319,7 +319,7 @@ describe("Testing App HTTP", function() {
                 app.client.routes.get("/test/eight", function(req, res) {
 
                     sendSpy = sinon.spy(res, "send");
-                    appRenderSpy = sinon.spy(app, "render");
+                    appRenderSpy = sinon.spy(app.client.Factory.prototype, "_render");
                     cacheAddSpy = sinon.spy(app.cache, "add");
 
                     res.render('index', {
