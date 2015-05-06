@@ -105,7 +105,12 @@ function Client(opts) {
          */
         dispatch: function() {
             if (this.route != null && (this.route.handler && (typeof this.route.handler.callback === 'function'))) {
-                this.context = this.route.handler.callback.apply(null, [this.req, this.res]);
+                try {
+                    this.context = this.route.handler.callback.apply(null, [this.req, this.res]);
+                } catch (e) {
+                    logger.error(e);
+                    this.res.send(500);
+                }
                 // if route's callback returned object, - no render, and automatically send response object
                 if (this.context != null) {
                     this.res.send(this.context);

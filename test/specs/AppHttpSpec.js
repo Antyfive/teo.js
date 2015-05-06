@@ -252,6 +252,21 @@ describe("Testing App HTTP", function() {
                 .end(done);
         });
 
+        it("Should response with 500 code if error was thrown in controller", function(done) {
+
+            app.client.routes.get("/error", function(req, res) {
+
+                throw new Error("Test");
+            });
+
+            agent
+                .get('/error')
+                .expect('Content-Type', "text/html")
+                .expect(500)
+                .end(done);
+
+        });
+
         describe("Testing res.send method", function() {
 
             it("Should send static public css file", function(done) {
@@ -442,6 +457,23 @@ describe("Testing App HTTP", function() {
                         .end(done);
 
                 });
+
+                it("Should response with 500 code JSON when error was thrown in controller", function(done) {
+
+                    app.client.routes.get("/error/json", function(req, res) {
+
+                        throw new Error("Test");
+                    });
+
+                    agent
+                        .get('/error/json')
+                        .set('Accept', 'application/json')
+                        .expect('Content-Type', /json/)
+                        .expect(500, {"code": 500, "message":"Internal Server Error"})
+                        .end(done);
+
+                });
+
 
             });
 
