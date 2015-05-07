@@ -13,14 +13,27 @@
     }
   ],
   "keywords": [
+    "node.js",
+    "node",
     "framework",
     "web-framework",
     "mvc",
     "teo",
     "teo.js",
     "teojs",
+    "rest",
+    "restful",
     "REST",
-    "API"
+    "API",
+    "api",
+    "web",
+    "router",
+    "app",
+    "modules",
+    "models",
+    "controllers",
+    "views",
+    "extensions"
   ],
   "license": "MIT",
   "bin": {
