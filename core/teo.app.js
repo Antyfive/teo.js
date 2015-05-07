@@ -8,7 +8,6 @@
 
 var fs = require('fs'),
     domain = require('domain'),
-    renderer = require('hogan.js'),
     async = require('async'),
     util = require('./teo.utils'),
     Base = require('./teo.base'),
