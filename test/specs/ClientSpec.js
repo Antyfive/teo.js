@@ -114,7 +114,7 @@ describe("Testing Client Factory", function() {
         params = {
             'appsDir': '../' + appDir,
             'confDir': appDir + '/config',
-            'dir': appDir,
+            'appDir': appDir,
             'mode': 'development'
         },
         client, req, res, agent, dispatchStub, clientFactory;

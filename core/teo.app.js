@@ -26,7 +26,8 @@ var App = Base.extend({
     cache: null,
     initialize: function(options, callback) {
         util.extend(this, {
-            dir: options.dir,
+            homeDir: options.homeDir,
+            appDir: options.appDir,
             confDir: options.confDir,
             name: options.name,
             mode: options.mode,
@@ -255,7 +256,7 @@ var App = Base.extend({
     _readAppDirs: function(callback) {
         var dirs = this.config.get("appDirs");
         var functs = util.map(dirs, function(currentDir) {
-            return async.apply(this.__collectAppDirFiles.bind(this), this.dir + '/' + currentDir);
+            return async.apply(this.__collectAppDirFiles.bind(this), this.appDir + '/' + currentDir);
         }.bind(this));
 
         async.series(functs, callback);
@@ -269,7 +270,7 @@ var App = Base.extend({
     _readAppFiles: function(callback) {
         var files = this.config.get("appFiles");
         var functs = util.map(files, function(file) {
-            return async.apply(this.__loadFile.bind(this), this.dir + "/" + file);
+            return async.apply(this.__loadFile.bind(this), this.appDir + "/" + file);
         }.bind(this));
 
         async.series(functs, callback);

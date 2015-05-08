@@ -35,7 +35,7 @@ var Teo = Base.extend({
         this._parseParams(params);
         this.core = new Core({
             mode: this.mode,
-            dir: this.dir,
+            homeDir: this.homeDir,
             appsDir: this.appsDir,
             confDir: this.confDir
         }, function(err, core) {
@@ -70,9 +70,9 @@ var Teo = Base.extend({
 
     _parseParams: function(params) {
         this.mode = ( process.argv[ 2 ] === 'production' ) ? process.argv[ 2 ] : 'development';
-        this.dir = params.dirname || process.cwd().replace( /\\/g, '/' );// home dirname ( from where framework is started )
-        this.appsDir = this.dir + '/apps';    // main apps dir
-        this.confDir = this.dir + '/config';    // main apps dir
+        this.homeDir = params.homeDir || process.cwd().replace( /\\/g, '/' );// home dirname ( from where framework is started )
+        this.appsDir = this.homeDir + '/apps';    // main apps dir
+        this.confDir = this.homeDir + '/config';    // main apps dir
     }
 });
 
