@@ -126,7 +126,7 @@ describe("Testing Teo.js App Extensions", function () {
 
     });
 
-    it("Should resolve extension and add it to registry", function() {
+    it("Should resolve module extension and add it to registry", function() {
 
         var requireStub = sinon.stub(extensions, "__requireExtension");
 
@@ -159,6 +159,45 @@ describe("Testing Teo.js App Extensions", function () {
         }, extensions._extensionsRegistry["my-extension-1"], "Extensions registry should be updated");
 
         resolveSpy.restore();
+        requireStub.restore();
+
+    });
+
+    it("Should resolve local file extension", function() {
+
+        var requireStub = sinon.stub(extensions, "__requireExtension");
+
+        requireStub.withArgs("my-file-name-1").returns({
+            // is used in app config with this namespace
+            configNamespace: "my-file-config",
+            // module's config
+            config: {
+                "myParam": "1"
+            }
+        });
+
+        var resolveSpy = sinon.spy(extensions, "_resolveExtension");
+
+        extensions.add({
+            "name": "my-extension-1",
+            "file": "my-file-name-1"
+        });
+
+        assert.equal(requireStub.args[0][0], "/extensions/my-file-name-1", "Extension path should be correct");
+
+        resolveSpy.restore();
+        requireStub.restore();
+
+    });
+
+    it("Should throw error if extension was not loaded", function() {
+
+        assert.throw(function() {
+            extensions.add({
+                "name": "my-extension-1",
+                "file": "my-file-name-1"
+            });
+        }, "Cannot find module '/extensions/my-file-name-1'")
 
     });
 
