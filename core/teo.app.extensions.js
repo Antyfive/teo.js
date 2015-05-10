@@ -82,5 +82,12 @@ exports = module.exports = Base.extend({
         }
 
         return _extension;
+    },
+
+    /**
+     * Run loaded extensions
+     */
+    runAll: function() {
+
     }
 });

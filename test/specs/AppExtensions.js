@@ -18,7 +18,7 @@ describe("Testing Teo.js App Extensions", function () {
                 config: {
                     "myParam": "1"
                 },
-                install: function(app) {
+                extension: function(app) {
                     app.middleware(function(req, res, next) {
                         req.setHeader("X-Powered-By", "Teo.js");
                         next();
@@ -198,6 +198,30 @@ describe("Testing Teo.js App Extensions", function () {
                 "file": "my-file-name-1"
             });
         }, "Cannot find module '/extensions/my-file-name-1'")
+
+    });
+
+    it.skip("Should throw an error if extension API is not correct", function() {   // check it, when run loaded extension
+
+        var requireStub = sinon.stub(extensions, "__requireExtension");
+
+        requireStub.withArgs("my-module-name-1").returns({
+            // is used in app config with this namespace
+            configNamespace: "my-module-config",
+            // module's config
+            config: {
+                "myParam": "1"
+            }
+        });
+
+        assert.throws(function() {
+            extensions.add({
+                "name": "my-extension-1",
+                "module": "my-module-name-1"
+            });
+        }, "'Extension' property is missed in exported object");
+
+        requireStub.restore();
 
     });
 
