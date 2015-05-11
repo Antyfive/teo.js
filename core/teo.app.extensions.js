@@ -25,8 +25,8 @@ exports = module.exports = Base.extend({
             filePath: opts.filePath
         });
 
-        if (opts.extensions) {
-            this.add(opts.extensions);
+        if (opts.extensionsList) {
+            this.add(opts.extensionsList);
         }
     },
 

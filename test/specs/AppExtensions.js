@@ -34,16 +34,6 @@ describe("Testing Teo.js App Extensions", function () {
             app: {
                 test: "true"
             }
-            /*extensions: [
-                {
-                    "name": "my-extension-1",
-                    "module": "my-module-name-1"
-                },
-                {
-                    "name": "my-extension-2",
-                    "file": "my-module-name-2"
-                }
-            ]*/
         });
 
     });
@@ -65,7 +55,7 @@ describe("Testing Teo.js App Extensions", function () {
         var addStub = sinon.stub(extensions, "add", function() {});
 
         extensions.initialize({
-            extensions: [
+            extensionsList: [
                 {
                     "name": "my-extension-1",
                     "module": "my-module-name-1"
