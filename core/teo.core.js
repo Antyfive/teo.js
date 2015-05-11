@@ -19,11 +19,26 @@ var Core = Base.extend({
     apps: {},
 
     initialize: function(params, callback) {
-        util.extend(this, params);
+        util.extend(this, {
+            mode: params.mode,
+            homeDir: params.homeDir,
+            appsDir: params.appsDir,
+            confDir: params.confDir
+        });
+
         this.bindProcessEvents();
+        this.createCoreApp(callback);
+    },
+
+    /**
+     * Create core app. It would be used for core app purposes
+     * @param {Function} callback
+     */
+    createCoreApp: function(callback) {
         // mixture first core's app
         this._app = this.mixtureApp({
-            dir: this.appsDir,
+            homeDir: this.homeDir,
+            appDir: this.appsDir,
             confDir: Path.normalize(__dirname + "/../config"),
             mode: this.mode,
             coreApp: true
@@ -84,8 +99,9 @@ var Core = Base.extend({
             apps = this.apps;
 
         application = this.mixtureApp({
-            dir: appDir,
+            appDir: appDir,
             confDir: appDir + "/config",
+            homeDir: this.homeDir,
             name: appName,
             mode: this.mode,
             config: this._app.config

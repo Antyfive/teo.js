@@ -6,15 +6,16 @@
 
 /* global copyright, version, logger  */
 
-var fs = require('fs'),
-    domain = require('domain'),
-    async = require('async'),
-    util = require('./teo.utils'),
-    Base = require('./teo.base'),
-    Client = require( './teo.client'),
-    AppCache = require('./teo.app.cache'),
+var fs = require("fs"),
+    domain = require("domain"),
+    async = require("async"),
+    util = require("./teo.utils"),
+    Base = require("./teo.base"),
+    Client = require("./teo.client"),
+    AppCache = require("./teo.app.cache"),
     Middleware = require("./teo.middleware"),
     Db = require("./db/teo.db"),
+    Extensions = require("./teo.app.extensions"),
     http = require("http");
 
 /**
@@ -26,7 +27,8 @@ var App = Base.extend({
     cache: null,
     initialize: function(options, callback) {
         util.extend(this, {
-            dir: options.dir,
+            homeDir: options.homeDir,
+            appDir: options.appDir,
             confDir: options.confDir,
             name: options.name,
             mode: options.mode,
@@ -37,8 +39,8 @@ var App = Base.extend({
         this._middleware = new Middleware();
 
         this.initApp(options, function() {
-            // TODO: client instance on every call
             this.client = new Client({app: this});
+            this.extensions = new Extensions(util.extend({app: this}, this.config.get("extensions")));
             // ----
             process.nextTick(function() {
                 this.emit("app:ready", this);
@@ -255,7 +257,7 @@ var App = Base.extend({
     _readAppDirs: function(callback) {
         var dirs = this.config.get("appDirs");
         var functs = util.map(dirs, function(currentDir) {
-            return async.apply(this.__collectAppDirFiles.bind(this), this.dir + '/' + currentDir);
+            return async.apply(this.__collectAppDirFiles.bind(this), this.appDir + '/' + currentDir);
         }.bind(this));
 
         async.series(functs, callback);
@@ -269,7 +271,7 @@ var App = Base.extend({
     _readAppFiles: function(callback) {
         var files = this.config.get("appFiles");
         var functs = util.map(files, function(file) {
-            return async.apply(this.__loadFile.bind(this), this.dir + "/" + file);
+            return async.apply(this.__loadFile.bind(this), this.appDir + "/" + file);
         }.bind(this));
 
         async.series(functs, callback);
@@ -379,6 +381,7 @@ var App = Base.extend({
             // scripts should be run before db is connected (as models should be collected as well)
             async.apply(this.runAppScripts.bind(this)),
             async.apply(this._connectOrm.bind(this)),
+            async.apply(this._runExtensions.bind(this)),
             async.apply(function(next) {
                 var withListen = true;
                 this.initServer(withListen);
@@ -495,6 +498,15 @@ var App = Base.extend({
      */
     _canUseDb: function() {
         return (this.config.get("db").enabled === true) && this.db;
+    },
+
+    /**
+     * Run all extensions
+     * @param {Function} callback
+     * @private
+     */
+    _runExtensions: function(callback) {
+        this.extensions.runAll(callback);
     }
 });
 

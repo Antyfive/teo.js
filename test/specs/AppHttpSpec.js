@@ -14,7 +14,7 @@ describe("Testing App HTTP", function() {
         params = {
             'appsDir': '../' + appDir,
             'confDir': appDir + '/config',
-            'dir': appDir,
+            'appDir': appDir,
             'mode': 'development'
         },
         agent,

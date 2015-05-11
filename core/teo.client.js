@@ -122,7 +122,7 @@ function Client(opts) {
                 if (this.req.headers["range"]) {
                     var extension = helper.getExtension(this.pathname);
                     var contentType = mime.lookup(extension || this.req.headers.accept || "html") ;
-                    streamer.stream(this.req, this.res, this.app.dir + this.pathname, contentType);
+                    streamer.stream(this.req, this.res, this.app.appDir + this.pathname, contentType);
                 } else {
                     this.serveStatic(this.pathname.match(/\/public/) ?
                         this.pathname :
@@ -147,7 +147,7 @@ function Client(opts) {
          */
         serveStatic: function(path, callback) {
             var path = String(path),
-                absPath = this.app.dir + path,
+                absPath = this.app.appDir + path,
                 cached = this.app.cache.get(absPath),
                 self = this;
 
