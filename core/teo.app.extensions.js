@@ -11,13 +11,17 @@
  */
 var Base = require("./teo.base"),
     _ = require("./teo.utils"),
-    Path = require("path");
+    Path = require("path"),
+    Domain = require("domain"),
+    Async = require("async");
 
 exports = module.exports = Base.extend({
     initialize: function(opts) {
-        this._extensionsRegistry = {};
+        this._loadedExtensions = {};
+        this._installedExtensions = [];
 
         _.extend(this, {
+            app: opts.app,
             filePath: opts.filePath
         });
 
@@ -61,7 +65,7 @@ exports = module.exports = Base.extend({
 
         var _extension = this.__requireExtension(pathToExt);
 
-        this._extensionsRegistry[extension.name] = _extension;
+        this._loadedExtensions[extension.name] = _extension;
 
     },
 
@@ -85,9 +89,71 @@ exports = module.exports = Base.extend({
     },
 
     /**
-     * Run loaded extensions
+     * Getter of all loaded extensions registry
+     * @returns {{}|*}
+     * @private
      */
-    runAll: function() {
+    _getLoaded: function() {
+        return this._loadedExtensions;
+    },
 
+    /**
+     * Getter of installed extensions
+     * @returns {{}|*}
+     * @private
+     */
+    _getInstalled: function() {
+        return this._installedExtensions;
+    },
+
+    /**
+     * Getter of loaded extension by name
+     * @param {String} name
+     * @returns {*}
+     * @private
+     */
+    _findLoadedByName: function(name) {
+        return this._loadedExtensions[name];
+    },
+
+    /**
+     * Run loaded extensions
+     * @param {Function} callback
+     */
+    runAll: function(callback) {
+        var functs = _.map(this._getLoaded(), function(extension, name) {
+            return Async.apply(this.runSingle.bind(this), name);
+        }, this);
+
+        Async.series(functs, callback);
+    },
+
+    /**
+     * Run single extension by extension name
+     * @param {String} name
+     * @param {Function} callback
+     */
+    runSingle: function(name, callback) {
+        var _extension = this._findLoadedByName(name);
+
+        if (!_.isObject(_extension)) {
+            throw new Error("Extension '" + name + "' should be an object");
+        }
+
+        if (!_extension.hasOwnProperty("extension") || !_.isFunction(_extension.extension)) {
+            throw new Error("'" + name + "' should have 'extension' property, and it should be a function");
+        }
+
+        var domain = Domain.create();
+
+        domain.on("error", function(err) {
+            logger.error("Extension "+ name + "error:", err);
+        });
+
+        domain.run(function() {
+            _extension.extension.call(this.app, this.app);
+            this._installedExtensions.push(name);
+            callback();
+        }.bind(this));
     }
 });

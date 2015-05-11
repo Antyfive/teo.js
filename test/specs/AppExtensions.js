@@ -30,7 +30,10 @@ describe("Testing Teo.js App Extensions", function () {
     beforeEach(function () {
 
         extensions = new AppModules({
-            filePath: "/extensions"
+            filePath: "/extensions",
+            app: {
+                test: "true"
+            }
             /*extensions: [
                 {
                     "name": "my-extension-1",
@@ -156,7 +159,7 @@ describe("Testing Teo.js App Extensions", function () {
             config: {
                 "myParam": "1"
             }
-        }, extensions._extensionsRegistry["my-extension-1"], "Extensions registry should be updated");
+        }, extensions._loadedExtensions["my-extension-1"], "Extensions registry should be updated");
 
         resolveSpy.restore();
         requireStub.restore();
@@ -201,27 +204,92 @@ describe("Testing Teo.js App Extensions", function () {
 
     });
 
-    it.skip("Should throw an error if extension API is not correct", function() {   // check it, when run loaded extension
+    describe("Testing run of extension", function() {
 
-        var requireStub = sinon.stub(extensions, "__requireExtension");
+        var requireStub;
 
-        requireStub.withArgs("my-module-name-1").returns({
-            // is used in app config with this namespace
-            configNamespace: "my-module-config",
-            // module's config
-            config: {
-                "myParam": "1"
-            }
-        });
+        beforeEach(function() {
 
-        assert.throws(function() {
+            requireStub = sinon.stub(extensions, "__requireExtension");
+
+            requireStub.withArgs("my-module-name-1").returns({
+                // is used in app config with this namespace
+                configNamespace: "my-module-config",
+                // module's config
+                config: {
+                    "myParam": "1"
+                },
+                "extension": function() {
+
+                }
+            });
+
             extensions.add({
                 "name": "my-extension-1",
                 "module": "my-module-name-1"
             });
-        }, "'Extension' property is missed in exported object");
 
-        requireStub.restore();
+        });
+
+        afterEach(function() {
+
+            requireStub.restore();
+
+        });
+
+        it("Should throw an error if extension is not object", function() {   // check it, when run loaded extension
+
+            var findLoadedByNameStub = sinon.stub(extensions, "_findLoadedByName", function() {
+                return undefined;
+            });
+
+            assert.throw(function() {
+                extensions.runSingle("my-extension-1");
+            }, "Extension \'my-extension-1\' should be an object");
+
+            findLoadedByNameStub.restore();
+
+        });
+
+        it("Should throw an error if it doesn't have 'extension' property", function() {
+
+            var findLoadedByNameStub = sinon.stub(extensions, "_findLoadedByName", function() {
+                return {};
+            });
+
+            assert.throw(function() {
+                extensions.runSingle("my-extension-1");
+            }, "'my-extension-1' should have 'extension' property, and it should be a function");
+
+            findLoadedByNameStub.restore();
+
+        });
+
+        it("Should run all loaded extensions", function(done) {
+
+            var extensionSpy = sinon.spy(extensions._findLoadedByName("my-extension-1"), "extension");
+            var runSingleSpy = sinon.spy(extensions, "runSingle");
+
+            extensions.add({
+                "name": "my-extension-1",
+                "module": "my-module-name-1"
+            });
+
+            extensions.runAll(function() {
+
+                assert.isTrue(extensionSpy.calledOnce, "Extension method should be called once");
+                assert.deepEqual(extensionSpy.args[0][0], {test: "true"}, "App should be passed as argument");
+                assert.deepEqual(extensions._installedExtensions, ["my-extension-1"], "Installed extensions registry should be updated");
+
+                assert.isTrue(runSingleSpy.calledOnce, "Runner of extension should be called once");
+
+                extensionSpy.restore();
+                runSingleSpy.restore();
+
+                done();
+            });
+
+        });
 
     });
 
