@@ -22,8 +22,7 @@ var Base = require("./teo.base"),
     Session = require("./teo.client.session"),
     Csrf = require("./teo.client.session.csrf"),
     streamer = require("./teo.client.streamer"),
-    Cookie = require("./teo.client.cookie"),
-    Compressor = require('./teo.compressor');
+    Cookie = require("./teo.client.cookie");
 
 // ---- mime types additional settings
 mime.default_type = "text/html";
