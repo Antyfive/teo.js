@@ -39,9 +39,8 @@ function Client(opts) {
     this.session = new Session({
         config: opts.app.config.get("session")
     });
-    this.compressor = new Compressor();
 
-    this.Factory = Base.extend(utils.extend(this.routes, {session: this.session, compressor: this.compressor}, {
+    this.Factory = Base.extend(utils.extend(this.routes, {session: this.session}, {
         app: opts.app,
         // routes: this.routes,
         initialize: function(opts) {
