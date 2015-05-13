@@ -8,7 +8,6 @@
 
 var fs = require("fs"),
     async = require("async"),
-    Compressor = require("./teo.compressor"),
     util = require("./teo.utils"),
     Base = require("./teo.base"),
     App = require("./teo.app"),

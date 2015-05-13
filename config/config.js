@@ -4,7 +4,6 @@ module.exports = {
     host: "localhost",
     port: 3000,
     delimiters: '{{ }}',
-    compressOutput: false,
     cache: {
         static: false,     // cache static files
         response: false      // cache response by url

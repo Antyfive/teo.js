@@ -19,7 +19,6 @@ module.exports = {
     },
     // common params could be without mode as well
     delimiters: '{{ }}',
-    compressOutput: true,
     cookie: {
         keys: ["signed key"]    // default signed key
     },
