@@ -218,8 +218,6 @@ function Client(opts) {
                                     this.res.send(500);
                                     return;
                                 }
-                                if (this.app.config.get('compressOutput'))
-                                    output = this.compressor.compressHTML(output);    // TODO: refactor usage of compressor
                                 if (Object.keys(this.req.params).length === 0 && this.app.config.get("cache").response === true) {       // TODO AT: make caching for routes with changeable params           // TODO AT: make caching for routes with changeable params
                                     this.app.cache.add(this.route.path, output);
                                 }
@@ -248,11 +246,14 @@ function Client(opts) {
                 var body;
 
                 var extension = helper.getExtension(this.pathname);
-                var contentType = mime.lookup(args[2] || extension || this.req.headers.accept || "html") ;
+                var contentType = mime.lookup(args[2] || extension || this.req.headers.accept || "html");
+                var writeHeadObj = {
+                    "Content-Type": contentType
+                };
 
                 if (args.length === 1) {
                     code = +args[0];
-                    if (utils.isNaN(code)) {    // if it's not code, than it's error
+                    if (utils.isNaN(code) || (code < 100 || code > 511)) {    // if it's not status code (based on http.STATUS_CODES), than it's error
                         code = 200;
                         body = args[0];
                     }
@@ -272,14 +273,17 @@ function Client(opts) {
                     logger.warn("Sending not a object as JSON body response:", body);
                 }
 
-                this.res.writeHead(code, {'Content-Type': contentType}); // send content type
-
                 var response = sendJson ?
                     this.buildRespObject(code, body) :
                         (utils.isString(body) ? body : http.STATUS_CODES[code]);
 
-                this.res.end(response);
+                if (utils.isString(response)) {
+                    writeHeadObj["Content-Length"] = response.length;
+                }
 
+                this.res.writeHead(code, writeHeadObj);
+
+                this.res.end(response);
             }.bind(this);
         },
 

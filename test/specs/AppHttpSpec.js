@@ -351,6 +351,35 @@ describe("Testing App HTTP", function() {
 
             });
 
+            it("Should string with numbers as a body", function(done) {
+
+                app.client.routes.get("/numbers", function(req, res) {
+
+                    res.send("12345")
+                });
+
+                agent
+                    .get("/numbers")
+                    .expect('Content-Type', "text/html")
+                    .expect(200, "12345")
+                    .end(done);
+            });
+
+            it("Should contain content-length header in response", function(done) {
+
+                app.client.routes.get("/content-length", function(req, res) {
+                    res.send("ok");
+                });
+
+                agent
+                    .get("/content-length")
+                    .expect('Content-Type', "text/html")
+                    .expect('Content-Length', "2")
+                    .expect(200, "ok")
+                    .end(done);
+
+            });
+
             // TODO: test rendering with adding to cache
 
             describe("JSON", function() {
