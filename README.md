@@ -37,7 +37,6 @@ In home directory of your application, just create `config` directory, and place
     host: "localhost",                      // your host
     port: 3000,                             // port
     delimiters: '{{ }}',                    // template engine delimiters
-    compressOutput: false,                  // compress output html
     cache: {
         "static": false,                    // cache static files
         "response": false                   // cache response by url
@@ -116,8 +115,7 @@ module.exports = {
     },
     // common parameters can be set without mode as well. 
     // In this case, parameters below, will be shared among development, and production mode.
-    delimiters: '{{ }}',    // save delimiters for both modes
-    compressOutput: true    // compress output html in response for both modes
+    delimiters: '{{ }}'    // save delimiters for both modes
 };
 ```
 # Project structure
