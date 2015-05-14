@@ -415,4 +415,28 @@ Each log message type has it's own output color.
 `logger.log("Message")` outputs in format:
 `[Thu Mar 19 2015 10:11:12 GMT] Success: Message`
 
+## Extensions
+
+Framework supports external extensions.
+
+Extensions can be loaded into the system as externally installed npm **modules**, or as **local** files (your own local extensions).
+
+#### Extensions config
+```javascript
+extensions: {
+        // Path to local extensions directory. i.e. /your_home_dir/extensions/my_extension
+        filePath: "/extensions",
+        extensionsList: [
+            {
+                "name": "powered-by",   // name in registry of extensions
+                "module": "teo-powered-by-extension"    // npm module
+            },
+            {
+                "name": "html-compressor",
+                // local file name. Framework will be looking for /your_home_dir/extensions/myCompressor.js
+                "file": "myCompressor" 
+            }
+        ]
+    }
+```
 To be continued...
