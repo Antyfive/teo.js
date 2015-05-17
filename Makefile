@@ -1,6 +1,5 @@
 TESTS = test/specs/*.js
 REPORTER = spec
-
 test:
 	@NODE_ENV=test NODE_TLS_REJECT_UNAUTHORIZED=0 ./node_modules/.bin/mocha \
 	--require ./test/common.js \
@@ -12,6 +11,28 @@ test:
         --timeout 5000 \
         --slow 300 \
 
+test-es6:
+	@NODE_ENV=test NODE_TLS_REJECT_UNAUTHORIZED=0 ./node_modules/.bin/mocha test/es6 \
+        --require ./test/es6/common.js \
+        --compilers js:babel/register \
+        --reporter $(REPORTER) \
+        --ui bdd \
+        --recursive \
+        --colors \
+        --timeout 5000 \
+        --slow 300 \
+
+test-es6-w:
+	@NODE_ENV=test NODE_TLS_REJECT_UNAUTHORIZED=0 ./node_modules/.bin/mocha test/es6 \
+	--require ./test/es6/common.js \
+        --compilers js:babel/register \
+        --reporter min \
+        --ui bdd \
+        --recursive \
+        --colors \
+        --timeout 5000 \
+        --slow 300 \
+        --watch
 test-w:
 	@NODE_ENV=test NODE_TLS_REJECT_UNAUTHORIZED=0 ./node_modules/.bin/mocha \
 	--require ./test/common.js \
