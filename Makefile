@@ -4,6 +4,7 @@ REPORTER = spec
 test:
 	@NODE_ENV=test NODE_TLS_REJECT_UNAUTHORIZED=0 ./node_modules/.bin/mocha \
 	--require ./test/common.js \
+        --compilers js:babel/register \
         --reporter $(REPORTER) \
         --ui bdd \
         --recursive \
@@ -14,7 +15,8 @@ test:
 test-w:
 	@NODE_ENV=test NODE_TLS_REJECT_UNAUTHORIZED=0 ./node_modules/.bin/mocha \
 	--require ./test/common.js \
-        --reporter $(REPORTER) \
+        --compilers js:babel/register \
+        --reporter min \
         --ui bdd \
         --recursive \
         --colors \
