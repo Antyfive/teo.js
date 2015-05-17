@@ -439,4 +439,16 @@ extensions: {
         ]
     }
 ```
+#### Extension example
+```javascript
+module.exports = {
+    extension: function(app) {  // app API is passed inside extension
+        // use 'app' or 'this' (extension function is called in app's context)
+        app.middleware(function(req, res, next) {
+            res.setHeader("X-Powered-By", "Teo.js v" + version);
+            next();
+        });
+    }
+};
+```
 To be continued...
