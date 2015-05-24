@@ -60,6 +60,7 @@
     "commander": "~2.6.x",
     "cookies": "~0.5.x",
     "hogan.js": "~2.x",
+    "lodash": "^3.9.1",
     "mime": "*",
     "mkdirp": ">=0.3.x",
     "moment": "~2.9.x",
