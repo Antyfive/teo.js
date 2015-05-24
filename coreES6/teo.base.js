@@ -10,16 +10,19 @@ class Base extends events.EventEmitter {
 	// constructor
 	constructor(config, callback) {
 		// allow not strict order of arguments
-	    if (config instanceof Function)
+	    if (config instanceof Function) {
 	        var callback = config,
 	            config = {};
+	    }
 
-	    if (config instanceof Object)
+	    if (config instanceof Object) {
 	        var callback = (typeof callback === "function") ? callback : function() {};
+	    }
 
-	    if (config === void 0)
+	    if (config === void 0) {
 	        var config = {},
 	            callback = function() {};
+	    }
 
 		super(config, callback);
 		
