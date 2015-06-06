@@ -34,6 +34,7 @@ class Teo extends Base {
             appsDir: this.appsDir,
             confDir: this.confDir
         }, (err, core) => {
+            debugger;
             if (err) {
                 throw new Error(err);
             }

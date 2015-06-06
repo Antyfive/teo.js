@@ -24,7 +24,7 @@ util.thunkify = function(nodefn) { // [1]
     }
 };
 
-util.generator = function(generator, done) {
+util.generator = function(generator, done) {    // TODO: catch errors
     return co(generator).then((res) => {
             done(null, res);
         }, (err) => {
