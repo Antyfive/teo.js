@@ -5,7 +5,8 @@
  */
 
 const _ = require("lodash"),
-    util = require("util");
+    util = require("util"),
+    co = require("co");
 
 /**
  * Creates a thunk from a passed function
@@ -23,6 +24,32 @@ util.thunkify = function(nodefn) { // [1]
     }
 };
 
+util.generator = function(generator, done) {
+    return co(generator).then((res) => {
+            done(null, res);
+        }, (err) => {
+            done(err);
+    });
+};
+
+/**
+ * Run async func
+ * @param func
+ * @returns {*}
+ * Usage: yield util.async(this.asyncFunc.bind(this, param));
+ */
+util.async = function(func) {
+    return co(function* () {
+        yield func();
+    });
+};
+
+util.promise = function(fn) {
+    return new Promise((resolve, reject) => {
+        return fn(resolve, reject);
+    });
+};
+
 _.mixin(util);
 
-export default _;
+module.exports = _;

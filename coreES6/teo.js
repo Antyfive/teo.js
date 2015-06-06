@@ -14,7 +14,7 @@ global.version = require("../package.json").version;
 global.copyright = "Powered by Teo.js";
 global.logger = require("./teo.logger");
 
-export default class Teo extends Base {
+class Teo extends Base {
 	constructor(config, callback) {
 		super(config, callback);
 
@@ -34,10 +34,17 @@ export default class Teo extends Base {
             appsDir: this.appsDir,
             confDir: this.confDir
         }, (err, core) => {
-            this.callback.call(this, this);
-            process.nextTick(() => {
-                this.emit("ready", this);
-            });
+            if (err) {
+                throw new Error(err);
+            }
+            else {
+                this.callback.call(this, this);
+                process.nextTick(() => {
+                    this.emit("ready", this);
+                });
+            }
         });
 	}
 }
+
+module.exports = Teo;

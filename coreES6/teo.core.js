@@ -6,7 +6,9 @@
 
 /* global logger */
 
-const fs = require("fs"),
+const
+    co = require("co"),
+    fs = require("fs"),
     async = require("async"),
     Path = require("path"),
     cluster = require("cluster"),
@@ -14,12 +16,17 @@ const fs = require("fs"),
     Base = require("./teo.base"),
     App = require("./teo.app");
 
-export default class Core extends Base {
+class Core extends Base {
 	constructor(config, callback) {
 		super(config, callback);
 
+        this.apps = {};
         this._bindProcessEvents();
-        this._createCoreApp(this.callback);
+        util.generator(function* () {
+            yield util.async(this._createCoreApp.bind(this));
+            yield util.async(this.loadApps.bind(this));
+            return this;
+        }.bind(this), this.callback);
 	}
 
     _bindProcessEvents() {
@@ -50,41 +57,34 @@ export default class Core extends Base {
         }
     }
 
-    /**
-     * Creates core's app
-     * @param {Function} callback
-     * @private
-     */
-    _createCoreApp(callback) {
-        // create first core's app
-        this._app = this._createApp({
-            homeDir: this.config.homeDir,
-            appDir: this.config.appsDir,
-            confDir: Path.normalize(__dirname + "/../config"),
-            mode: this.config.mode,
-            coreApp: true
-        });
-
-        this._app.once("app:ready", () => {
-            this.coreAppConfig = this._app.config;
-
-            if (this.coreAppConfig.get("cluster").enabled) {
-                this._setupWorkersLogging();
-            }
-            this.loadApps((err) => {
-                callback.call(this, err, this);
+    _createCoreApp() {
+        return (function* () {
+            this._app = yield this._createApp({
+                homeDir: this.config.homeDir,
+                appDir: this.config.appsDir,
+                confDir: Path.normalize(__dirname + "/../config"),
+                mode: this.config.mode,
+                coreApp: true
             });
-        });
-    }
+            // TODO:
+            /*this.config = this._app.config;
 
+            if (this.config.get("cluster").enabled) {
+                this.setupWorkersLogging();
+            }*/
+            return this._app;
+        }.bind(this))();
+    }
     /**
      * Create new app
      * @param {Object} options
      * @returns {*}
      * @private
      */
-    _createApp(options) {
-        return new App(options);
+    _createApp(options) { // TODO: error's handler
+        return util.promise(function(resolve, reject) {
+            new App(options, resolve);
+        });
     }
 
     _setupWorkersLogging() {
@@ -100,62 +100,47 @@ export default class Core extends Base {
         }
     }
 
-    /**
-     * Load apps
-     * @param {Function }callback
-     */
-    loadApps(callback) {
+    loadApps() {
         var self = this,
-            appsDir = this.appsDir;
+            appsDir = this.config.appsDir,
+            readDir = util.thunkify(fs.readdir);
 
-        fs.readdir(appsDir, (err, apps) => {
-            if (err) {
-                logger.error(err);
-                callback(err);
-                return;
+        return (function* () {
+            var apps = yield readDir(appsDir);
+
+            var l = apps.length;
+            for (var i = 0; i < l; i++) {
+                let appName = apps[i];
+                let appDir = appsDir + "/" + appName;
+                let stat = yield util.thunkify(fs.lstat)(appDir);
+
+                if (stat.isDirectory()) {
+                    yield util.async(this.registerApp.bind(this, appName));    // TODO: yield util.async(this.registerApp.bind(this, appName))
+                }
             }
-
-            // TODO: generator
-            var functs = util.map(apps, function(appName) {
-                return async.apply(function(app, next) {
-                    var appDir = appsDir + "/" + app,
-                        stat = fs.lstatSync(appDir);
-
-                    if (stat.isDirectory()) {
-                        self.registerApp(app, next);
-                    }
-                    else {
-                        next();
-                    }
-                }, appName);
-            });
-
-            async.series(functs, callback);
-        });
+            return self.apps;
+        }.bind(this))();
     }
 
-    registerApp(appName, callback) {
-        var appDir = this.appsDir + '/' + appName,
+    registerApp(appName) {
+        var appDir = this.config.appsDir + '/' + appName,
             application,
             apps = this.apps;
 
-        application = this._createApp({
-            appDir: appDir,
-            confDir: appDir + "/config",
-            homeDir: this.homeDir,
-            name: appName,
-            mode: this.mode,
-            config: this._app.config
-        });
+        return (function* () {
+            application = yield this._createApp({
+                appDir: appDir,
+                confDir: appDir + "/config",
+                homeDir: this.config.homeDir,
+                name: appName,
+                mode: this.config.mode,
+                config: this._app.config
+            });
+            apps[appName] = application;
 
-        application.once("app:ready", function(app) {
-            apps[appName] = app;
-            callback(app);
-        });
-
-        application.on("error", (err) => {
-            this._exitHandler({exit: true}, err);
-        });
+            return apps[appName];
+            // TODO: errors handler
+        }.bind(this))();
     }
 
     /**
@@ -167,7 +152,7 @@ export default class Core extends Base {
      * 2. Start single application by passed name
      * // TODO: generators
      */
-    start(name, callback) {
+    _start(name, callback) {
         if (util.isString(name)) {
             var name = name,
                 callback = (typeof callback === "function") ? callback : function(){};
@@ -198,7 +183,7 @@ export default class Core extends Base {
         }
     }
     // TODO: generators
-    stop(done) {
+    _stop(done) {
         var functs = [];
         util.forEach(this.apps, (app) => {
             functs.push(function(next) {
@@ -232,3 +217,5 @@ export default class Core extends Base {
         return this.apps[name];
     }
 }
+
+module.exports = Core;
