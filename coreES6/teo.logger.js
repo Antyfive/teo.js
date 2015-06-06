@@ -72,7 +72,7 @@ function _log(message) {
     }
 }
 
-export default {
+module.exports = {
     success() {
         let message = _parseMessage.apply(this, [].slice.call(arguments));
         _log(util.format("Success: %s", message).green);

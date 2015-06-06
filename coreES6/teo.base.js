@@ -4,7 +4,8 @@
  * @date 17/6/14
  */
 
-var events = require("events");
+const events = require("events"),
+    co = require("co");
 
 class Base extends events.EventEmitter {
 	// constructor
@@ -29,6 +30,14 @@ class Base extends events.EventEmitter {
 	    this.config = config;
 	    this.callback = callback;
 	}
+
+    asyncInit(generator, done) {
+        co(generator).then((res) => {
+            done(null, res);
+        }, (err) => {
+            done(err);
+        });
+    }
 }
 
 module.exports = Base;
