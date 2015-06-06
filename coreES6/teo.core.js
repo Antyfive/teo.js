@@ -23,8 +23,8 @@ class Core extends Base {
         this.apps = {};
         this._bindProcessEvents();
         util.generator(function* () {
-            yield util.async(this._createCoreApp.bind(this));
-            yield util.async(this.loadApps.bind(this));
+            yield util.async(this._createCoreApp.bind(this)).catch(logger.error);
+            yield util.async(this.loadApps.bind(this)).catch(logger.error);
             return this;
         }.bind(this), this.callback);
 	}
@@ -57,23 +57,21 @@ class Core extends Base {
         }
     }
 
-    _createCoreApp() {
-        return (function* () {
-            this._app = yield this._createApp({
-                homeDir: this.config.homeDir,
-                appDir: this.config.appsDir,
-                confDir: Path.normalize(__dirname + "/../config"),
-                mode: this.config.mode,
-                coreApp: true
-            });
-            // TODO:
-            /*this.config = this._app.config;
+    * _createCoreApp() {
+        this._app = yield this._createApp({
+            homeDir: this.config.homeDir,
+            appDir: this.config.appsDir,
+            confDir: Path.normalize(__dirname + "/../config"),
+            mode: this.config.mode,
+            coreApp: true
+        });
+        // TODO:
+        /*this.config = this._app.config;
 
-            if (this.config.get("cluster").enabled) {
-                this.setupWorkersLogging();
-            }*/
-            return this._app;
-        }.bind(this))();
+        if (this.config.get("cluster").enabled) {
+            this.setupWorkersLogging();
+        }*/
+        return this._app;
     }
     /**
      * Create new app
@@ -81,9 +79,11 @@ class Core extends Base {
      * @returns {*}
      * @private
      */
-    _createApp(options) { // TODO: error's handler
+    _createApp(options) { // TODO: error's handler; generator (yield new App?)
         return util.promise(function(resolve, reject) {
-            new App(options, resolve);
+            new App(options, function(err, res) {
+                resolve(res);
+            });
         });
     }
 
@@ -100,47 +100,44 @@ class Core extends Base {
         }
     }
 
-    loadApps() {
+    * loadApps() {
         var self = this,
             appsDir = this.config.appsDir,
             readDir = util.thunkify(fs.readdir);
 
-        return (function* () {
-            var apps = yield readDir(appsDir);
+        var apps = yield readDir(appsDir);
 
-            var l = apps.length;
-            for (var i = 0; i < l; i++) {
-                let appName = apps[i];
-                let appDir = appsDir + "/" + appName;
-                let stat = yield util.thunkify(fs.lstat)(appDir);
+        var l = apps.length;
+        for (var i = 0; i < l; i++) {
+            let appName = apps[i];
+            let appDir = appsDir + "/" + appName;
+            let stat = yield util.thunkify(fs.lstat)(appDir);
 
-                if (stat.isDirectory()) {
-                    yield util.async(this.registerApp.bind(this, appName));    // TODO: yield util.async(this.registerApp.bind(this, appName))
-                }
+            if (stat.isDirectory()) {
+                yield util.async(this.registerApp.bind(this, appName));    // TODO: yield util.async(this.registerApp.bind(this, appName))
             }
-            return self.apps;
-        }.bind(this))();
+        }
+        return self.apps;
     }
 
-    registerApp(appName) {
+    * registerApp(appName) {
         var appDir = this.config.appsDir + '/' + appName,
             application,
             apps = this.apps;
 
-        return (function* () {
-            application = yield this._createApp({
-                appDir: appDir,
-                confDir: appDir + "/config",
-                homeDir: this.config.homeDir,
-                name: appName,
-                mode: this.config.mode,
-                config: this._app.config
-            });
-            apps[appName] = application;
 
-            return apps[appName];
-            // TODO: errors handler
-        }.bind(this))();
+        application = yield this._createApp({
+            appDir: appDir,
+            confDir: appDir + "/config",
+            homeDir: this.config.homeDir,
+            name: appName,
+            mode: this.config.mode,
+            coreConfig: this._app.config
+        });
+        apps[appName] = application;
+
+        return apps[appName];
+        // TODO: errors handler
     }
 
     /**
