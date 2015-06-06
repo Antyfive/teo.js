@@ -4,7 +4,9 @@
  * @date 5/26/15
  */
 
-const Base = require("./teo.base"),
+const
+    fs = require("fs"),
+    Base = require("./teo.base"),
     _ = require("./teo.utils"),
     AppCache = require("./teo.app.cache");
 
@@ -15,53 +17,47 @@ class App extends Base {
         this.cache = new AppCache();
 
         _.generator(function* () {
-            yield _.async(this.initApp.bind(this));
+            yield _.async(this.initApp.bind(this)).catch(logger.error);
             // TODO: create client, client extensions
             return this;
         }.bind(this), this.callback);
     }
 
-    initApp() {
-        return (function* () {
-            yield _.async(this.loadConfig.bind(this));
-            yield _.async(this.collectExecutableFiles.bind(this));
-            yield _.async(this.initDb.bind(this));
-            return this
-        }.bind(this))();
+    * initApp() {
+        yield _.async(this.loadConfig.bind(this)).catch(logger.error);
+        yield _.async(this.collectExecutableFiles.bind(this)).catch(logger.error);
+        yield _.async(this.initDb.bind(this)).catch(logger.error);
+        return this;
     }
 
-    loadConfig() {
-        return (function* () {
-            let configFiles = yield _.thunkify(fs.readdir)(this.config.confDir);
-            let filesCount = configFiles.length;
+    * loadConfig() {
+        let configFiles = yield _.thunkify(fs.readdir)(this.config.confDir);
+        let filesCount = configFiles.length;
 
-            if (filesCount > 0) {
-                for (var f in configFiles) {
-                    let file = configFiles[f],
-                        confFile = this.config.confDir + "/" + file;
+        if (filesCount > 0) {
+            for (var f in configFiles) {
+                let file = configFiles[f],
+                    confFile = this.config.confDir + "/" + file;
 
-                    if (confFile.indexOf(".js") !== -1) {
-                        let config = this._getScript(confFile);
-                        this._applyConfig(config);
-                    }
+                if (confFile.indexOf(".js") !== -1) {
+                    let config = this._getScript(confFile);
+                    this._applyConfig(config);
                 }
             }
+        }
 
-            return this.config || {};
-        }.bind(this))();
+        return this.config || {};
     }
 
-    collectExecutableFiles() {
-        return (function* () {
-            yield _.async(this._readAppDirs.bind(this));
-            yield _.async(this._readAppFiles.bind(this));
-        }.bind(this))();
+    * collectExecutableFiles() {
+        yield _.async(this._readAppDirs.bind(this)).catch(logger.error);
+        yield _.async(this._readAppFiles.bind(this)).catch(logger.error);
+
+        return this;
     }
 
-    initDb() {  // TODO
-        return (function* () {
-            return this;
-        }.bind(this))();
+    * initDb() {  // TODO
+        return this;
     }
 
     // ----
@@ -81,12 +77,10 @@ class App extends Base {
     }
 
     _applyConfig(conf) {
-        var app = this,
+        let app = this,
             config = (typeof conf === "object" ? conf : {});
 
-        this.config = this.config || {};
-
-        _.extend(this.config, config);
+        _.extend(this.config, this.config.coreConfig, config);
 
         /**
          * Getter of config by mode ( development or production )
@@ -98,61 +92,53 @@ class App extends Base {
         };
     }
     // ----
-    _readAppDirs() {
-        return (function* () {
-            let dirs = this.config.get("appDirs") || [];
-            let l = dirs.length;
+    * _readAppDirs() {
+        let dirs = this.config.get("appDirs") || [];
+        let l = dirs.length;
 
-            for (var i = 0; i < l; i++) {
-                let currentDir = dirs[i];
-                yield _.async(this.__collectAppDirFiles.bind(this, this.config.appDir + "/" + currentDir));
-            }
-        }.bind(this))();
+        for (var i = 0; i < l; i++) {
+            let currentDir = dirs[i];
+            yield _.async(this.__collectAppDirFiles.bind(this, this.config.appDir + "/" + currentDir)).catch(logger.error);
+        }
     }
 
-    __collectAppDirFiles(dir) {
-        return (function* () {
-            let files = yield _.thunkify(fs.readdir)(dir);
-            let l = files.length;
+    * __collectAppDirFiles(dir) {
+        let files = yield _.thunkify(fs.readdir)(dir);
+        let l = files.length;
 
-            for (var i = 0; i < l; i++) {
-                let file = dir + "/" + files[i];
-                yield _.async(this.__loadFile.bind(this, file));
-            }
+        for (var i = 0; i < l; i++) {
+            let file = dir + "/" + files[i];
+            yield _.async(this.__loadFile.bind(this, file)).catch(logger.error);
+        }
 
-            return this;
-        }.bind(this))()
+        return this;
     }
 
-    __loadFile(filePath) {
-        return (function* () {
-            let stat = _.thunkify(fs.lstat)(filePath);
+    * __loadFile(filePath) {
+        let stat = yield _.thunkify(fs.lstat)(filePath);
 
-            if (!stat.isFile()) {
-                throw new Error("Not a file was found!");
-            }
+        if (!stat.isFile()) {
+            throw new Error("Not a file was found!");
+        }
 
-            let script = this._getScript(filePath);
-            this.cache.add(filePath, script);
+        let script = this._getScript(filePath);
+        this.cache.add(filePath, script);
 
-            return script;
-        }.bind(this))();
+        return script;
     }
 
     // ----
 
-    _readAppFiles() {
-        return (function* () {
-            let files = this.config.get("appFiles");
-            let l = files.length;
+     * _readAppFiles() {
+         let files = this.config.get("appFiles");
+         let l = files.length;
 
-            for (var i = 0; i < l; i++) {
-                let file = this.config.appDir + "/" + files[i];
-                yield _.async(this.__loadFile.bind(this, file));
-            }
+         for (var i = 0; i < l; i++) {
+             let file = this.config.appDir + "/" + files[i];
+             yield _.async(this.__loadFile.bind(this, file)).catch(logger.error);
+         }
 
-            return this;
-        }.bind(this))();
+         return this;
     }
     // ----
     // TODO: start of app, stop
