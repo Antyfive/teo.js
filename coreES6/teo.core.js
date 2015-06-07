@@ -66,8 +66,8 @@ class Core extends Base {
             coreApp: true
         });
         // TODO:
-        /*this.config = this._app.config;
-
+        /*
+         this.config = this._app.config;
         if (this.config.get("cluster").enabled) {
             this.setupWorkersLogging();
         }*/
@@ -149,34 +149,19 @@ class Core extends Base {
      * 2. Start single application by passed name
      * // TODO: generators
      */
-    _start(name, callback) {
-        if (util.isString(name)) {
-            var name = name,
-                callback = (typeof callback === "function") ? callback : function(){};
-        }
-
-        if (util.isFunction(name)) {    // start(callback)
-            var callback = name,
-                name = undefined;
-        }
-
-        if (!util.isUndefined(name)) {
+    * start(name) {
+        if (!util.isUndefined(name)) {  // start single app
             var app = this.getApp(name);
-            app.start(() => {
-                callback(null, app)
-            });
+            yield app.start();
+
+            return app;
         }
-
         else {
-            var functs = [];
-            util.each(this.apps, function(app) {
-                // functs.push(app.start.bind(app));
-                functs.push(function(next) {
-                    app.start(next);
-                });
-            });
+            for (var app in this.apps) {    // start all apps
+                yield this.apps[app].start();
+            }
 
-            async.series(functs, callback);
+            return this.apps;
         }
     }
     // TODO: generators
