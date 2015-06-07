@@ -7,14 +7,10 @@
 const Base = require("./teo.base"),
     _ = require("./teo.utils");
 
-module.exports = {
-    Client: Client,
-    ClientFactory: ClientFactory
-};
-
 class Client extends Base {
     constructor(config, callback) {
         super(config, callback);
     }
-
 }
+
+module.exports = Client;
