@@ -1,48 +1,23 @@
 /*!
- * Teo.js client
+ * Client factory
  * @author Andrew Teologov <teologov.and@gmail.com>
- * @date 6/6/15
+ * @date 6/7/15
  */
 
 const
     Base = require("./teo.base"),
-    _ = require("./teo.utils"),
-    Routes = require("./teo.client.routes"),
-    //Factory = require("./teo.client.factory");
-    url = require("url"),
-    path = require("path"),
-    mime = require("mime"),
-    http = require("http"),
-    querystring = require("querystring"),
-    fs = require("fs"),
-    renderer = require("hogan.js"),
-    streamer = require("./teo.client.streamer");
-    /* TODO: extensions
-    Session = require("./teo.client.session"),
-    Csrf = require("./teo.client.session.csrf"),
-    Cookie = require("./teo.client.cookie");*/
+    _ = require("./teo.utils");
 
-// ---- mime types additional settings
-mime.default_type = "text/html";
-// extra mime types
-mime.define({
-    "font/ttf": ["ttf"],
-    "font/eot": ["eot"],
-    "font/otf": ["otf"],
-    "font/woff": ["woff"]
-});
+class ClientFactory extends Base {
+    constructor(opts) {
+        super(opts);
 
-class Client extends Base {
-    constructor(config, callback) {
-        super(config, callback);
-
-        this.req = this.config.req;
-        this.res = this.config.res;
+        this.req = opts.req;
+        this.res = opts.res;
         // ----
-        this.app = this.config.app; // TODO: do not pass complete app reference here, only config, and file cache
         this.parsedUrl = url.parse(this.req.url, true); // parse query string as well (second argument)
         this.pathname = this.parsedUrl.pathname;
-        this.route = Client.routes.matchRoute(this.req.method, this.pathname);
+        this.route = this.matchRoute(this.req.method, this.pathname);
         this.extension = _.getExtension(this.pathname);// TODO: improve
         // this.context = new ClientContext({req: this.req, res: this.res, app: this.app});
         // ----
@@ -50,18 +25,6 @@ class Client extends Base {
         this.mixinReq();
         this.mixinRes();
     }
-
-    // ---- ----
-
-    static Factory(config) {
-        /*_.extend(config, {
-            routes: Client.routes
-        });
-        return new Factory(config);*/
-
-        return new Client(config);
-    }
-    // ---- ----
 
     /**
      * Process call
@@ -91,12 +54,12 @@ class Client extends Base {
                 }
 
                 // ----
-                /*var csrfToken = payload[this.req.csrf.keyName];
+                var csrfToken = payload[this.req.csrf.keyName];
 
                 if (csrfToken !== this.req.csrf.getToken()) {
                     this.res.send(403, "Invalid CSRF token!");
                     return;
-                }*/
+                }
                 this.dispatch();
             }.bind(this));
         }
@@ -109,7 +72,7 @@ class Client extends Base {
      * Dispatch call after first process is finished
      */
     dispatch() {
-        if (this.route != null && (this.route.handler && (typeof this.route.handler.callback === "function"))) {
+        if (this.route != null && (this.route.handler && (typeof this.route.handler.callback === 'function'))) {
             try {
                 this.context = this.route.handler.callback.apply(null, [this.req, this.res]);
             } catch (e) {
@@ -186,14 +149,14 @@ class Client extends Base {
          */
         this.res.render = function(tpl, context, callback) {
             var _mixinContextObj = function(obj) {  // TODO: mixin layout response in the one place
-                //obj._csrfToken = this.req.csrf.getToken();
+                obj._csrfToken = this.req.csrf.getToken();
                 return obj;
             }.bind(this);
             var context = context || {};
 
             this._render(tpl, context.partial || {}, function(err, output) {
                 if (err) {
-                    if (_.isFunction(callback)) {
+                    if (util.isFunction(callback)) {
                         callback(err);
                     }
                     else {
@@ -206,7 +169,7 @@ class Client extends Base {
                 obj.partial = {};
                 obj.partial[tpl] = output;
 
-                if (typeof callback === "function") {   // if callback - than return output only
+                if (typeof callback === 'function') {   // if callback - than return output only
                     callback(null, output);
                 }
                 else {  // otherwise, render layout
@@ -232,7 +195,7 @@ class Client extends Base {
         }.bind(this);
 
         this.res.json = function(obj) {
-            this.res.setHeader("Content-Type", "application/json");
+            this.res.setHeader('Content-Type', 'application/json');
             this.res.send(200, obj, "json");
         }.bind(this);
 
@@ -240,11 +203,10 @@ class Client extends Base {
         /**
          * Expects one or two arguments, if one argument is passed, then it's going to be a response body
          * res.send(body)
-         * res.send(500, "errMsg")
+         * res.send(500, 'errMsg')
          * res.send(200, body, "json") -- to set force header
          */
         this.res.send = function() {
-            debugger;
             var args = [].slice.call(arguments);
             var code;
             var body;
@@ -257,7 +219,7 @@ class Client extends Base {
 
             if (args.length === 1) {
                 code = +args[0];
-                if (_.isNaN(code) || (code < 100 || code > 511)) {    // if it's not status code (based on http.STATUS_CODES), than it's error
+                if (utils.isNaN(code) || (code < 100 || code > 511)) {    // if it's not status code (based on http.STATUS_CODES), than it's error
                     code = 200;
                     body = args[0];
                 }
@@ -271,17 +233,17 @@ class Client extends Base {
             if (body instanceof Buffer) {
                 body = body.toString();
             }
-            var sendJson = (contentType.match(/json/) || _.isObject(body));
+            var sendJson = (contentType.match(/json/) || utils.isObject(body));
 
-            if (contentType.match(/json/) && !_.isObject(body)) {
+            if (contentType.match(/json/) && !utils.isObject(body)) {
                 logger.warn("Sending not a object as JSON body response:", body);
             }
 
             var response = sendJson ?
                 this.buildRespObject(code, body) :
-                (_.isString(body) ? body : http.STATUS_CODES[code]);
+                (utils.isString(body) ? body : http.STATUS_CODES[code]);
 
-            if (_.isString(response)) {
+            if (utils.isString(response)) {
                 writeHeadObj["Content-Length"] = response.length;
             }
 
@@ -293,7 +255,7 @@ class Client extends Base {
 
     mixinReq() {
         // currently, strict order of mixins here
-        /*this.req.cookie = new Cookie({
+        this.req.cookie = new Cookie({
             req: this.req,
             res: this.res,
             config: this.app.config.get("cookie")
@@ -306,7 +268,7 @@ class Client extends Base {
             req: this.req,
             res: this.res,
             config: this.app.config.get("csrf")
-        });*/
+        });
 
         if (this.route) {   // extracted from route parsed parameters object (e.g /route/:id )
             this.req.params = this.route.params;
@@ -386,7 +348,4 @@ class Client extends Base {
     }
 }
 
-Client.routes = new Routes();
-// TODO: session
-
-module.exports = Client;
+module.exports = ClientFactory;

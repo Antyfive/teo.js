@@ -6,7 +6,8 @@
 
 const _ = require("lodash"),
     util = require("util"),
-    co = require("co");
+    co = require("co"),
+    path = require("path");
 
 /**
  * Creates a thunk from a passed function
@@ -48,6 +49,10 @@ util.promise = function(fn) {
     return new Promise((resolve, reject) => {
         return fn(resolve, reject);
     });
+};
+
+util.getExtension = function( routeStr ) {
+    return path.extname(routeStr).replace(".", "").toLowerCase();
 };
 
 _.mixin(util);
