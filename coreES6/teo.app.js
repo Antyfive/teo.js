@@ -26,7 +26,6 @@ class App extends Base {
         _.generator(function* () {
             yield _.async(this.initApp.bind(this)).catch(logger.error);
             // TODO: create client, client extensions
-            this.client = new Client();
             return this;
         }.bind(this), this.callback);
     }
@@ -207,16 +206,16 @@ class App extends Base {
 
     _createContext() {
         return function(req, res) {
-            /*var client = new this.client.Factory({req: req, res: res});
-            if (this._middleware.count() > 0) {
-                this._middleware.run(client.req, client.res, function() {
-                    client.process.apply(client, arguments);
-                });
-            }
-            else {
-                client.process();
-            }*/
-            res.end("ES6");
+            var client = Client.Factory({req: req, res: res, app: this});   // as for now, pass hole app
+            //if (this._middleware.count() > 0) {
+            //    this._middleware.run(client.req, client.res, function() {
+            //        client.process.apply(client, arguments);
+            //    });
+            //}
+            //else {
+            debugger;
+            client.process();
+            //}
         }.bind(this);
     }
 
@@ -230,13 +229,13 @@ class App extends Base {
             let script = scripts[i];
             // TODO: improve
             if (script.match(/\/controllers\//)) {
-                yield _.async(this._runController.bind(this, script, [this.client.routes, ((this._canUseDb() && this.db.getOrm() || undefined))]));
+                yield _.async(this._runController.bind(this, script, [Client.routes, ((this._canUseDb() && this.db.getOrm() || undefined))]));
             }
             else if (script.match(/\/models\//)) {
                 yield _.async(this._runModel.bind(this, script));
             }
             else { // TODO: do allow execute other scripts?
-                yield _.async(this._runController.bind(this, script, [this.client.routes, ((this._canUseDb() && this.db.getOrm() || undefined))]));
+                yield _.async(this._runController.bind(this, script, [Client.routes, ((this._canUseDb() && this.db.getOrm() || undefined))]));
             }
         }
         return this;
