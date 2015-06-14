@@ -8,7 +8,6 @@ const
     Base = require("./teo.base"),
     _ = require("./teo.utils"),
     Routes = require("./teo.client.routes"),
-    //Factory = require("./teo.client.factory");
     url = require("url"),
     path = require("path"),
     mime = require("mime"),
@@ -70,39 +69,46 @@ class Client extends Base {
      * TODO: improve
      */
     process() {
-        if (arguments.length > 0) {
+        if (arguments.length > 0) { // in case, middleware will pass something
             this.res.send.apply(this.res, this.parseProcessArgs.apply(this, arguments));
         }
-        if (this.req.method.toLowerCase() === "post") {
-            var body = "";
+        var reqChunks = [];
+        var contentType = this.req.headers["content-type"];
+
+        if (contentType && contentType.indexOf("multipart") === 0) {
+            // TODO: parse multipart
+            debugger;
+        } else {
             this.req.on("data", function(chunk) {
-                body += chunk
+                reqChunks.push(chunk);
             });
             this.req.on("end", function() {
                 // ----
-                var contentType = this.req.headers["content-type"], payload;
+                var body = reqChunks.join();
+                var payload;
 
                 try {
+                    // TODO: multipart
                     payload = (contentType === "application/json") ? JSON.parse(body) : querystring.parse(body);
                     this.setReqBody(payload);
                 } catch(e) {
                     this.res.send(500, e.message);
                     return;
                 }
-
                 // ----
                 /*var csrfToken = payload[this.req.csrf.keyName];
 
-                if (csrfToken !== this.req.csrf.getToken()) {
-                    this.res.send(403, "Invalid CSRF token!");
-                    return;
-                }*/
+                 if (csrfToken !== this.req.csrf.getToken()) {
+                 this.res.send(403, "Invalid CSRF token!");
+                 return;
+                 }*/
                 this.dispatch();
             }.bind(this));
         }
-        else {
-            this.dispatch();
-        }
+    }
+
+    _process() {
+
     }
 
     /**
@@ -151,8 +157,7 @@ class Client extends Base {
     serveStatic(path, callback) {
         var path = String(path),
             absPath = this.app.appDir + path,
-            cached = this.app.cache.get(absPath),
-            self = this;
+            cached = this.app.cache.get(absPath);
 
         if (cached != null) {
             callback(null, absPath, cached);
@@ -164,12 +169,12 @@ class Client extends Base {
                             logger.error(err.message);
                             callback(err.message, absPath);
                         } else {
-                            if (self.app.config.get("cache").static === true) { // add to cache, if file exists
-                                self.app.cache.add(absPath, data);
+                            if (this.app.config.get("cache").static === true) { // add to cache, if file exists
+                                this.app.cache.add(absPath, data);
                             }
                             callback(null, absPath, data);
                         }
-                    });
+                    }.bind(this));
                 } else {
                     callback(404, "Requested file does not exists");
                 }
@@ -244,7 +249,6 @@ class Client extends Base {
          * res.send(200, body, "json") -- to set force header
          */
         this.res.send = function() {
-            debugger;
             var args = [].slice.call(arguments);
             var code;
             var body;
