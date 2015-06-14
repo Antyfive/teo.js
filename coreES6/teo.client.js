@@ -16,10 +16,6 @@ const
     fs = require("fs"),
     renderer = require("hogan.js"),
     streamer = require("./teo.client.streamer");
-    /* TODO: extensions
-    Session = require("./teo.client.session"),
-    Csrf = require("./teo.client.session.csrf"),
-    Cookie = require("./teo.client.cookie");*/
 
 // ---- mime types additional settings
 mime.default_type = "text/html";
@@ -105,10 +101,6 @@ class Client extends Base {
                 this.dispatch();
             }.bind(this));
         }
-    }
-
-    _process() {
-
     }
 
     /**
@@ -391,6 +383,5 @@ class Client extends Base {
 }
 
 Client.routes = new Routes();
-// TODO: session
 
 module.exports = Client;
