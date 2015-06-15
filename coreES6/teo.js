@@ -7,7 +7,7 @@
 const
     _ = require("./teo.utils"),
     Base = require("./teo.base"),
-    // Cluster = require("./teo.cluster"),
+    Cluster = require("./teo.cluster"),
     Core = require("./teo.core");
 
 // ----
@@ -54,18 +54,20 @@ class Teo extends Base {
      * @param callback
      */
     start(appName, callback) {
-        /*if (this.core.config.get("cluster").enabled) {
-            var cluster = new Cluster(function() {
-                this.core.start.apply(this.core, args);
-            }.bind(this));
-        }
-        else {*/
-            _.generator(function* () {
-                return yield this.core.start(appName);  // will return started app
-            }.bind(this), function(err, res) {
+        _.generator(function* () {
+            if (this.core.coreAppConfig.get("cluster").enabled) {
+                yield _.promise(function (resolve, reject) {
+                    new Cluster(resolve);
+                }.bind(this));
+            }
+            return yield this.core.start(appName);
+        }.bind(this), function(err, res) {
+            if (err) {
+                throw new Error(err);
+            } else {
                 callback(null, res);
-            });
-        //}
+            }
+        });
     }
 }
 
