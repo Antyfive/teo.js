@@ -71,6 +71,7 @@ class Core extends Base {
         if (this.config.get("cluster").enabled) {
             this.setupWorkersLogging();
         }*/
+        this.coreAppConfig = this._app.config;
         return this._app;
     }
     /**
@@ -132,7 +133,7 @@ class Core extends Base {
             homeDir: this.config.homeDir,
             name: appName,
             mode: this.config.mode,
-            coreConfig: this._app.config
+            coreConfig: this.coreAppConfig
         });
         apps[appName] = application;
 
@@ -143,11 +144,6 @@ class Core extends Base {
     /**
      * Starts application
      * @param {String} [name] :: application name
-     * @param {Function} [callback]
-     * It can be used in two cases:
-     * 1. Start all apps, if no name passed
-     * 2. Start single application by passed name
-     * // TODO: generators
      */
     * start(name) {
         if (!util.isUndefined(name)) {  // start single app
@@ -190,6 +186,8 @@ class Core extends Base {
         return this.apps;
     }
 
+    // getters / setters ----
+
     /**
      * Get app it's by name
      * @param {String} name
@@ -197,6 +195,14 @@ class Core extends Base {
      */
     getApp(name) {
         return this.apps[name];
+    }
+
+    get coreAppConfig() {
+        return this._config;
+    }
+
+    set coreAppConfig(val) {
+        this._config = val;
     }
 }
 
