@@ -15,13 +15,16 @@ const
     Base = require("./teo.base"),
     _ = require("./teo.utils"),
     AppCache = require("./teo.app.cache"),
-    Client = require("./teo.client");
+    Client = require("./teo.client"),
+    Middleware = require("./teo.middleware"),
+    co = require("co");
 
 class App extends Base {
     constructor(config, callback) {
         super(config, callback);
 
         this.cache = new AppCache();
+        this._middleware = new Middleware();
 
         _.generator(function* () {
             yield _.async(this.initApp.bind(this)).catch(logger.error);
@@ -207,16 +210,13 @@ class App extends Base {
     _createContext() {
         return function(req, res) {
             var client = Client.Factory({req: req, res: res, app: this});   // as for now, pass hole app
-            //if (this._middleware.count() > 0) {
-            //    this._middleware.run(client.req, client.res, function() {
-            //        client.process.apply(client, arguments);
-            //    });
-            //}
-            //else {
-            debugger;
-            client.process();
-            //}
+            this._middleware.run(this.respond, client).catch(logger.error); // TODO: end resp with error (500)
         }.bind(this);
+    }
+
+    * respond(next) {
+        yield *next;        // run chain of middleware functions
+        this.process();     // client.process
     }
 
     // ---- ----
@@ -259,7 +259,7 @@ class App extends Base {
                 script.apply(this, args);
                 resolve();
             }.bind(this));
-        });
+        }.bind(this));
 
         return this;
     }
@@ -303,6 +303,14 @@ class App extends Base {
 
     * _runExtensions() {
         return this;
+    }
+
+    /**
+     * Middleware wrapper
+     * @param {Function} func
+     */
+    middleware(func) {
+        this._middleware.add(func);
     }
 }
 

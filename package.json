@@ -56,28 +56,28 @@
   "dependencies": {
     "async": ">=0.2.x",
     "co": "^4.5.4",
-    "colors": ">=1.x",
-    "commander": "~2.6.x",
-    "cookies": "~0.5.x",
-    "hogan.js": "~2.x",
+    "colors": "^1.1.2",
+    "commander": "^2.6.0",
+    "composition": "^2.1.1",
+    "cookies": "^0.5.0",
+    "hogan.js": "^2.0.0",
     "lodash": "^3.9.1",
     "mime": "*",
-    "mkdirp": ">=0.3.x",
-    "moment": "~2.9.x",
-    "path-to-regexp-wrap": "*",
-    "underscore": "~1.6.x"
+    "mkdirp": "^0.5.1",
+    "moment": "^2.9.0",
+    "path-to-regexp-wrap": "*"
   },
   "devDependencies": {
     "babel": "^5.4.3",
     "blanket": "^1.1.6",
-    "chai": "~1.9.1",
+    "chai": "^3.0.0",
     "mocha": "^2.2.5",
-    "sails-disk": "0.10.x",
-    "sails-mysql": "0.10.x",
-    "semver": "~4.1.0",
-    "sinon-chai": "~2.5.0",
-    "supertest": "~0.14.0",
-    "waterline": "0.10.x"
+    "sails-disk": "^0.10.8",
+    "sails-mysql": "^0.10.12",
+    "semver": "^4.3.6",
+    "sinon-chai": "^2.8.0",
+    "supertest": "^1.0.1",
+    "waterline": "^0.10.24"
   },
   "repository": {
     "type": "git",

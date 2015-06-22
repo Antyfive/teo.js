@@ -46,7 +46,7 @@ function _parseMessage() {
 }
 
 function _format(message) {
-    return util.format("[%s] %s", moment(), message);
+    return util.format("[%s] %s", moment().toString().cyan, message);
 }
 
 /**
