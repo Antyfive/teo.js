@@ -17,6 +17,9 @@ const
     renderer = require("hogan.js"),
     streamer = require("./teo.client.streamer");
 
+/**
+ * Client layers: app => client => context => req & res
+ */
 // ---- mime types additional settings
 mime.default_type = "text/html";
 // extra mime types
@@ -39,6 +42,7 @@ class Client extends Base {
         this.pathname = this.parsedUrl.pathname;
         this.route = Client.routes.matchRoute(this.req.method, this.pathname);
         this.extension = _.getExtension(this.pathname);// TODO: improve
+        this.contentType = this.req.headers["content-type"];
         // this.context = new ClientContext({req: this.req, res: this.res, app: this.app});
         // ----
         // TODO: move mixins to the separate class
@@ -49,11 +53,6 @@ class Client extends Base {
     // ---- ----
 
     static Factory(config) {
-        /*_.extend(config, {
-            routes: Client.routes
-        });
-        return new Factory(config);*/
-
         return new Client(config);
     }
     // ---- ----
@@ -65,13 +64,8 @@ class Client extends Base {
      * TODO: improve
      */
     process() {
-        if (arguments.length > 0) { // in case, middleware will pass something
-            this.res.send.apply(this.res, this.parseProcessArgs.apply(this, arguments));
-        }
         var reqChunks = [];
-        var contentType = this.req.headers["content-type"];
-
-        if (contentType && contentType.indexOf("multipart") === 0) {
+        if (this.contentType && this.contentType.indexOf("multipart") === 0) {
             // TODO: parse multipart
             debugger;
         } else {
@@ -85,7 +79,7 @@ class Client extends Base {
 
                 try {
                     // TODO: multipart
-                    payload = (contentType === "application/json") ? JSON.parse(body) : querystring.parse(body);
+                    payload = (this.contentType === "application/json") ? JSON.parse(body) : querystring.parse(body);
                     this.setReqBody(payload);
                 } catch(e) {
                     this.res.send(500, e.message);
@@ -280,7 +274,7 @@ class Client extends Base {
             if (_.isString(response)) {
                 writeHeadObj["Content-Length"] = response.length;
             }
-
+            // TODO: pipe
             this.res.writeHead(code, writeHeadObj);
 
             this.res.end(response);
