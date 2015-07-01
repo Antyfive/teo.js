@@ -10,44 +10,64 @@ const
     Routes = require("./teo.client.routes"),
     url = require("url"),
     path = require("path"),
-    mime = require("mime"),
-    http = require("http"),
     querystring = require("querystring"),
     fs = require("fs"),
     renderer = require("hogan.js"),
-    streamer = require("./teo.client.streamer");
+    streamer = require("./teo.client.streamer"),
+    ClientContext = require("./teo.client.context");
 
 /**
  * Client layers: app => client => context => req & res
  */
-// ---- mime types additional settings
-mime.default_type = "text/html";
-// extra mime types
-mime.define({
-    "font/ttf": ["ttf"],
-    "font/eot": ["eot"],
-    "font/otf": ["otf"],
-    "font/woff": ["woff"]
-});
 
 class Client extends Base {
     constructor(config, callback) {
         super(config, callback);
 
-        this.req = this.config.req;
-        this.res = this.config.res;
-        // ----
         this.app = this.config.app; // TODO: do not pass complete app reference here, only config, and file cache
-        this.parsedUrl = url.parse(this.req.url, true); // parse query string as well (second argument)
-        this.pathname = this.parsedUrl.pathname;
+        // ---- ----
+        this.context = new ClientContext({
+            req: this.config.req,
+            res: this.config.res
+        });
+        // bind events ---- ----
+        this.req.on("error", this.onReqError.bind(this));
+        // ---- ----
         this.route = Client.routes.matchRoute(this.req.method, this.pathname);
+        // set req route params
+        if (this.route) {
+            this.req.params = this.route.params;
+        }
         this.extension = _.getExtension(this.pathname);// TODO: improve
-        this.contentType = this.req.headers["content-type"];
-        // this.context = new ClientContext({req: this.req, res: this.res, app: this.app});
         // ----
-        // TODO: move mixins to the separate class
-        this.mixinReq();
-        this.mixinRes();
+    }
+
+    // error handlers ---- ----
+
+    onReqError(code, message) {
+        this.res.send(code, message);
+    }
+
+    // getters & setters ----
+
+    get req() {
+        return this.context.req;
+    }
+
+    get parsedUrl() {
+        return this.req.parsedUrl;
+    }
+
+    get pathname() {
+        return this.req.pathname
+    }
+
+    get contentType() {
+        return this.req.contentType
+    }
+
+    get res() {
+        return this.context.res;
     }
 
     // ---- ----
@@ -58,43 +78,10 @@ class Client extends Base {
     // ---- ----
 
     /**
-     * Process call
-     * Could be called with arguments. In this case immediate response with middleware error.
-     * Usage: .process() || .process(errCode) || process("Err msg") || process(code, err)
-     * TODO: improve
+     * Process call on request end
      */
     process() {
-        var reqChunks = [];
-        if (this.contentType && this.contentType.indexOf("multipart") === 0) {
-            // TODO: parse multipart
-            debugger;
-        } else {
-            this.req.on("data", function(chunk) {
-                reqChunks.push(chunk);
-            });
-            this.req.on("end", function() {
-                // ----
-                var body = reqChunks.join();
-                var payload;
-
-                try {
-                    // TODO: multipart
-                    payload = (this.contentType === "application/json") ? JSON.parse(body) : querystring.parse(body);
-                    this.setReqBody(payload);
-                } catch(e) {
-                    this.res.send(500, e.message);
-                    return;
-                }
-                // ----
-                /*var csrfToken = payload[this.req.csrf.keyName];
-
-                 if (csrfToken !== this.req.csrf.getToken()) {
-                 this.res.send(403, "Invalid CSRF token!");
-                 return;
-                 }*/
-                this.dispatch();
-            }.bind(this));
-        }
+        this.dispatch();
     }
 
     /**
@@ -103,7 +90,7 @@ class Client extends Base {
     dispatch() {
         if (this.route != null && (this.route.handler && (typeof this.route.handler.callback === "function"))) {
             try {
-                this.context = this.route.handler.callback.apply(null, [this.req, this.res]);
+                this.context = this.route.handler.callback.apply(this, [this.req, this.res]);
             } catch (e) {
                 logger.error(e);
                 this.res.send(500);
@@ -168,182 +155,60 @@ class Client extends Base {
         }
     }
 
-    mixinRes() {
-        /**
-         * Renderer
-         * @param {String} tpl :: template name
-         * @param {Object} context :: data to render
-         * @param {Function} [callback] :: if callback is passed - no send of the response
-         */
-        this.res.render = function(tpl, context, callback) {
-            var _mixinContextObj = function(obj) {  // TODO: mixin layout response in the one place
-                //obj._csrfToken = this.req.csrf.getToken();
-                return obj;
-            }.bind(this);
-            var context = context || {};
+    // ---- ---- ---- ---- ---- ----
 
-            this._render(tpl, context.partial || {}, function(err, output) {
-                if (err) {
-                    if (_.isFunction(callback)) {
-                        callback(err);
-                    }
-                    else {
-                        this.res.send(500);
-                    }
-                    return;
-                }
-                delete context.partial;
-                var obj = context;
-                obj.partial = {};
-                obj.partial[tpl] = output;
-
-                if (typeof callback === "function") {   // if callback - than return output only
-                    callback(null, output);
-                }
-                else {  // otherwise, render layout
-                    var cached = this.app.cache.get(this.route.path);
-                    if (cached != null) {
-                        this.res.send(cached);
-                    }
-                    else {
-                        _mixinContextObj(obj);
-                        this._render("layout", obj, function(err, output) { // TODO: mixin render only in the res.
-                            if (err) {
-                                this.res.send(500);
-                                return;
-                            }
-                            if (Object.keys(this.req.params).length === 0 && this.app.config.get("cache").response === true) {       // TODO AT: make caching for routes with changeable params           // TODO AT: make caching for routes with changeable params
-                                this.app.cache.add(this.route.path, output);
-                            }
-                            this.res.send(output);
-                        }.bind(this));
-                    }
-                }
-            }.bind(this));
-        }.bind(this);
-
-        this.res.json = function(obj) {
-            this.res.setHeader("Content-Type", "application/json");
-            this.res.send(200, obj, "json");
-        }.bind(this);
-
-
-        /**
-         * Expects one or two arguments, if one argument is passed, then it's going to be a response body
-         * res.send(body)
-         * res.send(500, "errMsg")
-         * res.send(200, body, "json") -- to set force header
-         */
-        this.res.send = function() {
-            var args = [].slice.call(arguments);
-            var code;
-            var body;
-
-            var extension = _.getExtension(this.pathname);
-            var contentType = mime.lookup(args[2] || extension || this.req.headers.accept || "html");
-            var writeHeadObj = {
-                "Content-Type": contentType
-            };
-
-            if (args.length === 1) {
-                code = +args[0];
-                if (_.isNaN(code) || (code < 100 || code > 511)) {    // if it's not status code (based on http.STATUS_CODES), than it's error
-                    code = 200;
-                    body = args[0];
-                }
-            }
-
-            if (args.length > 1) {
-                code = +args[0];
-                body = args[1];
-            }
-            // set buffer to string
-            if (body instanceof Buffer) {
-                body = body.toString();
-            }
-            var sendJson = (contentType.match(/json/) || _.isObject(body));
-
-            if (contentType.match(/json/) && !_.isObject(body)) {
-                logger.warn("Sending not a object as JSON body response:", body);
-            }
-
-            var response = sendJson ?
-                this.buildRespObject(code, body) :
-                (_.isString(body) ? body : http.STATUS_CODES[code]);
-
-            if (_.isString(response)) {
-                writeHeadObj["Content-Length"] = response.length;
-            }
-            // TODO: pipe
-            this.res.writeHead(code, writeHeadObj);
-
-            this.res.end(response);
-        }.bind(this);
-    }
-
-    mixinReq() {
-        // currently, strict order of mixins here
-        /*this.req.cookie = new Cookie({
-            req: this.req,
-            res: this.res,
-            config: this.app.config.get("cookie")
-        });
-        this.req.session = this.session.start({
-            req: this.req,
-            res: this.res
-        });
-        this.req.csrf = new Csrf({
-            req: this.req,
-            res: this.res,
-            config: this.app.config.get("csrf")
-        });*/
-
-        if (this.route) {   // extracted from route parsed parameters object (e.g /route/:id )
-            this.req.params = this.route.params;
-        }
-        this.req.query = this.parsedUrl.query;
-    }
-
-    buildRespObject(code, data) {
-        var obj = {
-            code: code,
-            data: data,
-            message: http.STATUS_CODES[code]
-        };
-        return JSON.stringify(obj);
-    }
-
+    // TODO: get rid of this here
     /**
-     * Sets req body
-     * @param {Object} body
+     * Renderer
+     * @param {String} tpl :: template name
+     * @param {Object} context :: data to render
+     * @param {Function} [callback] :: if callback is passed - no send of the response
      */
-    setReqBody(body) {
-        this.req.body = body;
-    }
+    render(tpl, context, callback) {
+        var _mixinContextObj = function(obj) {  // TODO: mixin layout response in the one place
+            //obj._csrfToken = this.req.csrf.getToken();
+            return obj;
+        }.bind(this);
+        var context = context || {};
 
-    /**
-     * Parse process method arguments
-     * @returns {Array}
-     */
-    parseProcessArgs() {
-        var err = 500;
-        var body;
-        // Only error body is set // e.g. next("My err") || next(400)
-        if (arguments.length === 1) {
-
-            if (!+arguments[0]) {
-                body = arguments[0].toString();
-            } else {
-                err = +arguments[0];
+        this._render(tpl, context.partial || {}, function(err, output) {
+            if (err) {
+                if (_.isFunction(callback)) {
+                    callback(err);
+                }
+                else {
+                    this.res.send(500);
+                }
+                return;
             }
-        }
-        // e.g. next(500, "Msg")
-        else {
-            err = +arguments[0];
-            body = arguments[1].toString();
-        }
+            delete context.partial;
+            var obj = context;
+            obj.partial = {};
+            obj.partial[tpl] = output;
 
-        return [err, body];
+            if (typeof callback === "function") {   // if callback - than return output only
+                callback(null, output);
+            }
+            else {  // otherwise, render layout
+                var cached = this.app.cache.get(this.route.path);
+                if (cached != null) {
+                    this.res.send(cached);
+                }
+                else {
+                    _mixinContextObj(obj);
+                    this._render("layout", obj, function(err, output) { // TODO: mixin render only in the res.
+                        if (err) {
+                            this.res.send(500);
+                            return;
+                        }
+                        if (Object.keys(this.req.params).length === 0 && this.app.config.get("cache").response === true) {       // TODO AT: make caching for routes with changeable params           // TODO AT: make caching for routes with changeable params
+                            this.app.cache.add(this.route.path, output);
+                        }
+                        this.res.send(output);
+                    }.bind(this));
+                }
+            }
+        }.bind(this));
     }
 
     /**
@@ -374,6 +239,7 @@ class Client extends Base {
             callback(null, output);
         }.bind( this ));
     }
+    // ---- ---- ---- ---- ---- ----
 }
 
 Client.routes = new Routes();

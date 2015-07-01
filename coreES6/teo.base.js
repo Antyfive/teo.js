@@ -25,19 +25,11 @@ class Base extends events.EventEmitter {
 	            callback = function() {};
 	    }
 
-		super(config, callback);
+		super();
 		
 	    this.config = config;
 	    this.callback = callback;
 	}
-
-    asyncInit(generator, done) {
-        co(generator).then((res) => {
-            done(null, res);
-        }, (err) => {
-            done(err);
-        });
-    }
 }
 
 module.exports = Base;
