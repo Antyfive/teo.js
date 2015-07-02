@@ -89,22 +89,23 @@ class Client extends Base {
      */
     dispatch() {
         if (this.route != null && (this.route.handler && (typeof this.route.handler.callback === "function"))) {
+            var context;
             try {
-                this.context = this.route.handler.callback.apply(this, [this.req, this.res]);
+                context = this.route.handler.callback.apply(this, [this.req, this.res]);
             } catch (e) {
                 logger.error(e);
                 this.res.send(500);
             }
             // if route's callback returned object, - no render, and automatically send response object
-            if (this.context != null) {
-                this.res.send(this.context);
+            if (context != null) {
+                this.res.send(context);
             }
         }
         else if (this.extension != null) {
             if (this.req.headers["range"]) {
                 var extension = _.getExtension(this.pathname);
                 var contentType = mime.lookup(extension || this.req.headers.accept || "html") ;
-                streamer.stream(this.req, this.res, this.app.appDir + this.pathname, contentType);
+                streamer.stream(this.req, this.res, this.app.config.appDir + this.pathname, contentType);
             } else {
                 this.serveStatic(this.pathname.match(/\/public/) ?
                     this.pathname :
@@ -129,7 +130,7 @@ class Client extends Base {
      */
     serveStatic(path, callback) {
         var path = String(path),
-            absPath = this.app.appDir + path,
+            absPath = this.app.config.appDir + path,
             cached = this.app.cache.get(absPath);
 
         if (cached != null) {
@@ -151,7 +152,7 @@ class Client extends Base {
                 } else {
                     callback(404, "Requested file does not exists");
                 }
-            });
+            }.bind(this));
         }
     }
 
@@ -173,7 +174,7 @@ class Client extends Base {
                     callback(err);
                 }
                 else {
-                    this.res.send(500);
+                    this.res.send(_.isNumber(err) ? err : 500);
                 }
                 return;
             }
