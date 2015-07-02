@@ -2,7 +2,7 @@ language: node_js
 cache:
   - npm
 node_js:
-  - "0.10"
+  - "iojs"
 install:
   - npm install
 before_script: "./bin/teo setup test"
