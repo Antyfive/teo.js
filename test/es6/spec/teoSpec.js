@@ -50,11 +50,11 @@ describe("Testing Teo Main Entry Point", () => {
 
 	});
 
-	it("Should call callback when core created", (done) => {
+	it.skip("Should call callback when core created", (done) => {
 
 		var callbackSpy = sinon.spy(teo, "callback");
 
-		createCoreStub.restore();	
+		createCoreStub.restore();
 
 		teo.createCore();
 
@@ -67,7 +67,7 @@ describe("Testing Teo Main Entry Point", () => {
 
 	});
 
-	it("Should emit 'ready' event when core was initialized", () => {
+	it.skip("Should emit 'ready' event when core was initialized", () => {
 
 		var emitSpy = sinon.spy(teo, "emit");
 
