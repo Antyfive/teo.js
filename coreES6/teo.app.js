@@ -4,7 +4,6 @@
  * @date 5/26/15
  */
 // TODO:
-// middleware
 // orm
 // stop app
 
@@ -12,12 +11,13 @@ const
     fs = require("fs"),
     domain = require("domain"),
     http = require("http"),
+    co = require("co"),
     Base = require("./teo.base"),
     _ = require("./teo.utils"),
     AppCache = require("./teo.app.cache"),
     Client = require("./teo.client"),
     Middleware = require("./teo.middleware"),
-    co = require("co");
+    Extensions = require("./teo.app.extensions");
 
 class App extends Base {
     constructor(config, callback) {
@@ -28,7 +28,6 @@ class App extends Base {
 
         _.generator(function* () {
             yield _.async(this.initApp.bind(this)).catch(logger.error);
-            // TODO: create client, client extensions
             return this;
         }.bind(this), this.callback);
     }
@@ -37,7 +36,7 @@ class App extends Base {
         yield _.async(this.loadConfig.bind(this)).catch(logger.error);
         yield _.async(this.collectExecutableFiles.bind(this)).catch(logger.error);
         yield _.async(this.initDb.bind(this)).catch(logger.error);
-        return this;
+        this._initExtensions();
     }
 
     * loadConfig() {
@@ -62,8 +61,6 @@ class App extends Base {
     * collectExecutableFiles() {
         yield _.async(this._readAppDirs.bind(this)).catch(logger.error);
         yield _.async(this._readAppFiles.bind(this)).catch(logger.error);
-
-        return this;
     }
 
     * initDb() {  // TODO
@@ -114,7 +111,6 @@ class App extends Base {
             let currentDir = dirs[i];
             yield _.async(this.__collectAppDirFiles.bind(this, this.config.appDir + "/" + currentDir)).catch(logger.error);
         }
-        return this;
     }
 
     * __collectAppDirFiles(dir) {
@@ -125,8 +121,6 @@ class App extends Base {
             let file = dir + "/" + files[i];
             yield _.async(this.__loadFile.bind(this, file)).catch(logger.error);
         }
-
-        return this;
     }
 
     * __loadFile(filePath) {
@@ -152,8 +146,6 @@ class App extends Base {
              let file = this.config.appDir + "/" + files[i];
              yield _.async(this.__loadFile.bind(this, file)).catch(logger.error);
          }
-
-         return this;
     }
 
     // ---- ----
@@ -171,8 +163,6 @@ class App extends Base {
                 resolve(this);
             }.bind(this));
         }.bind(this));
-
-        return this;
     }
 
     * stop() {  // TODO:
@@ -238,7 +228,6 @@ class App extends Base {
                 yield _.async(this._runController.bind(this, script, [Client.routes, ((this._canUseDb() && this.db.getOrm() || undefined))]));
             }
         }
-        return this;
     }
 
     * _runController(fileName, args) {
@@ -260,14 +249,12 @@ class App extends Base {
                 resolve();
             }.bind(this));
         }.bind(this));
-
-        return this;
     }
 
     * _runModel(model) {
         if (!this._canUseDb()) {
             logger.warn("Cannot run model " + model + ", as DB usage is disabled in config, or ORM wasn't initialized properly.");
-            return this;
+            return;
         }
 
         let collection = this._getScript(model);
@@ -288,8 +275,6 @@ class App extends Base {
                 resolve();
             }.bind(this));
         });
-
-        return this;
     }
 
     _canUseDb() {   // TODO
@@ -301,8 +286,12 @@ class App extends Base {
         return this;
     }
 
+    _initExtensions() {
+        this.extensions = new Extensions(_.extend({app: this}, this.config.get("extensions")));
+    }
+
     * _runExtensions() {
-        return this;
+        yield _.async(this.extensions.runAll.bind(this.extensions));
     }
 
     /**
