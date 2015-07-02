@@ -12,9 +12,9 @@ const
     path = require("path"),
     querystring = require("querystring"),
     fs = require("fs"),
-    renderer = require("hogan.js"),
     streamer = require("./teo.client.streamer"),
-    ClientContext = require("./teo.client.context");
+    ClientContext = require("./teo.client.context"),
+    viewHelpers = require("./teo.viewHelpers");
 
 /**
  * Client layers: app => client => context => req & res
@@ -165,13 +165,9 @@ class Client extends Base {
      * @param {Function} [callback] :: if callback is passed - no send of the response
      */
     render(tpl, context, callback) {
-        var _mixinContextObj = function(obj) {  // TODO: mixin layout response in the one place
-            //obj._csrfToken = this.req.csrf.getToken();
-            return obj;
-        }.bind(this);
         var context = context || {};
 
-        this._render(tpl, context.partial || {}, function(err, output) {
+        this.serveStatic("/views/" + tpl + ".template", function(err, absPath, template) {
             if (err) {
                 if (_.isFunction(callback)) {
                     callback(err);
@@ -181,63 +177,37 @@ class Client extends Base {
                 }
                 return;
             }
-            delete context.partial;
-            var obj = context;
-            obj.partial = {};
-            obj.partial[tpl] = output;
-
-            if (typeof callback === "function") {   // if callback - than return output only
+            var output = viewHelpers.render(template, context.partial, {delimiters: this.app.config.get("delimiters")});
+            if (_.isFunction(callback)) {   // if callback - than return output only
                 callback(null, output);
             }
             else {  // otherwise, render layout
-                var cached = this.app.cache.get(this.route.path);
+                delete context.partial;
+                context.partial = {};
+                context.partial[tpl] = output;
+                let cached = this.app.cache.get(this.route.path);
                 if (cached != null) {
                     this.res.send(cached);
                 }
                 else {
-                    _mixinContextObj(obj);
-                    this._render("layout", obj, function(err, output) { // TODO: mixin render only in the res.
+                    // _mixinContextObj(obj);
+                    this.serveStatic("/views/layout.template", function(err, absPath, template) {
                         if (err) {
                             this.res.send(500);
                             return;
                         }
+                        //
+                        let output = viewHelpers.render(template, context, {delimiters: this.app.config.get("delimiters")});
+
                         if (Object.keys(this.req.params).length === 0 && this.app.config.get("cache").response === true) {       // TODO AT: make caching for routes with changeable params           // TODO AT: make caching for routes with changeable params
                             this.app.cache.add(this.route.path, output);
                         }
+
                         this.res.send(output);
                     }.bind(this));
                 }
             }
         }.bind(this));
-    }
-
-    /**
-     * Simple renderer
-     * @param {String} templateName
-     * @param {Object} context
-     * @param {Function} callback
-     * @private
-     * TODO: move to view helpers
-     */
-    _render(templateName, context, callback) { // TODO AT: temporal solution get rid of this here
-        this.serveStatic("/views/" + templateName + ".template", function(err, absPath, res) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            var partial = context.partial || {};
-            delete context.partial;
-
-            // copyright
-            context.copyright = copyright;
-            context.version = version;
-
-            var compiled  = renderer.compile(res.toString(), {delimiters:  this.app.config.get("delimiters")}),
-                output = compiled.render(context, partial);
-
-            callback(null, output);
-        }.bind( this ));
     }
     // ---- ---- ---- ---- ---- ----
 }
