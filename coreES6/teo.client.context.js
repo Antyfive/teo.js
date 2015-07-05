@@ -35,7 +35,7 @@ class ClientContext extends Base {
     }
 
     get res() {
-        return this._res;
+        return this._res.res;
     }
 
     set res(val) {

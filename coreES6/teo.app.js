@@ -151,9 +151,9 @@ class App extends Base {
     // ---- ----
 
     * start() {
+        yield _.async(this._runExtensions.bind(this));
         yield _.async(this._runAppScripts.bind(this));
         yield _.async(this._connectOrm.bind(this));
-        yield _.async(this._runExtensions.bind(this));
 
         var withListen = true;
         this.initServer(withListen);
@@ -200,7 +200,10 @@ class App extends Base {
     _createContext() {
         return function(req, res) {
             var client = Client.Factory({req: req, res: res, app: this});   // as for now, pass hole app
-            this._middleware.run(this.respond, client).catch(logger.error); // TODO: end resp with error (500)
+            this._middleware.run(this.respond, client).catch(function(error) {
+                logger.error(error);
+                client.res.send(500);
+            });
         }.bind(this);
     }
 
