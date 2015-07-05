@@ -17,10 +17,6 @@ class TeoReq extends Base {
         this.req.parsedUrl = this.parsedUrl = url.parse(this.req.url, true); // parse query string as well (second argument)
         this.req.pathname = this.pathname = this.parsedUrl.pathname;
         this.req.contentType = this.contentType = this.req.headers["content-type"];
-        // TODO
-        if (this.config.route) {   // extracted from route parsed parameters object (e.g /route/:id )
-            this.req.params = this.config.route.params;
-        }
         this.req.query = this.parsedUrl.query;
 
         this.bindEvents()

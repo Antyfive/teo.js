@@ -23,6 +23,9 @@ mime.define({
 class TeoRes extends Base {
     constructor(config) {
         super(config);
+
+        this.res.send = this.send.bind(this);
+        this.res.json = this.json.bind(this);
     }
 
     get res() {
@@ -75,7 +78,7 @@ class TeoRes extends Base {
         }
 
         var response = sendJson ?
-            this.buildRespObject(code, body) :
+            TeoRes.buildRespObject(code, body) :
             (_.isString(body) ? body : http.STATUS_CODES[code]);
 
         if (_.isString(response)) {
@@ -87,7 +90,7 @@ class TeoRes extends Base {
         this.res.end(response);
     }
 
-    buildRespObject(code, data) {
+    static buildRespObject(code, data) {
         var obj = {
             code: code,
             data: data,
