@@ -17,7 +17,8 @@ const
     AppCache = require("./teo.app.cache"),
     Client = require("./teo.client"),
     Middleware = require("./teo.middleware"),
-    Extensions = require("./teo.app.extensions");
+    Extensions = require("./teo.app.extensions"),
+    Db = require("./db/teo.db");
 
 class App extends Base {
     constructor(config, callback) {
@@ -35,7 +36,7 @@ class App extends Base {
     * initApp() {
         yield _.async(this.loadConfig.bind(this)).catch(logger.error);
         yield _.async(this.collectExecutableFiles.bind(this)).catch(logger.error);
-        yield _.async(this.initDb.bind(this)).catch(logger.error);
+        this.initDb();
         this._initExtensions();
     }
 
@@ -63,8 +64,16 @@ class App extends Base {
         yield _.async(this._readAppFiles.bind(this)).catch(logger.error);
     }
 
-    * initDb() {  // TODO
-        return this;
+    initDb() {
+        if (!this.config.get("db").enabled === true) {
+            return;
+        }
+        try {
+            this.db = new Db(this.config.get("db"));
+        } catch (err) {
+            logger.error(err);
+            throw err;
+        }
     }
 
     // ---- ----
@@ -277,16 +286,24 @@ class App extends Base {
                 this.db.getOrm().getAdapter().addCollection(collection);
                 resolve();
             }.bind(this));
-        });
+        }.bind(this));
     }
 
-    _canUseDb() {   // TODO
-        return false;
+    _canUseDb() {
+        return (this.config.get("db").enabled === true) && this.db;
     }
     // TODO: block ---- ----
 
     * _connectOrm() {
-        return this;
+        if (!this._canUseDb()) {
+            return;
+        }
+
+        yield _.async(this.db.connect.bind(this.db)).catch(function(err) {
+            logger.error(err);
+            throw err;
+        });
+
     }
 
     _initExtensions() {

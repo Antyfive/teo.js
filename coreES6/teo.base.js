@@ -27,8 +27,12 @@ class Base extends events.EventEmitter {
 
 		super();
 		
-	    this.config = config;
+	    this.applyConfig(config);
 	    this.callback = callback;
+	}
+
+	applyConfig(config) {
+		this.config = config;
 	}
 }
 
