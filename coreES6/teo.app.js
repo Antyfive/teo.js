@@ -4,7 +4,6 @@
  * @date 5/26/15
  */
 // TODO:
-// orm
 // stop app
 
 const
@@ -320,6 +319,12 @@ class App extends Base {
      */
     middleware(func) {
         this._middleware.add(func);
+    }
+
+    // getters & setters ----
+
+    get name() {
+        return this.config.name;
     }
 }
 
