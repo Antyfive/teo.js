@@ -13,7 +13,7 @@ describe("Testing Teo Base Class", () => {
 
 		let base = new Base();
 
-		assert.instanceOf(base.__proto__, events.EventEmitter, "Should inherit EventEmiiter");
+		assert.instanceOf(base.__proto__, events.EventEmitter, "Should inherit EventEmitter");
 
 	});
 
@@ -26,6 +26,18 @@ describe("Testing Teo Base Class", () => {
 		assert.instanceOf(base, Base, "Should be instance of Base class");
 		assert.deepEqual(base.config, {test: "test"}, "Options object should be equal");
 		assert.isFunction(base.callback, "Should be a function");
+
+	});
+
+	it("Should apply config", () => {
+
+		let applyConfigSpy = sinon.spy(Base.prototype, "applyConfig");
+		let base = new Base({
+			test: "123"
+		});
+
+		assert.isTrue(applyConfigSpy.calledOnce, "Config should be applied");
+		assert.deepEqual(base.config, {test: "123"}, "Config should be correct");
 
 	});
 
@@ -42,7 +54,7 @@ describe("Testing Teo Base Class", () => {
 
 		let base = new Base({test: "test"});
 
-		assert.deepEqual(base.config, {test: "test"}, "Should be an empty object");
+		assert.deepEqual(base.config, {test: "test"}, "Should be a correct object");
 		assert.isFunction(base.callback, "Callback should be function");
 
 	});
