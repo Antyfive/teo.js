@@ -62,8 +62,7 @@ class Core extends Base {
             homeDir: this.config.homeDir,
             appDir: this.config.appsDir,
             confDir: Path.normalize(__dirname + "/../config"),
-            mode: this.config.mode,
-            coreApp: true
+            mode: this.config.mode
         });
         // TODO:
         /*
