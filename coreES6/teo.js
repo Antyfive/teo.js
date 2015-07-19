@@ -60,9 +60,10 @@ class Teo extends Base {
                     new Cluster(resolve);
                 }.bind(this));
             }
-            return yield this.core.start(appName);
+            yield this.core.start(appName);
         }.bind(this), function(err, res) {
             if (err) {
+                logger.error(err);
                 throw new Error(err);
             } else {
                 callback(null, res);
