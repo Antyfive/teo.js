@@ -45,6 +45,8 @@ class Core extends Base {
     }
 
     _exitHandler(options, err) {
+        options = options || {};
+
         if (options.cleanup) {  // TODO: cleanup
             logger.info("cleanup");
         }
@@ -58,7 +60,7 @@ class Core extends Base {
     }
 
     * _createCoreApp() {
-        this._app = yield this._createApp({
+        this.app = yield this._createApp({
             homeDir: this.config.homeDir,
             appDir: this.config.appsDir,
             confDir: Path.normalize(__dirname + "/../config"),
@@ -71,7 +73,8 @@ class Core extends Base {
             this.setupWorkersLogging();
         }*/
         this.coreAppConfig = this._app.config;
-        return this._app;
+
+        return this.app;
     }
     /**
      * Create new app
@@ -120,6 +123,11 @@ class Core extends Base {
         return self.apps;
     }
 
+    /**
+     * Register & create app in the system
+     * @param appName
+     * @returns {*}
+     */
     * registerApp(appName) {
         var appDir = this.config.appsDir + '/' + appName,
             application,
@@ -142,44 +150,77 @@ class Core extends Base {
 
     /**
      * Starts application
-     * @param {String} [name] :: application name
+     * @param {String} [appName] :: application name
      */
-    * start(name) {
-        if (!util.isUndefined(name)) {  // start single app
+    * start(appName) {
+        yield this._lifeCircleAction(appName, "start");
+    }
+
+    /**
+     * Starts application
+     * @param {String} [appName] :: application name
+     * @returns {*}
+     */
+    * stop(appName) {
+        yield this._lifeCircleAction(appName, "stop");
+    }
+
+    /**
+     * Restarts application
+     * @param {String} [appName] :: application name
+     * @returns {*}
+     */
+    * restart(appName) {
+        yield this._lifeCircleAction(appName, "restart");
+    }
+
+    /**
+     * Complete shutdown of the system
+     * TODO: tests
+     */
+    * shutdown() {
+        // Stop all apps
+        yield this.stop();
+        // exit with cleanup
+        this._exitHandler({cleanup: true});
+    }
+
+    /**
+     * Does app life circle action
+     * @param name :: app name
+     * @param action :: action name
+     * @private
+     * supported actions: start, stop, restart
+     */
+    * _lifeCircleAction(name, action) {
+        let actions = ["start", "stop", "restart"];
+
+        if (actions.indexOf(action) === -1) {
+            throw new Error("Not supported action `" +action+ "` was received");
+        }
+
+        if (this.coreAppConfig.get("coreAppEnabled") === true) {
+            yield this.app[action]();
+        }
+
+        if (!util.isUndefined(name)) {  // perform action on single app
             var app = this.getApp(name);
-            yield app.start();
+
+            if (app) {
+                yield app[action]();
+            }
 
             return app;
         }
         else {
-            for (var app in this.apps) {    // start all apps
-                yield this.apps[app].start();
+            for (var app in this.apps) {    // perform action on all apps
+                yield this.apps[app][action]();
             }
-
-            return this.apps;
         }
-    }
-    // TODO: generators
-    _stop(done) {
-        var functs = [];
-        util.forEach(this.apps, (app) => {
-            functs.push(function(next) {
-                app.stop(next);
-            })
-        });
-        functs.push((next) => {
-            this._app.stop(next);
-        });
 
-        async.series(functs, (err) => {
-            done && done(err);
-            this._exitHandler({cleanup: true});
-        });
+        return this.apps;
     }
 
-    restart() {   // TODO
-
-    }
     // getters  ----
     getApps() {
         return this.apps;
@@ -196,7 +237,23 @@ class Core extends Base {
         return this.apps[name];
     }
 
-    get coreAppConfig() {
+    /**
+     * Core app getter
+     * @returns {*}
+     */
+    get app() {
+        return this._app;
+    }
+
+    /**
+     * Core app setter
+     * @param app
+     */
+    set app(app) {
+        this._app = app;
+    }
+
+    get coreAppConfig() {   // todo: rename
         return this._config;
     }
 

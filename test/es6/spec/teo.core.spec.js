@@ -10,7 +10,7 @@ const
     App = require(teoBase + "/teo.app"),
     co = require("co"),
     // generator test case
-    test = generator => done => co(generator).then(done, done);
+    async = generator => done => co(generator).then(done, done);
 
 describe("Testing Teo Core", function () {
 
@@ -25,13 +25,14 @@ describe("Testing Teo Core", function () {
 
     describe("Initialize", () => {
 
-        let bindProcessEventsSpy, createCoreAppSpy, loadAppsSpy;
+        let bindProcessEventsSpy, createCoreAppSpy, loadAppsSpy, registerAppSpy;
 
         before(done => {
 
             bindProcessEventsSpy = sinon.spy(Core.prototype, "_bindProcessEvents");
             createCoreAppSpy = sinon.spy(Core.prototype, "_createCoreApp");
             loadAppsSpy = sinon.spy(Core.prototype, "loadApps");
+            registerAppSpy = sinon.spy(Core.prototype, "registerApp");
 
             core = new Core(params, done);
 
@@ -43,6 +44,7 @@ describe("Testing Teo Core", function () {
             bindProcessEventsSpy.restore();
             createCoreAppSpy.restore();
             loadAppsSpy.restore();
+            registerAppSpy.restore();
 
         });
 
@@ -55,13 +57,17 @@ describe("Testing Teo Core", function () {
         it("Should create core app", () => {
 
             assert.isTrue(createCoreAppSpy.calledOnce);
-            assert.instanceOf(core._app, App);
+            assert.instanceOf(core.app, App);
 
         });
 
         it("Should load apps", () => {
 
             assert.isTrue(loadAppsSpy.calledOnce);
+
+            assert.isTrue(registerAppSpy.calledOnce);
+
+            assert.equal(registerAppSpy.args[0][0], "test", "App's name should be passed");
             assert.deepEqual(Object.keys(core.apps), ["test"]);
             assert.instanceOf(core.apps.test, App);
 
@@ -83,7 +89,7 @@ describe("Testing Teo Core", function () {
 
         });
 
-        it("Should register new app", test(function* () {
+        it("Should register new app", async(function* () {
 
             var createAppSpy = sinon.spy(core, "_createApp");
 
@@ -109,7 +115,223 @@ describe("Testing Teo Core", function () {
 
         }));
 
+    });
 
+    describe("App life cycle", () => {
+
+        let lifeCircleActionSpy;
+
+        before(done => {
+
+            core = new Core(params, done);
+
+            lifeCircleActionSpy = sinon.spy(core, "_lifeCircleAction");
+
+        });
+
+        after(() => {
+
+            core = null;
+
+        });
+
+        afterEach(() => {
+
+            lifeCircleActionSpy.reset();
+
+        });
+
+        it("Should start single app with passed name", async(function* () {
+
+            let appStartStub = sinon.stub(core.apps.test, "start", function* () {});
+
+            yield core.start("test");
+
+            assert.isTrue(appStartStub.calledOnce);
+            assert.isTrue(lifeCircleActionSpy.calledOnce);
+            assert.deepEqual(lifeCircleActionSpy.args[0], ["test", "start"]);
+
+            appStartStub.restore();
+
+        }));
+
+        it("Should start all apps without passed name", async(function* () {
+
+            let appStartStub = sinon.stub(core.apps.test, "start", function* () {});
+
+            yield core.start();
+
+            assert.isTrue(appStartStub.calledOnce);
+            assert.isTrue(lifeCircleActionSpy.calledOnce);
+            assert.deepEqual(lifeCircleActionSpy.args[0], [undefined, "start"]);
+
+
+            appStartStub.restore();
+
+        }));
+
+        it("Should start core app with other apps", async(function* () {
+
+            let coreAppStartStub = sinon.stub(core.app, "start", function* (){});
+            let appStartStub = sinon.stub(core.apps.test, "start", function* () {});
+            core.coreAppConfig.coreAppEnabled = true;
+
+            yield core.start();
+
+            assert.isTrue(coreAppStartStub.calledOnce);
+            assert.isTrue(appStartStub.calledOnce);
+
+
+            coreAppStartStub.restore();
+            appStartStub.restore();
+
+            core.coreAppConfig.coreAppEnabled = false;
+
+        }));
+
+        it("Shouldn't start core app but other apps", async(function* () {
+
+            let coreAppStartStub = sinon.stub(core.app, "start", function* (){});
+            let appStartStub = sinon.stub(core.apps.test, "start", function* () {});
+
+            yield core.start();
+
+            assert.isFalse(coreAppStartStub.calledOnce);
+            assert.isTrue(appStartStub.calledOnce);
+
+            coreAppStartStub.restore();
+            appStartStub.restore();
+
+        }));
+
+
+        it("Should stop single app with passed name", async(function* () {
+
+            let appStopStub = sinon.stub(core.apps.test, "stop", function* () {});
+
+            yield core.stop("test");
+
+            assert.isTrue(appStopStub.calledOnce);
+
+            assert.isTrue(lifeCircleActionSpy.calledOnce);
+            assert.deepEqual(lifeCircleActionSpy.args[0], ["test", "stop"]);
+
+            appStopStub.restore();
+
+        }));
+
+        it("Should stop all apps without passed name", async(function* () {
+
+            let appStopStub = sinon.stub(core.apps.test, "stop", function* () {});
+
+            yield core.stop();
+
+            assert.isTrue(appStopStub.calledOnce);
+            assert.isTrue(lifeCircleActionSpy.calledOnce);
+            assert.deepEqual(lifeCircleActionSpy.args[0], [undefined, "stop"]);
+
+            appStopStub.restore();
+
+        }));
+
+        it("Should stop core app with other apps", async(function* () {
+
+            let coreAppStopStub = sinon.stub(core.app, "stop", function* (){});
+            let appStopStub = sinon.stub(core.apps.test, "stop", function* () {});
+
+            core.coreAppConfig.coreAppEnabled = true;
+
+            yield core.stop();
+
+            assert.isTrue(coreAppStopStub.calledOnce);
+            assert.isTrue(appStopStub.calledOnce);
+
+            coreAppStopStub.restore();
+            appStopStub.restore();
+
+            core.coreAppConfig.coreAppEnabled = false;
+
+        }));
+
+        it("Shouldn't stop core app but other apps", async(function* () {
+
+            let coreAppStopStub = sinon.stub(core.app, "stop", function* (){});
+            let appStopStub = sinon.stub(core.apps.test, "stop", function* () {});
+
+            yield core.stop();
+
+            assert.isFalse(coreAppStopStub.called);
+            assert.isTrue(appStopStub.calledOnce);
+
+            coreAppStopStub.restore();
+            appStopStub.restore();
+
+        }));
+
+
+
+        it("Should restart single app with passed name", async(function* () {
+
+            let appRestartStub = sinon.stub(core.apps.test, "restart", function* () {});
+
+            yield core.restart("test");
+
+            assert.isTrue(appRestartStub.calledOnce);
+
+            assert.isTrue(lifeCircleActionSpy.calledOnce);
+            assert.deepEqual(lifeCircleActionSpy.args[0], ["test", "restart"]);
+
+            appRestartStub.restore();
+
+        }));
+
+        it("Should restart all apps without passed name", async(function* () {
+
+            let appRestartStub = sinon.stub(core.apps.test, "restart", function* () {});
+
+            yield core.restart();
+
+            assert.isTrue(appRestartStub.calledOnce);
+            assert.isTrue(lifeCircleActionSpy.calledOnce);
+            assert.deepEqual(lifeCircleActionSpy.args[0], [undefined, "restart"]);
+
+            appRestartStub.restore();
+
+        }));
+
+        it("Should restart core app with other apps", async(function* () {
+
+            let coreAppRestartStub = sinon.stub(core.app, "restart", function* (){});
+            let appRestartStub = sinon.stub(core.apps.test, "restart", function* () {});
+
+            core.coreAppConfig.coreAppEnabled = true;
+
+            yield core.restart();
+
+            assert.isTrue(coreAppRestartStub.calledOnce);
+            assert.isTrue(appRestartStub.calledOnce);
+
+            coreAppRestartStub.restore();
+            appRestartStub.restore();
+
+            core.coreAppConfig.coreAppEnabled = false;
+
+        }));
+
+        it("Shouldn't restart core app but other apps", async(function* () {
+
+            let coreAppRestartStub = sinon.stub(core.app, "restart", function* (){});
+            let appRestartStub = sinon.stub(core.apps.test, "restart", function* () {});
+
+            yield core.restart();
+
+            assert.isFalse(coreAppRestartStub.called);
+            assert.isTrue(appRestartStub.calledOnce);
+
+            coreAppRestartStub.restore();
+            appRestartStub.restore();
+
+        }));
 
     });
 });
