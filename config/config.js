@@ -3,6 +3,7 @@ module.exports = {
     protocol: "http",
     host: "localhost",
     port: 3000,
+    coreAppEnabled: false,  // core app for administrator purposes (in future)
     delimiters: '{{ }}',
     cache: {
         static: false,     // cache static files
