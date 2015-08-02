@@ -90,7 +90,7 @@ describe('Testing Core', function() {
 
     });
 
-    describe("Testing Apps Start", function() {
+    describe.skip("Testing Apps Start", function() {
 
         it("Should start all apps without passing a name", function(done) {
 
