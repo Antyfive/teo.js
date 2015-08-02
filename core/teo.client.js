@@ -67,6 +67,7 @@ function Client(opts) {
         process: function() {
             if (arguments.length > 0) {
                 this.res.send.apply(this.res, this.parseProcessArgs.apply(this, arguments));
+                return;
             }
             if (this.req.method.toLowerCase() === "post") {
                 var body = "";
@@ -246,7 +247,7 @@ function Client(opts) {
                 var extension = helper.getExtension(this.pathname);
                 var contentType = mime.lookup(args[2] || extension || this.req.headers.accept || "html");
                 var writeHeadObj = {
-                    "Content-Type": contentType
+                    "Content-Type": contentType + "; charset=UTF-8"
                 };
 
                 if (args.length === 1) {
@@ -276,7 +277,7 @@ function Client(opts) {
                         (utils.isString(body) ? body : http.STATUS_CODES[code]);
 
                 if (utils.isString(response)) {
-                    writeHeadObj["Content-Length"] = response.length;
+                    writeHeadObj["Content-Length"] = new Buffer(response, "utf8").length;
                 }
 
                 this.res.writeHead(code, writeHeadObj);

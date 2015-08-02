@@ -37,7 +37,8 @@ var App = Base.extend({
 
         this.cache = new AppCache();
         this._middleware = new Middleware();
-
+        var withListen = false;
+        this.initServer(withListen);
         this.initApp(options, function() {
             this.client = new Client({app: this});
             this.extensions = new Extensions(util.extend({app: this}, this.config.get("extensions")));
@@ -383,8 +384,7 @@ var App = Base.extend({
             async.apply(this._connectOrm.bind(this)),
             async.apply(this._runExtensions.bind(this)),
             async.apply(function(next) {
-                var withListen = true;
-                this.initServer(withListen);
+                this.listenServer();
                 this.server.once("listening", next.bind(this, null, this));
             }.bind(this))
         );
