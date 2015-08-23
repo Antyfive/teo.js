@@ -144,7 +144,7 @@ describe("Testing App HTTP", function() {
         it('Should respond 404 PATCH with text/html', function(done) {
             agent
                 .patch('/test/route/2/2')
-                .expect('Content-Type', "text/html; charset=UTF-8")
+                .expect('Content-Type', "text/html")
                 .expect(404)
                 .end(function(err, res) {
                     done(err);
@@ -159,7 +159,7 @@ describe("Testing App HTTP", function() {
             agent
                 .post("/test/create/1")
                 .send({_crsfToken: "fake"})
-                .expect('Content-Type', "text/html; charset=UTF-8")
+                .expect('Content-Type', "text/html")
                 .expect(403)
                 .end(function(err, res) {
                     done(err);
@@ -247,7 +247,7 @@ describe("Testing App HTTP", function() {
 
             agent
                 .get('/test/create/6?id=one')
-                .expect('Content-Type', "text/html; charset=UTF-8")
+                .expect('Content-Type', "text/html")
                 .expect(200)
                 .end(done);
         });
@@ -261,7 +261,7 @@ describe("Testing App HTTP", function() {
 
             agent
                 .get('/error')
-                .expect('Content-Type', "text/html; charset=UTF-8")
+                .expect('Content-Type', "text/html")
                 .expect(500)
                 .end(done);
 
@@ -360,7 +360,7 @@ describe("Testing App HTTP", function() {
 
                 agent
                     .get("/numbers")
-                    .expect('Content-Type', "text/html; charset=UTF-8")
+                    .expect('Content-Type', "text/html")
                     .expect(200, "12345")
                     .end(done);
             });
@@ -373,7 +373,7 @@ describe("Testing App HTTP", function() {
 
                 agent
                     .get("/content-length")
-                    .expect('Content-Type', "text/html; charset=UTF-8")
+                    .expect('Content-Type', "text/html")
                     .expect('Content-Length', "2")
                     .expect(200, "ok")
                     .end(done);
