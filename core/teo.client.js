@@ -247,7 +247,7 @@ function Client(opts) {
                 var extension = helper.getExtension(this.pathname);
                 var contentType = mime.lookup(args[2] || extension || this.req.headers.accept || "html");
                 var writeHeadObj = {
-                    "Content-Type": contentType + "; charset=UTF-8"
+                    "Content-Type": contentType
                 };
 
                 if (args.length === 1) {
@@ -264,9 +264,10 @@ function Client(opts) {
                 }
                 // set buffer to string
                 if (body instanceof Buffer) {
-                    body = body.toString();
+                    writeHeadObj["Content-Length"] = body.length;
+                    //body = body.toString();
                 }
-                var sendJson = (contentType.match(/json/) || utils.isObject(body));
+                var sendJson = (contentType.match(/json/) || (utils.isObject(body) && !Buffer.isBuffer(body)));
 
                 if (contentType.match(/json/) && !utils.isObject(body)) {
                     logger.warn("Sending not a object as JSON body response:", body);
@@ -274,9 +275,9 @@ function Client(opts) {
 
                 var response = sendJson ?
                     this.buildRespObject(code, body) :
-                        (utils.isString(body) ? body : http.STATUS_CODES[code]);
+                    (utils.isString(body) || Buffer.isBuffer(body) ? body : http.STATUS_CODES[code]);
 
-                if (utils.isString(response)) {
+                if (utils.isString(response) && !writeHeadObj["Content-Length"]) {
                     writeHeadObj["Content-Length"] = new Buffer(response, "utf8").length;
                 }
 

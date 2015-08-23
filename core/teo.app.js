@@ -288,7 +288,7 @@ var App = Base.extend({
         fs.readdir(dir, function(err, files) {
             if (err) {
                 logger.error(err);
-                callback(err);
+                callback(null);
                 return;
             }
             if (!files.length) {
