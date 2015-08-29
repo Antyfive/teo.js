@@ -67,22 +67,22 @@ class TeoRes extends Base {
             code = +args[0];
             body = args[1];
         }
-        // set buffer to string
+
         if (body instanceof Buffer) {
-            body = body.toString();
+            writeHeadObj["Content-Length"] = body.length;
         }
-        var sendJson = (contentType.match(/json/) || _.isObject(body));
+        var sendJson = (contentType.match(/json/) || (_.isObject(body) && !Buffer.isBuffer(body)));
 
         if (contentType.match(/json/) && !_.isObject(body)) {
             logger.warn("Sending not a object as JSON body response:", body);
         }
 
         var response = sendJson ?
-            TeoRes.buildRespObject(code, body) :
-            (_.isString(body) ? body : http.STATUS_CODES[code]);
+            this.buildRespObject(code, body) :
+            (_.isString(body) || Buffer.isBuffer(body) ? body : http.STATUS_CODES[code]);
 
-        if (_.isString(response)) {
-            writeHeadObj["Content-Length"] = response.length;
+        if (_.isString(response) && !writeHeadObj["Content-Length"]) {
+            writeHeadObj["Content-Length"] = new Buffer(response, "utf8").length;
         }
         // TODO: pipe
         this.res.writeHead(code, writeHeadObj);
