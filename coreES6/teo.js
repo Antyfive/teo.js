@@ -22,12 +22,14 @@ class Teo extends Base {
 		this._parseOptions();
 		this.createCore();
 	}
+    
 	_parseOptions() {
 		this.mode = this.config.mode || ((process.argv[2] === "production") ? process.argv[2] : "development");
         this.homeDir = this.config.homeDir || process.cwd().replace(/\\/g, "/");// home dirname ( from where framework is started )
         this.appsDir = this.homeDir + "/apps";    // main apps dir
         this.confDir = this.homeDir + "/config";    // config dir
 	}
+
 	createCore() {
         var self = this;
 		this.core = new Core({
@@ -73,10 +75,21 @@ class Teo extends Base {
         return _.async(this._runAppLifeCircleAction.bind(this, appName, "stop", callback));
     }
 
+    /**
+     * Restarts application
+     * @param [appName] :: name of the application to stop (or alternatively, to stop all, if no name)
+     * @param {Function} callback
+     * @returns {*}
+     */
     restart(appName, callback) {
         return _.async(this._runAppLifeCircleAction.bind(this, appName, "restart", callback));
     }
 
+    /**
+     * Shutdown system
+     * @param {Function} callback
+     * @returns {*}
+     */
     shutdown(callback) {
         return _.async(this._runAppLifeCircleAction.bind(this, undefined, "shutdown", callback));
     }
