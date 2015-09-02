@@ -12,7 +12,7 @@ const
     async = require("async"),
     Path = require("path"),
     cluster = require("cluster"),
-    util = require("./teo.utils"),
+    _ = require("./teo.utils"),
     Base = require("./teo.base"),
     App = require("./teo.app");
 
@@ -22,9 +22,9 @@ class Core extends Base {
 
         this.apps = {};
         this._bindProcessEvents();
-        util.generator(function* () {
-            yield util.async(this._createCoreApp.bind(this)).catch(logger.error);
-            yield util.async(this.loadApps.bind(this)).catch(logger.error);
+        _.generator(function* () {
+            yield _.async(this._createCoreApp.bind(this)).catch(logger.error);
+            yield _.async(this.loadApps.bind(this)).catch(logger.error);
             return this;
         }.bind(this), this.callback);
 	}
@@ -83,7 +83,7 @@ class Core extends Base {
      * @private
      */
     _createApp(options) { // TODO: error's handler; generator (yield new App?)
-        return util.promise(function(resolve, reject) {
+        return _.promise(function(resolve, reject) {
             new App(options, function(err, res) {
                 resolve(res);
             });
@@ -106,7 +106,7 @@ class Core extends Base {
     * loadApps() {
         var self = this,
             appsDir = this.config.appsDir,
-            readDir = util.thunkify(fs.readdir);
+            readDir = _.thunkify(fs.readdir);
 
         var apps = yield readDir(appsDir);
 
@@ -114,10 +114,10 @@ class Core extends Base {
         for (var i = 0; i < l; i++) {
             let appName = apps[i];
             let appDir = appsDir + "/" + appName;
-            let stat = yield util.thunkify(fs.lstat)(appDir);
+            let stat = yield _.thunkify(fs.lstat)(appDir);
 
             if (stat.isDirectory()) {
-                yield util.async(this.registerApp.bind(this, appName));    // TODO: yield util.async(this.registerApp.bind(this, appName))
+                yield _.async(this.registerApp.bind(this, appName));    // TODO: yield _.async(this.registerApp.bind(this, appName))
             }
         }
         return self.apps;
@@ -157,7 +157,7 @@ class Core extends Base {
     }
 
     /**
-     * Starts application
+     * Stops application
      * @param {String} [appName] :: application name
      * @returns {*}
      */
@@ -203,7 +203,7 @@ class Core extends Base {
             yield this.app[action]();
         }
 
-        if (!util.isUndefined(name)) {  // perform action on single app
+        if (!_.isUndefined(name)) {  // perform action on single app
             var app = this.getApp(name);
 
             if (app) {

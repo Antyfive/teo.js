@@ -6,26 +6,25 @@
 
 const Teo = require(teoBase + "/teo"),
 	TeoCore = require(teoBase + "/teo.core"),
+    _ = require(teoBase + "/teo.utils"),
 	events = require("events");
 
 describe("Testing Teo Main Entry Point", () => {
 
-	let teo, createCoreStub;
+	let teo;
 
 	beforeEach(() => {
 
 		teo = new Teo({
 			mode: "test",
-			homeDir: "testDir"
+            homeDir: "testDir"
 		});
-		createCoreStub = sinon.stub(Teo.prototype, "createCore", () => {});
 
 	});
 
 	afterEach(() => {
 
 		teo = null;
-		createCoreStub.restore();
 
 	});
 
@@ -50,38 +49,54 @@ describe("Testing Teo Main Entry Point", () => {
 
 	});
 
-	it.skip("Should call callback when core created", (done) => {
+	it("Should call callback when core created", (done) => {
 
-		var callbackSpy = sinon.spy(teo, "callback");
-
-		createCoreStub.restore();
-
-		teo.createCore();
-
-		process.nextTick(() => {
-
-			assert.isTrue(callbackSpy.calledOnce, "Callback should be called once");
-			done();
-
-		});
-
-	});
-
-	it.skip("Should emit 'ready' event when core was initialized", () => {
-
-		var emitSpy = sinon.spy(teo, "emit");
-
-		createCoreStub.restore();
+        var callbackStub = sinon.stub(teo, "callback", function() {
+            assert.isFalse(teo.callback.calledOnce, "Callback should be called once");
+            callbackStub.restore();
+            done();
+        });
 
 		teo.createCore();
 
-		process.nextTick(() => {
-
-			assert.isTrue(emitSpy.called, "Emit method should be called once");							
-			assert.equal(emitSpy.args[1][0], "ready", "Event name should be correct");							
-			assert.deepEqual(emitSpy.args[1][1], teo, "Teo instance should be passed as an argument");							
-
-		});
-
 	});
+
+	it("Should emit 'ready' event when core was initialized", (done) => {
+
+		var emitSpy = sinon.stub(teo, "emit", function() {
+
+            assert.isTrue(emitSpy.called, "Emit method should be called once");
+            assert.equal(emitSpy.args[0][0], "ready", "Event name should be correct");
+            assert.instanceOf(emitSpy.args[0][1], Teo, "Teo instance should be passed as an argument");
+
+            emitSpy.restore();
+
+            done();
+
+        });
+
+		teo.createCore();
+	});
+
+	it("Should start application", (done) => {
+
+        teo.core.coreAppConfig = {
+            get: sinon.stub()
+        };
+
+        teo.core.coreAppConfig.get.withArgs("cluster").returns({
+            enabled: false
+        });
+
+        let callbackStub = sinon.stub();
+        let promise = teo.start(null, callbackStub);
+
+        promise.then(function() {
+
+            assert.isTrue(callbackStub.calledOnce);
+            done();
+
+        });
+
+    });
 });

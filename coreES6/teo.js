@@ -42,26 +42,60 @@ class Teo extends Base {
             else {
                 self.callback.call(self, self);
                 process.nextTick(() => {
-                    self.emit("ready", this);
+                    self.emit("ready", self);
                 });
             }
         });
 	}
 
     /**
-     * Start framework
+     * Start application
      * @param [appName] :: name of the application to start (or alternatively, start all)
      * @param callback
      */
     start(appName, callback) {
-        _.generator(function* () {
+        return _.async(function* () {
             if (this.core.coreAppConfig.get("cluster").enabled) {
-                yield _.promise(function (resolve, reject) {
+                yield _.promise(function(resolve, reject) {
                     new Cluster(resolve);
                 }.bind(this));
             }
-            yield this.core.start(appName);
-        }.bind(this), function(err, res) {
+            yield _.async(this._runAppLifeCircleAction.bind(this, appName, "start", callback));
+        }.bind(this));
+    }
+
+    /**
+     * Stop application
+     * @param [appName] :: name of the application to stop (or alternatively, to stop all, if no name)
+     * @param {Function} callback
+     */
+    stop(appName, callback) {
+        return _.async(this._runAppLifeCircleAction.bind(this, appName, "stop", callback));
+    }
+
+    restart(appName, callback) {
+        return _.async(this._runAppLifeCircleAction.bind(this, appName, "restart", callback));
+    }
+
+    shutdown(callback) {
+        return _.async(this._runAppLifeCircleAction.bind(this, undefined, "shutdown", callback));
+    }
+
+    /**
+     * Run app life circle action
+     * @param {String|undefined} appName
+     * @param {String} action
+     * @param {Function} callback
+     * @private
+     */
+    * _runAppLifeCircleAction(appName, action, callback) {
+        let actions = ["start", "stop", "restart", "shutdown"];
+
+        if (actions.indexOf(action) === -1) {
+            throw new Error("Not supported action `" +action+ "` was received");
+        }
+
+        return _.generator(this.core[action].bind(this.core, appName), function(err, res) {
             if (err) {
                 logger.error(err);
                 throw new Error(err);
