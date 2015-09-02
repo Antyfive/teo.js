@@ -245,7 +245,7 @@ class App extends Base {
         let script = this._getScript(fileName);
 
         if (!_.isFunction(script)) {
-            throw new Error("Trying to run not a script! Script path: " + fileName);
+            throw new Error("Trying to run not a function! File path: " + fileName);
         }
 
         let d = domain.create();
