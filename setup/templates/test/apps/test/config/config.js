@@ -67,5 +67,7 @@ module.exports = {
                 }
             }
         }
-    }
+    },
+    appDirs: ["models", "controllers"], // app's directories to read and collect files inside, on system start
+    appFiles: ["app.js"]    // app's files to read and cache on system start
 };

@@ -8,6 +8,7 @@
 
 const
     fs = require("fs"),
+    path = require("path"),
     domain = require("domain"),
     http = require("http"),
     co = require("co"),
@@ -46,7 +47,7 @@ class App extends Base {
         if (filesCount > 0) {
             for (var f in configFiles) {
                 let file = configFiles[f],
-                    confFile = this.config.confDir + "/" + file;
+                    confFile = path.join(this.config.confDir, file);
 
                 if (confFile.indexOf(".js") !== -1) {
                     let config = this._getScript(confFile);
