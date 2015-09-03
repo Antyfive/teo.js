@@ -22,7 +22,7 @@ class Teo extends Base {
 		this._parseOptions();
 		this.createCore();
 	}
-    
+
 	_parseOptions() {
 		this.mode = this.config.mode || ((process.argv[2] === "production") ? process.argv[2] : "development");
         this.homeDir = this.config.homeDir || process.cwd().replace(/\\/g, "/");// home dirname ( from where framework is started )
