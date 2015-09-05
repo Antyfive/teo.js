@@ -9,6 +9,7 @@ const
     App = require(teoBase + "/teo.app"),
     AppCache = require(teoBase + "/teo.app.cache"),
     Middleware = require(teoBase + "/teo.middleware"),
+    Db = require(teoBase + "/db/teo.db"),
     co = require("co"),
     fs = require("fs"),
     path = require("path"),
@@ -101,6 +102,69 @@ describe("Testing Teo App", () => {
             applyConfigStub.restore();
 
         }));
+
+        it("Should collect executable files", async(function* () {
+
+            let readAppDirsStub = sinon.stub(app, "_readAppDirs", function* () {});
+            let readAppFilesStub = sinon.stub(app, "_readAppFiles", function* () {});
+
+            yield app.collectExecutableFiles();
+
+            assert.isTrue(readAppDirsStub.calledOnce);
+            assert.isTrue(readAppFilesStub.calledOnce);
+
+            readAppDirsStub.restore();
+            readAppFilesStub.restore();
+
+        }));
+
+        describe("Init DB", () => {
+
+            let configStub;
+
+            beforeEach(() => {
+
+                configStub = sinon.stub(app.config, "get");
+
+            });
+
+            afterEach(() => {
+
+                configStub.restore();
+
+            });
+
+            it("Should init DB", () => {
+
+                configStub.withArgs("db").returns({
+                    enabled: true
+                });
+
+                try {
+                    app.initDb();
+                } catch(e) {
+
+                }
+
+                assert.isTrue(configStub.calledTwice);
+
+            });
+
+            it("Shouldn't init DB", () => {
+
+                configStub.reset();
+
+                configStub.withArgs("db").returns({
+                    enabled: false
+                });
+
+                app.initDb();
+
+                assert.isTrue(configStub.calledOnce);
+
+            });
+
+        });
     });
 
 });
