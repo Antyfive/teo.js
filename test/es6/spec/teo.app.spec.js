@@ -10,6 +10,7 @@ const
     AppCache = require(teoBase + "/teo.app.cache"),
     Middleware = require(teoBase + "/teo.middleware"),
     Db = require(teoBase + "/db/teo.db"),
+    _ = require(teoBase + "/teo.utils"),
     co = require("co"),
     fs = require("fs"),
     path = require("path"),
@@ -191,6 +192,53 @@ describe("Testing Teo App", () => {
             });
 
         });
+
+        describe("Config", () => {
+            let config;
+
+            beforeEach(() => {
+                config = {myConfig: true};
+                app.config = {
+                    appConfig: "123",
+                    coreConfig: {
+                        coreParam: "1"
+                    },
+                    mode: "test",
+                    test: { // test mode
+                        key: "testmode"
+                    },
+                    key2: "hi"
+                };
+
+                app._applyConfig(config);
+            });
+
+            it("Should apply config object", () => {
+
+                assert.deepEqual(_.omit(app.config, "get"), {
+                    coreParam: "1",
+                    appConfig: "123",
+                    myConfig: true,
+                    mode: "test",
+                    test: {
+                        key: "testmode"
+                    },
+                    key2: "hi"
+                });
+
+                assert.isFunction(app.config.get, "Config getter should be applied");
+
+            });
+
+            it("Should get parameter by key", () => {
+
+                assert.equal(app.config.get("key"), "testmode", "Should get key from run mode property");
+                assert.equal(app.config.get("key2"), "hi", "Should get key from non-mode properties");
+
+            });
+
+        });
+
     });
 
 });

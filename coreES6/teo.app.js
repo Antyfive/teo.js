@@ -97,7 +97,7 @@ class App extends Base {
         let app = this,
             config = (typeof conf === "object" ? conf : {});
 
-        this.config = _.extend(this.config.coreConfig || {}, this.config, config);
+        this.config = _.omit(_.extend(this.config.coreConfig || {}, this.config, config), ["coreConfig"]);
 
         /**
          * Getter of config by mode ( development or production )
