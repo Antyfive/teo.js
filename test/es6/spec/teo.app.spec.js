@@ -119,246 +119,246 @@ describe("Testing Teo App", () => {
 
         }));
 
-        describe("Init DB", () => {
+    });
 
-            let configStub;
+    describe("Init DB", () => {
 
-            beforeEach(() => {
+        let configStub;
 
-                configStub = sinon.stub(app.config, "get");
+        beforeEach(() => {
 
+            configStub = sinon.stub(app.config, "get");
+
+        });
+
+        afterEach(() => {
+
+            configStub.restore();
+
+        });
+
+        it("Should init DB", () => {
+
+            configStub.withArgs("db").returns({
+                enabled: true
             });
 
-            afterEach(() => {
-
-                configStub.restore();
-
-            });
-
-            it("Should init DB", () => {
-
-                configStub.withArgs("db").returns({
-                    enabled: true
-                });
-
-                try {
-                    app.initDb();
-                } catch(e) {
-
-                }
-
-                assert.isTrue(configStub.calledTwice);
-
-            });
-
-            it("Shouldn't init DB", () => {
-
-                configStub.reset();
-
-                configStub.withArgs("db").returns({
-                    enabled: false
-                });
-
+            try {
                 app.initDb();
+            } catch(e) {
 
-                assert.isTrue(configStub.calledOnce);
+            }
 
-            });
+            assert.isTrue(configStub.calledTwice);
 
         });
 
-        describe("App sources loading", () => {
+        it("Shouldn't init DB", () => {
 
-            let configGetStub;
+            configStub.reset();
 
-            beforeEach(() => {
-
-                configGetStub = sinon.stub(app.config, "get");
-
+            configStub.withArgs("db").returns({
+                enabled: false
             });
 
-            afterEach(() => {
+            app.initDb();
 
-                configGetStub.restore();
+            assert.isTrue(configStub.calledOnce);
 
+        });
+
+    });
+
+    describe("App sources loading", () => {
+
+        let configGetStub;
+
+        beforeEach(() => {
+
+            configGetStub = sinon.stub(app.config, "get");
+
+        });
+
+        afterEach(() => {
+
+            configGetStub.restore();
+
+        });
+
+        it("Should get script from cache", () => {
+
+            let cacheStub = sinon.stub(app.cache, "get");
+
+            cacheStub.withArgs("myFilePath").returns({test: true});
+
+            let file = app._getScript("myFilePath");
+
+            assert.isTrue(cacheStub.calledOnce);
+            assert.equal(cacheStub.args[0][0], "myFilePath");
+            assert.deepEqual(file, {test: true});
+
+            cacheStub.restore();
+
+        });
+
+        it("Should load script if no in cache", () => {
+
+            assert.throws(app._getScript.bind(app, "myFilePath"), "Cannot find module 'myFilePath'");
+
+        });
+
+        it("Should read app's directories", async(function* () {
+
+            configGetStub.withArgs("appDirs").returns([
+                "first",
+                "second"
+            ]);
+
+            let collectAppDirFilesStub = sinon.stub(app, "__collectAppDirFiles", function* () {});
+
+            yield app._readAppDirs();
+
+            assert.isTrue(collectAppDirFilesStub.calledTwice);
+            assert.deepEqual(collectAppDirFilesStub.args, [
+                [path.join(app.config.appDir, "first")], [path.join(app.config.appDir, "second")]
+            ]);
+
+            collectAppDirFilesStub.restore();
+
+        }));
+
+        it("Should collect files inside directory", async(function* () {
+
+            let readdirStub = sinon.stub(fs, "readdir", function(args, cb) {
+                cb(null, ["one.js", "two.js"]);
             });
 
-            it("Should get script from cache", () => {
+            let loadFileStub = sinon.stub(app, "__loadFile", function* () {});
 
-                let cacheStub = sinon.stub(app.cache, "get");
+            yield app.__collectAppDirFiles("test");
 
-                cacheStub.withArgs("myFilePath").returns({test: true});
+            assert.isTrue(readdirStub.calledOnce);
+            assert.equal(readdirStub.args[0][0], "test");
+            assert.isTrue(loadFileStub.calledTwice);
+            assert.deepEqual(loadFileStub.args, [
+                ["test/one.js"], ["test/two.js"]
+            ]);
 
-                let file = app._getScript("myFilePath");
+            readdirStub.restore();
+            loadFileStub.restore();
 
-                assert.isTrue(cacheStub.calledOnce);
-                assert.equal(cacheStub.args[0][0], "myFilePath");
-                assert.deepEqual(file, {test: true});
+        }));
 
-                cacheStub.restore();
+        it("Should load single file", async(function* () {
 
+            let lstatStub = sinon.stub(fs, "lstat", function(args, cb) {
+                cb(null, {
+                    isFile: function() {return true}
+                })
             });
 
-            it("Should load script if no in cache", () => {
-
-                assert.throws(app._getScript.bind(app, "myFilePath"), "Cannot find module 'myFilePath'");
-
+            let getScriptStub = sinon.stub(app, "_getScript",  function() {
+                return "script";
             });
 
-            it("Should read app's directories", async(function* () {
+            let cacheAddSpy = sinon.stub(app.cache, "add");
 
-                configGetStub.withArgs("appDirs").returns([
-                    "first",
-                    "second"
-                ]);
+            yield app.__loadFile("/mypath");
 
-                let collectAppDirFilesStub = sinon.stub(app, "__collectAppDirFiles", function* () {});
+            assert.isTrue(lstatStub.calledOnce);
+            assert.equal(lstatStub.args[0][0], "/mypath");
 
-                yield app._readAppDirs();
+            assert.isTrue(getScriptStub.calledOnce);
 
-                assert.isTrue(collectAppDirFilesStub.calledTwice);
-                assert.deepEqual(collectAppDirFilesStub.args, [
-                    [path.join(app.config.appDir, "first")], [path.join(app.config.appDir, "second")]
-                ]);
+            assert.isTrue(cacheAddSpy.calledOnce);
+            assert.deepEqual(cacheAddSpy.args[0], ["/mypath", "script"]);
 
-                collectAppDirFilesStub.restore();
+            lstatStub.restore();
+            getScriptStub.restore();
+            cacheAddSpy.restore();
 
-            }));
+        }));
 
-            it("Should collect files inside directory", async(function* () {
+        it("Should throw error if not a file was loaded", async(function* () {
 
-                let readdirStub = sinon.stub(fs, "readdir", function(args, cb) {
-                    cb(null, ["one.js", "two.js"]);
-                });
+            let lstatStub = sinon.stub(fs, "lstat", function(args, cb) {
+                cb(null, {
+                    isFile: function() {return false}
+                })
+            });
 
-                let loadFileStub = sinon.stub(app, "__loadFile", function* () {});
-
-                yield app.__collectAppDirFiles("test");
-
-                assert.isTrue(readdirStub.calledOnce);
-                assert.equal(readdirStub.args[0][0], "test");
-                assert.isTrue(loadFileStub.calledTwice);
-                assert.deepEqual(loadFileStub.args, [
-                    ["test/one.js"], ["test/two.js"]
-                ]);
-
-                readdirStub.restore();
-                loadFileStub.restore();
-
-            }));
-
-            it("Should load single file", async(function* () {
-
-                let lstatStub = sinon.stub(fs, "lstat", function(args, cb) {
-                   cb(null, {
-                       isFile: function() {return true}
-                   })
-                });
-
-                let getScriptStub = sinon.stub(app, "_getScript",  function() {
-                    return "script";
-                });
-
-                let cacheAddSpy = sinon.stub(app.cache, "add");
-
+            try {
                 yield app.__loadFile("/mypath");
+            } catch(e) {
+                assert.equal(e.message, "Not a file was found!");
+            }
 
-                assert.isTrue(lstatStub.calledOnce);
-                assert.equal(lstatStub.args[0][0], "/mypath");
+            lstatStub.restore();
 
-                assert.isTrue(getScriptStub.calledOnce);
+        }));
 
-                assert.isTrue(cacheAddSpy.calledOnce);
-                assert.deepEqual(cacheAddSpy.args[0], ["/mypath", "script"]);
+        it("Should read app special files", async(function* () {
 
-                lstatStub.restore();
-                getScriptStub.restore();
-                cacheAddSpy.restore();
+            configGetStub.withArgs("appFiles").returns([
+                "first.js",
+                "second.js"
+            ]);
 
-            }));
+            let loadFileStub = sinon.stub(app, "__loadFile", function* () {});
 
-            it("Should throw error if not a file was loaded", async(function* () {
+            yield app._readAppFiles();
 
-                let lstatStub = sinon.stub(fs, "lstat", function(args, cb) {
-                    cb(null, {
-                        isFile: function() {return false}
-                    })
-                });
+            assert.isTrue(loadFileStub.calledTwice);
+            assert.deepEqual(loadFileStub.args, [
+                [path.join(app.config.appDir, "first.js")], [path.join(app.config.appDir, "second.js")]
+            ]);
 
-                try {
-                    yield app.__loadFile("/mypath");
-                } catch(e) {
-                    assert.equal(e.message, "Not a file was found!");
-                }
+            loadFileStub.restore();
+        }));
 
-                lstatStub.restore();
+    });
 
-            }));
+    describe("Config", () => {
+        let config;
 
-            it("Should read app special files", async(function* () {
+        beforeEach(() => {
+            config = {myConfig: true};
+            app.config = {
+                appConfig: "123",
+                coreConfig: {
+                    coreParam: "1"
+                },
+                mode: "test",
+                test: { // test mode
+                    key: "testmode"
+                },
+                key2: "hi"
+            };
 
-                configGetStub.withArgs("appFiles").returns([
-                    "first.js",
-                    "second.js"
-                ]);
+            app._applyConfig(config);
+        });
 
-                let loadFileStub = sinon.stub(app, "__loadFile", function* () {});
+        it("Should apply config object", () => {
 
-                yield app._readAppFiles();
+            assert.deepEqual(_.omit(app.config, "get"), {
+                coreParam: "1",
+                appConfig: "123",
+                myConfig: true,
+                mode: "test",
+                test: {
+                    key: "testmode"
+                },
+                key2: "hi"
+            });
 
-                assert.isTrue(loadFileStub.calledTwice);
-                assert.deepEqual(loadFileStub.args, [
-                    [path.join(app.config.appDir, "first.js")], [path.join(app.config.appDir, "second.js")]
-                ]);
-
-                loadFileStub.restore();
-            }));
+            assert.isFunction(app.config.get, "Config getter should be applied");
 
         });
 
-        describe("Config", () => {
-            let config;
+        it("Should get parameter by key", () => {
 
-            beforeEach(() => {
-                config = {myConfig: true};
-                app.config = {
-                    appConfig: "123",
-                    coreConfig: {
-                        coreParam: "1"
-                    },
-                    mode: "test",
-                    test: { // test mode
-                        key: "testmode"
-                    },
-                    key2: "hi"
-                };
-
-                app._applyConfig(config);
-            });
-
-            it("Should apply config object", () => {
-
-                assert.deepEqual(_.omit(app.config, "get"), {
-                    coreParam: "1",
-                    appConfig: "123",
-                    myConfig: true,
-                    mode: "test",
-                    test: {
-                        key: "testmode"
-                    },
-                    key2: "hi"
-                });
-
-                assert.isFunction(app.config.get, "Config getter should be applied");
-
-            });
-
-            it("Should get parameter by key", () => {
-
-                assert.equal(app.config.get("key"), "testmode", "Should get key from run mode property");
-                assert.equal(app.config.get("key2"), "hi", "Should get key from non-mode properties");
-
-            });
+            assert.equal(app.config.get("key"), "testmode", "Should get key from run mode property");
+            assert.equal(app.config.get("key2"), "hi", "Should get key from non-mode properties");
 
         });
 
