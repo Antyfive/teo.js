@@ -165,6 +165,32 @@ describe("Testing Teo App", () => {
             });
 
         });
+
+        describe("App sources loading", () => {
+
+            it("Should get script from cache", () => {
+
+                let cacheStub = sinon.stub(app.cache, "get");
+
+                cacheStub.withArgs("myFilePath").returns({test: true});
+
+                let file = app._getScript("myFilePath");
+
+                assert.isTrue(cacheStub.calledOnce);
+                assert.equal(cacheStub.args[0][0], "myFilePath");
+                assert.deepEqual(file, {test: true});
+
+                cacheStub.restore();
+
+            });
+
+            it("Should load script if no in cache", () => {
+
+                assert.throws(app._getScript.bind(app, "myFilePath"), "Cannot find module 'myFilePath'");
+
+            });
+
+        });
     });
 
 });
