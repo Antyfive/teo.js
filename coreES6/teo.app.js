@@ -118,7 +118,7 @@ class App extends Base {
 
         for (var i = 0; i < l; i++) {
             let currentDir = dirs[i];
-            yield _.async(this.__collectAppDirFiles.bind(this, this.config.appDir + "/" + currentDir)).catch(logger.error);
+            yield _.async(this.__collectAppDirFiles.bind(this, path.join(this.config.appDir, currentDir))).catch(logger.error);
         }
     }
 
@@ -127,7 +127,7 @@ class App extends Base {
         let l = files.length;
 
         for (var i = 0; i < l; i++) {
-            let file = dir + "/" + files[i];
+            let file = path.join(dir, files[i]);
             yield _.async(this.__loadFile.bind(this, file)).catch(logger.error);
         }
     }
@@ -152,7 +152,7 @@ class App extends Base {
          let l = files.length;
 
          for (var i = 0; i < l; i++) {
-             let file = this.config.appDir + "/" + files[i];
+             let file = path.join(this.config.appDir, files[i]);
              yield _.async(this.__loadFile.bind(this, file)).catch(logger.error);
          }
     }
