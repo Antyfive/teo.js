@@ -169,6 +169,20 @@ describe("Testing Teo App", () => {
 
         describe("App sources loading", () => {
 
+            let configGetStub;
+
+            beforeEach(() => {
+
+                configGetStub = sinon.stub(app.config, "get");
+
+            });
+
+            afterEach(() => {
+
+                configGetStub.restore();
+
+            });
+
             it("Should get script from cache", () => {
 
                 let cacheStub = sinon.stub(app.cache, "get");
@@ -190,6 +204,115 @@ describe("Testing Teo App", () => {
                 assert.throws(app._getScript.bind(app, "myFilePath"), "Cannot find module 'myFilePath'");
 
             });
+
+            it("Should read app's directories", async(function* () {
+
+                configGetStub.withArgs("appDirs").returns([
+                    "first",
+                    "second"
+                ]);
+
+                let collectAppDirFilesStub = sinon.stub(app, "__collectAppDirFiles", function* () {});
+
+                yield app._readAppDirs();
+
+                assert.isTrue(collectAppDirFilesStub.calledTwice);
+                assert.deepEqual(collectAppDirFilesStub.args, [
+                    [path.join(app.config.appDir, "first")], [path.join(app.config.appDir, "second")]
+                ]);
+
+                collectAppDirFilesStub.restore();
+
+            }));
+
+            it("Should collect files inside directory", async(function* () {
+
+                let readdirStub = sinon.stub(fs, "readdir", function(args, cb) {
+                    cb(null, ["one.js", "two.js"]);
+                });
+
+                let loadFileStub = sinon.stub(app, "__loadFile", function* () {});
+
+                yield app.__collectAppDirFiles("test");
+
+                assert.isTrue(readdirStub.calledOnce);
+                assert.equal(readdirStub.args[0][0], "test");
+                assert.isTrue(loadFileStub.calledTwice);
+                assert.deepEqual(loadFileStub.args, [
+                    ["test/one.js"], ["test/two.js"]
+                ]);
+
+                readdirStub.restore();
+                loadFileStub.restore();
+
+            }));
+
+            it("Should load single file", async(function* () {
+
+                let lstatStub = sinon.stub(fs, "lstat", function(args, cb) {
+                   cb(null, {
+                       isFile: function() {return true}
+                   })
+                });
+
+                let getScriptStub = sinon.stub(app, "_getScript",  function() {
+                    return "script";
+                });
+
+                let cacheAddSpy = sinon.stub(app.cache, "add");
+
+                yield app.__loadFile("/mypath");
+
+                assert.isTrue(lstatStub.calledOnce);
+                assert.equal(lstatStub.args[0][0], "/mypath");
+
+                assert.isTrue(getScriptStub.calledOnce);
+
+                assert.isTrue(cacheAddSpy.calledOnce);
+                assert.deepEqual(cacheAddSpy.args[0], ["/mypath", "script"]);
+
+                lstatStub.restore();
+                getScriptStub.restore();
+                cacheAddSpy.restore();
+
+            }));
+
+            it("Should throw error if not a file was loaded", async(function* () {
+
+                let lstatStub = sinon.stub(fs, "lstat", function(args, cb) {
+                    cb(null, {
+                        isFile: function() {return false}
+                    })
+                });
+
+                try {
+                    yield app.__loadFile("/mypath");
+                } catch(e) {
+                    assert.equal(e.message, "Not a file was found!");
+                }
+
+                lstatStub.restore();
+
+            }));
+
+            it("Should read app special files", async(function* () {
+
+                configGetStub.withArgs("appFiles").returns([
+                    "first.js",
+                    "second.js"
+                ]);
+
+                let loadFileStub = sinon.stub(app, "__loadFile", function* () {});
+
+                yield app._readAppFiles();
+
+                assert.isTrue(loadFileStub.calledTwice);
+                assert.deepEqual(loadFileStub.args, [
+                    [path.join(app.config.appDir, "first.js")], [path.join(app.config.appDir, "second.js")]
+                ]);
+
+                loadFileStub.restore();
+            }));
 
         });
 
