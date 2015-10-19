@@ -4,6 +4,8 @@
  * @date 17/6/14
  */
 
+"use strict";
+
 const events = require("events"),
     co = require("co");
 

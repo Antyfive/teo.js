@@ -4,6 +4,8 @@
  * @date 24/5/15
  */
 
+"use strict";
+
 const moment = require("moment"),
     colors = require("colors"),
     util = require("util"),

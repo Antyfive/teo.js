@@ -3,6 +3,7 @@
  * @author Andrew Teologov <teologov.and@gmail.com>
  * @date {22.05.15}
  */
+"use strict";
 
 const
     _ = require("./teo.utils"),

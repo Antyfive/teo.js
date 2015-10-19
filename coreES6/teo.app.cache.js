@@ -4,6 +4,8 @@
  * @date 6/6/15
  */
 
+"use strict";
+
 /* global logger */
 
 exports = module.exports = AppCache;

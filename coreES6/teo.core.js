@@ -6,6 +6,8 @@
 
 /* global logger */
 
+"use strict";
+
 const
     co = require("co"),
     fs = require("fs"),

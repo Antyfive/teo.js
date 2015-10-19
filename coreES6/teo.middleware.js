@@ -4,6 +4,8 @@
  * @date 6/16/15
  */
 
+"use strict";
+
 var _ = require("./teo.utils"),
     compose = require("composition");
 

@@ -5,6 +5,8 @@
  */
 /* global logger */
 
+"use strict";
+
 var fs = require("fs");
 
 // Middleware to stream video, audio with support for different formats and device request for chunks

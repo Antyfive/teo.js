@@ -9,6 +9,8 @@ const _ = require("lodash"),
     co = require("co"),
     path = require("path");
 
+"use strict";
+
 /**
  * Creates a thunk from a passed function
  * Usage: var thunk = thunkify(fs.readFile);

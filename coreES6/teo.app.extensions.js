@@ -5,6 +5,8 @@
  * @date 7/2/15
  */
 
+"use strict";
+
 const
     Base = require("./teo.base"),
     _ = require("./teo.utils"),

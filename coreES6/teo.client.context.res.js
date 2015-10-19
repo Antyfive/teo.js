@@ -4,6 +4,8 @@
  * @date 6/26/15
  */
 
+"use strict";
+
 const
     _ = require("lodash"),
     http = require("http"),
