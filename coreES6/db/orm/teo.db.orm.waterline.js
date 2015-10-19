@@ -4,6 +4,8 @@
  * @date 7/5/15
  */
 
+"use strict";
+
 const
     BaseOrm = require("./teo.db.orm");
 

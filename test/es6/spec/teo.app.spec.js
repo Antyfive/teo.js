@@ -364,4 +364,44 @@ describe("Testing Teo App", () => {
 
     });
 
+    describe("Life circle", () => {
+
+        describe("Start", () => {
+
+            let runExtensionsStub,runAppScriptsStub, connectOrmStub; //initServerStub;
+
+            beforeEach(() => {
+
+                runExtensionsStub = sinon.stub(app, "_runExtensions", function* () {});
+                runAppScriptsStub = sinon.stub(app, "_runAppScripts", function* () {});
+                connectOrmStub = sinon.stub(app, "_connectOrm", function* () {});
+                //initServerStub = sinon.stub(app, "initServer", function() {});
+
+            });
+
+            afterEach(() => {
+
+                runExtensionsStub.restore();
+                runAppScriptsStub.restore();
+                connectOrmStub.restore();
+                //initServerStub.restore();
+
+            });
+
+            it("Should start app", async(function* () {
+
+                let initServerSpy = sinon.spy(app, "initServer");
+
+                yield app.start();
+
+                assert.isTrue(initServerSpy.calledOnce);
+
+                initServerSpy.restore();
+
+            }));
+        });
+
+
+    });
+
 });

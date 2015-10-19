@@ -6,6 +6,8 @@
 
 /* global logger */
 
+"use strict";
+
 const
     cluster = require("cluster"),
     os = require("os");

@@ -4,6 +4,7 @@
  * @date 6/7/15
  */
 
+"use strict";
 
 const
     Base = require("./teo.base"),

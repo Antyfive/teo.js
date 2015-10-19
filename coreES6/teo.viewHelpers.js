@@ -4,6 +4,8 @@
  * @date 7/2/15
  */
 
+"use strict";
+
 const
     renderer = require("hogan.js");
 

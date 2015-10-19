@@ -3,6 +3,9 @@
  * @author Andrew Teologov <teologov.and@gmail.com>
  * @date 5/26/15
  */
+
+"use strict";
+
 // TODO:
 // stop app
 
@@ -65,7 +68,7 @@ class App extends Base {
     }
 
     initDb() {
-        if (!this.config.get("db").enabled === true) {
+        if (this.config.get("db").enabled === false) {
             return;
         }
         try {

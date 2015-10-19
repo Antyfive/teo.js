@@ -4,6 +4,8 @@
  * @date 6/26/15
  */
 
+"use strict";
+
 const
     Base = require("./teo.base"),
     ResContext = require("./teo.client.context.res"),
