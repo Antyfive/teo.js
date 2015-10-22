@@ -25,8 +25,9 @@ class Core extends Base {
         this.apps = {};
         this._bindProcessEvents();
         _.generator(function* () {
-            yield _.async(this._createCoreApp.bind(this)).catch(logger.error);
-            yield _.async(this.loadApps.bind(this)).catch(logger.error);
+            yield* this._createCoreApp();
+            yield* this.loadApps();
+
             return this;
         }.bind(this), this.callback);
 	}
@@ -42,7 +43,7 @@ class Core extends Base {
         process.on("exit", this._exitHandler.bind(null,{cleanup:true}));
         // catches ctrl+c event
         process.on("SIGINT", this._exitHandler.bind(null, {exit:true}));
-        // catches uncaught exceptions
+        // catches uncaught exceptions // TODO: check if NODE_ENV != "development"
         process.on("uncaughtException", this._exitHandler.bind(null, {exit:true}));
     }
 
@@ -119,7 +120,7 @@ class Core extends Base {
             let stat = yield _.thunkify(fs.lstat)(appDir);
 
             if (stat.isDirectory()) {
-                yield _.async(this.registerApp.bind(this, appName));    // TODO: yield _.async(this.registerApp.bind(this, appName))
+                yield* this.registerApp(appName);
             }
         }
         return self.apps;
@@ -155,7 +156,7 @@ class Core extends Base {
      * @param {String} [appName] :: application name
      */
     * start(appName) {
-        yield this._lifeCircleAction(appName, "start");
+        yield* this._lifeCircleAction(appName, "start");
     }
 
     /**
@@ -164,7 +165,7 @@ class Core extends Base {
      * @returns {*}
      */
     * stop(appName) {
-        yield this._lifeCircleAction(appName, "stop");
+        yield* this._lifeCircleAction(appName, "stop");
     }
 
     /**
@@ -173,7 +174,7 @@ class Core extends Base {
      * @returns {*}
      */
     * restart(appName) {
-        yield this._lifeCircleAction(appName, "restart");
+        yield* this._lifeCircleAction(appName, "restart");
     }
 
     /**
@@ -182,7 +183,7 @@ class Core extends Base {
      */
     * shutdown() {
         // Stop all apps
-        yield this.stop();
+        yield* this.stop();
         // exit with cleanup
         this._exitHandler({cleanup: true});
     }

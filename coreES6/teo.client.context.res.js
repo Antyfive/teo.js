@@ -34,6 +34,14 @@ class TeoRes extends Base {
         return this.config.res;
     }
 
+    get req() {
+        return this.config.req;
+    }
+
+    get pathname() {
+        return this.config.req.pathname
+    }
+
     json(obj) {
         this.res.setHeader("Content-Type", "application/json");
         this.send(200, obj, "json");
@@ -54,7 +62,7 @@ class TeoRes extends Base {
         var extension = _.getExtension(this.pathname);
         var contentType = mime.lookup(args[2] || extension || this.config.req.headers.accept || "html");
         var writeHeadObj = {
-            "Content-Type": contentType
+            "Content-Type": contentType + ";charset=UTF-8"
         };
 
         if (args.length === 1) {

@@ -107,18 +107,13 @@ class Client extends Base {
             if (this.req.headers["range"]) {
                 var extension = _.getExtension(this.pathname);
                 var contentType = mime.lookup(extension || this.req.headers.accept || "html") ;
-                streamer.stream(this.req, this.res, this.app.config.appDir + this.pathname, contentType);
+                streamer.stream(this.req, this.res, path.normalize(path.join(this.app.config.appDir, this.pathname)), contentType);
             } else {
-                this.serveStatic(this.pathname.match(/\/public/) ?
+                // TODO: cache, read from cache
+                this.sendStatic(this.pathname.match(/\/public/) ?
                     this.pathname :
-                    path.join("/public", this.pathname), function(err, filepath, content) {
-                    if (!err && content) {
-                        this.res.send(content);
-                    }
-                    else {
-                        this.res.send(err, filepath);
-                    }
-                }.bind(this));
+                        path.join("/public", this.pathname)
+                );
             }
         }
         else
@@ -126,36 +121,87 @@ class Client extends Base {
     }
 
     /**
-     * Serve of static files
-     * @param {String} path :: path to static
+     * Sends static
+     * @param filePath
+     */
+    sendStatic(filePath) {
+        this.readFileSafely(filePath, (err, dataBuffer) => {
+            if (err) {
+                this.res.send(404);
+                return;
+            }
+
+            this.res.send(dataBuffer);
+        });
+    }
+
+    /**
+     * Checks paths, and reads static file
+     * @param {String} filePath
      * @param {Function} callback
      */
-    serveStatic(path, callback) {
-        var path = String(path),
-            absPath = this.app.config.appDir + path,
-            cached = this.app.cache.get(absPath);
-
-        if (cached != null) {
-            callback(null, absPath, cached);
-        } else {
-            fs.exists(absPath, function(exists) {
-                if (exists) {
-                    fs.readFile(absPath, function(err, data) {
-                        if ( err ) {
-                            logger.error(err.message);
-                            callback(err.message, absPath);
-                        } else {
-                            if (this.app.config.get("cache").static === true) { // add to cache, if file exists
-                                this.app.cache.add(absPath, data);
-                            }
-                            callback(null, absPath, data);
-                        }
-                    }.bind(this));
-                } else {
-                    callback(404, "Requested file does not exists");
-                }
-            }.bind(this));
+    readFileSafely(filePath, callback) {    // lib code
+        try {
+            filePath = decodeURIComponent(filePath);    // decode url
+        } catch(e) {
+            callback(new Error("Can't decode file path"));
+            return;
         }
+
+        if (~filePath.indexOf("\0")) {  // zero byte
+            callback(new Error("Zero byte error"));
+            return;
+        }
+
+        filePath = path.normalize(path.join(this.app.config.appDir, filePath));
+
+        if (filePath.indexOf(this.app.config.appDir) !== 0) {
+            callback(new Error("File was not found"));
+            return;
+        }
+
+        fs.stat(filePath, (err, stats) => {
+            if (err || !stats.isFile()) {
+                callback(new Error("Not a file was found"));
+                return;
+            }
+
+            this._readFile(filePath, (err, dataBuffer) => {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                callback(null, dataBuffer);
+            });
+        });
+    }
+
+    /**
+     * Reads file
+     * @param {String} path
+     * @param callback
+     * @private
+     */
+    _readFile(path, callback) {
+        let readStream = new fs.ReadStream(path/*, {encoding: "utf-8"}*/);
+        let data = [];
+
+        readStream.on("readable", () => {
+            let read = readStream.read();
+            if (read != null) {
+                data.push(read);
+            }
+        });
+
+        readStream.on("error", (err) => {
+            logger.error(err);
+            callback(err);
+        });
+
+        readStream.on("end", () => {
+            callback(null, Buffer.concat(data));
+        });
     }
 
     // ---- ---- ---- ---- ---- ----
@@ -170,7 +216,7 @@ class Client extends Base {
     render(tpl, context, callback) {
         var context = context || {};
 
-        this.serveStatic("/views/" + tpl + ".template", function(err, absPath, template) {
+        this.readFileSafely("/views/" + tpl + ".template", function(err, template) {
             if (err) {
                 if (_.isFunction(callback)) {
                     callback(err);
@@ -180,7 +226,7 @@ class Client extends Base {
                 }
                 return;
             }
-            var output = viewHelpers.render(template, context.partial, {delimiters: this.app.config.get("delimiters")});
+            var output = viewHelpers.render(template.toString("utf8"), context.partial, {delimiters: this.app.config.get("delimiters")});
             if (_.isFunction(callback)) {   // if callback - than return output only
                 callback(null, output);
             }
@@ -188,19 +234,19 @@ class Client extends Base {
                 delete context.partial;
                 context.partial = {};
                 context.partial[tpl] = output;
-                let cached = this.app.cache.get(this.route.path);
+                /*let cached = this.app.cache.get(this.route.path);
                 if (cached != null) {
                     this.res.send(cached);
-                }
-                else {
+                }*/
+                //else {
                     // _mixinContextObj(obj);
-                    this.serveStatic("/views/layout.template", function(err, absPath, template) {
+                    this.readFileSafely("/views/layout.template", function(err, template) {
                         if (err) {
                             this.res.send(500);
                             return;
                         }
                         //
-                        let output = viewHelpers.render(template, context, {delimiters: this.app.config.get("delimiters")});
+                        let output = viewHelpers.render(template.toString("utf8"), context, {delimiters: this.app.config.get("delimiters")});
 
                         if (Object.keys(this.req.params).length === 0 && this.app.config.get("cache").response === true) {       // TODO AT: make caching for routes with changeable params           // TODO AT: make caching for routes with changeable params
                             this.app.cache.add(this.route.path, output);
@@ -208,7 +254,7 @@ class Client extends Base {
 
                         this.res.send(output);
                     }.bind(this));
-                }
+                //}
             }
         }.bind(this));
     }

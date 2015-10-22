@@ -12,13 +12,14 @@ const Teo = require(teoBase + "/teo"),
 
 describe("Testing Teo Main Entry Point", () => {
 
-	let teo;
+	let teo, dir;
 
 	beforeEach(() => {
 
+        dir = process.cwd().replace(/\\/g, "/");
 		teo = new Teo({
 			mode: "test",
-            homeDir: "testDir"
+            homeDir: dir
 		});
 
         teo.core.coreAppConfig = {
@@ -30,6 +31,7 @@ describe("Testing Teo Main Entry Point", () => {
 	afterEach(() => {
 
 		teo = null;
+        dir = null;
 
 	});
 
@@ -42,9 +44,9 @@ describe("Testing Teo Main Entry Point", () => {
 	it("Should parse passed full config correctly", () => {
 
 		assert.equal(teo.mode, "test", "Mode should be set correctly");
-		assert.equal(teo.homeDir, "testDir", "Home dir should be set correctly");
-		assert.equal(teo.appsDir, "testDir/apps", "Apps dir should be set correctly");
-		assert.equal(teo.confDir, "testDir/config", "Test dir should be set correctly");
+		assert.equal(teo.homeDir, dir, "Home dir should be set correctly");
+		assert.equal(teo.appsDir, dir + "/apps", "Apps dir should be set correctly");
+		assert.equal(teo.confDir, dir + "/config", "Test dir should be set correctly");
 
 	});
 

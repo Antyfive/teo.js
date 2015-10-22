@@ -63,7 +63,7 @@ class Teo extends Base {
                     new Cluster(resolve);
                 }.bind(this));
             }
-            yield _.async(this._runAppLifeCircleAction.bind(this, appName, "start", callback));
+            yield* this._runAppLifeCircleAction(appName, "start", callback);
         }.bind(this));
     }
 
@@ -109,14 +109,9 @@ class Teo extends Base {
             throw new Error("Not supported action '" +action+ "' was received");
         }
 
-        return _.generator(this.core[action].bind(this.core, appName), function(err, res) {
-            if (err) {
-                logger.error(err);
-                throw new Error(err);
-            } else {
-                callback(null, res);
-            }
-        });
+        yield* this.core[action](appName);
+
+        callback(this);
     }
 }
 
