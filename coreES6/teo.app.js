@@ -24,6 +24,7 @@ const
     Db = require("./db/teo.db");
 
 class App extends Base {
+    // TODO: log all errors, and fail in production only
     constructor(config, callback) {
         super(config, callback);
 
@@ -31,14 +32,15 @@ class App extends Base {
         this._middleware = new Middleware();
 
         _.generator(function* () {
-            yield _.async(this.initApp.bind(this)).catch(logger.error);
+            yield* this.initApp();
             return this;
         }.bind(this), this.callback);
     }
 
     * initApp() {
-        yield _.async(this.loadConfig.bind(this)).catch(logger.error);
-        yield _.async(this.collectExecutableFiles.bind(this)).catch(logger.error);
+        yield* this.loadConfig();
+        yield* this.collectExecutableFiles();
+
         this.initDb();
         this._initExtensions();
     }
@@ -121,7 +123,7 @@ class App extends Base {
 
         for (var i = 0; i < l; i++) {
             let currentDir = dirs[i];
-            yield _.async(this.__collectAppDirFiles.bind(this, path.join(this.config.appDir, currentDir))).catch(logger.error);
+            yield* this.__collectAppDirFiles(path.join(this.config.appDir, currentDir));
         }
     }
 
@@ -131,7 +133,7 @@ class App extends Base {
 
         for (var i = 0; i < l; i++) {
             let file = path.join(dir, files[i]);
-            yield _.async(this.__loadFile.bind(this, file)).catch(logger.error);
+            yield* this.__loadFile(file);
         }
     }
 
@@ -156,25 +158,18 @@ class App extends Base {
 
          for (var i = 0; i < l; i++) {
              let file = path.join(this.config.appDir, files[i]);
-             yield _.async(this.__loadFile.bind(this, file)).catch(logger.error);
+             yield* this.__loadFile(file);
          }
     }
 
     // ---- ----
 
     * start() {
-        yield _.async(this._runExtensions.bind(this));
-        yield _.async(this._runAppScripts.bind(this));
-        yield _.async(this._connectOrm.bind(this));
+        yield* this._runExtensions();
+        yield* this._runAppScripts();
+        yield* this._connectOrm();
 
-        var withListen = true;
-        this.initServer(withListen);
-
-        yield _.promise(function(resolve) {
-            this.server.once("listening", function() {
-                resolve(this);
-            }.bind(this));
-        }.bind(this));
+        yield* this.initServer();
     }
 
     * stop() {  // TODO:
@@ -189,20 +184,13 @@ class App extends Base {
 
     /**
      * Inits server
-     * @param {Boolean} withListen :: immediately listen to server
      */
-    initServer(withListen) {
+    * initServer() {
         this.server = http.createServer(this.getDispatcher());
-        if (withListen) {
-            this.listenServer();
-        }
-    }
 
-    /**
-     * Start listening of server
-     */
-    listenServer() {
-        this.server && this.server.listen(this.config.get("port"), this.config.get("host"));
+        yield function(callback) {
+            this.server.listen(this.config.get("port"), this.config.get("host"), callback);
+        }.bind(this);
     }
 
     getDispatcher() {
@@ -234,13 +222,13 @@ class App extends Base {
             let script = scripts[i];
             // TODO: improve
             if (script.match(/\/controllers\//)) {
-                yield _.async(this._runController.bind(this, script, [Client.routes, ((this._canUseDb() && this.db.getOrm() || undefined))]));
+                yield* this._runController(script, [Client.routes, ((this._canUseDb() && this.db.getOrm() || undefined))]);
             }
             else if (script.match(/\/models\//)) {
-                yield _.async(this._runModel.bind(this, script));
+                yield* this._runModel(script);
             }
             else { // TODO: do allow execute other scripts?
-                yield _.async(this._runController.bind(this, script, [Client.routes, ((this._canUseDb() && this.db.getOrm() || undefined))]));
+                yield* this._runController(script, [Client.routes, ((this._canUseDb() && this.db.getOrm() || undefined))]);
             }
         }
     }
@@ -314,7 +302,7 @@ class App extends Base {
     }
 
     * _runExtensions() {
-        yield _.async(this.extensions.runAll.bind(this.extensions));
+        yield* this.extensions.runAll();
     }
 
     /**
