@@ -15,6 +15,8 @@ module.exports = class TeoORM extends Base {
     constructor(config) {
         super(config);
 
+        this.connected = false;
+
         try {
             this.loadOrm();
             this.loadAdapter();
@@ -83,30 +85,11 @@ module.exports = class TeoORM extends Base {
     }
 
     /**
-     * Connects DB
-     * @param {Function} callback
-     */
-    _connect(callback) {
-        this.getAdapter().connect(function(err, models) {
-            if (err) {
-                logger.error(err);
-                throw new err;
-            }
-            else {
-                this._collections = models.collections;
-                this._connections = models.connections;
-                logger.success("DB is connected!");
-            }
-            callback();
-        }.bind(this));
-    }
-
-    /**
      * Returns collections list
      * @returns {collections|*|Array}
      */
     collections() {
-        return this._collections;
+        return this._getCollections();
     }
 
     /**
@@ -115,30 +98,74 @@ module.exports = class TeoORM extends Base {
      * @returns {*}
      */
     collection(name) {
-        return this._collections[name];
+        return this._getCollection(name);
     }
 
+    /**
+     * Connections getter
+     * @returns {*}
+     */
+    connections() {
+        return this._getConnections();
+    }
+
+    // ---- ---- ---- ----
+    /**
+     * Connect db
+     */
     * connect() {
-        yield _.promise(function(resolve, reject) {
-            try {
-                this.getAdapter().connect(resolve);
-            }
-            catch(e) {
-                reject(e);
-            }
-        }.bind(this));
+        return yield _.promise((resolve, reject) => {
+            this.getAdapter().connect((err, models) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                logger.log("DB has been successfully connected!");
+                this.connected = true;
+                resolve(models);
+            });
+        });
     }
 
     /**
      * Disconnect DB
-     * @param {Function} callback
      */
-    disconnect(callback) {
-        this.getAdapter().disconnect(function(err) {
-            if (err) {
-                logger.error(err);
-            }
-            callback(err);
+    * disconnect() {
+        return yield _.promise((resolve, reject) =>  {
+            this.getAdapter().disconnect((err) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                this.connected = false;
+                logger.log("DB has been successfully disconnected!");
+                resolve();
+            });
         });
     }
+
+    /**
+     * Check if connected
+     * @returns {TeoORM.connected}
+     */
+    connected() {
+        return this.connected;
+    }
+
+    // ---- ---- ---- ---- ---- ---- getters
+
+    /**
+     * Collections getter
+     * @private
+     */
+    _getCollections() {}
+
+    /**
+     * Collection getter
+     * @param {String} name
+     * @private
+     */
+    _getCollection(name) {}
+
+    _getConnections() {}
 };

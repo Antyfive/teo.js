@@ -56,7 +56,7 @@ class Teo extends Base {
      * @param [appName] :: name of the application to start (or alternatively, start all)
      * @param callback
      */
-    start(appName, callback) {
+    start(appName, callback) {  // TODO: generator
         return _.async(function* () {
             if (this.core.coreAppConfig.get("cluster").enabled) {
                 yield _.promise(function(resolve, reject) {

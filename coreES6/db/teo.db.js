@@ -80,14 +80,17 @@ module.exports = class TeoDB extends Base {
      * Connects db
      */
     * connect() {
-        yield this.getOrm().connect();
+        yield* this.getOrm().connect();
     }
 
     /**
      * Disconnect db
-     * @param callback
      */
-    disconnect(callback) {
-        this.getOrm().disconnect(callback);
+    * disconnect() {
+        yield* this.getOrm().disconnect();
+    }
+
+    connected() {
+        return this.getOrm().connected();
     }
 };
