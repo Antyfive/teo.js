@@ -366,15 +366,15 @@ describe("Testing Teo App", () => {
 
     describe("Life circle", () => {
 
-        describe("Start", () => {
+        describe("Start Stop", () => {
 
-            let runExtensionsStub,runAppScriptsStub, connectOrmStub; //initServerStub;
+            let runExtensionsStub,runAppScriptsStub, connectDBStub; //initServerStub;
 
             beforeEach(() => {
 
                 runExtensionsStub = sinon.stub(app, "_runExtensions", function* () {});
                 runAppScriptsStub = sinon.stub(app, "_runAppScripts", function* () {});
-                connectOrmStub = sinon.stub(app, "_connectOrm", function* () {});
+                connectDBStub = sinon.stub(app, "connectDB", function* () {});
                 //initServerStub = sinon.stub(app, "initServer", function() {});
 
             });
@@ -383,22 +383,38 @@ describe("Testing Teo App", () => {
 
                 runExtensionsStub.restore();
                 runAppScriptsStub.restore();
-                connectOrmStub.restore();
+                connectDBStub.restore();
                 //initServerStub.restore();
 
             });
 
             it("Should start app", async(function* () {
 
-                let initServerSpy = sinon.spy(app, "initServer");
+                let initServerStub = sinon.stub(app, "initServer", function* () {});
 
-                yield app.start();
+                yield* app.start();
 
-                assert.isTrue(initServerSpy.calledOnce);
+                assert.isTrue(initServerStub.calledOnce);
 
-                initServerSpy.restore();
+                initServerStub.restore();
 
             }));
+
+            it("Should stop app", async(function* () {
+
+                let closeServerStub = sinon.stub(app, "closeServer", function* () {});
+                let disconnectDBStub = sinon.stub(app, "disconnectDB", function* () {});
+
+                yield* app.stop();
+
+                assert.isTrue(closeServerStub.calledOnce);
+                assert.isTrue(disconnectDBStub.calledOnce);
+
+                closeServerStub.restore();
+                disconnectDBStub.restore();
+
+            }));
+
         });
 
 

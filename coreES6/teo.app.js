@@ -167,16 +167,21 @@ class App extends Base {
     * start() {
         yield* this._runExtensions();
         yield* this._runAppScripts();
-        yield* this._connectOrm();
+        yield* this.connectDB();
 
         yield* this.initServer();
     }
 
-    * stop() {  // TODO:
-
+    * stop() {
+        yield* this.closeServer();
+        yield* this.disconnectDB();
     }
 
     * restart() {   // TODO:
+
+    }
+
+    * shutdown() {
 
     }
 
@@ -190,6 +195,17 @@ class App extends Base {
 
         yield function(callback) {
             this.server.listen(this.config.get("port"), this.config.get("host"), callback);
+        }.bind(this);
+    }
+
+    * closeServer() {
+        logger.info(`Closing ${this.name} app server.`);
+
+        yield function(callback) {
+            this.server.close(() => {
+                logger.info(`Connection closed, port: ${this.config.get("port")} host: ${this.config.get("host")}`);
+                callback();
+            });
         }.bind(this);
     }
 
@@ -208,7 +224,7 @@ class App extends Base {
     }
 
     * respond(next) {
-        yield *next;        // run chain of middleware functions
+        yield* next;        // run chain of middleware functions
         this.process();     // client.process
     }
 
@@ -283,18 +299,19 @@ class App extends Base {
     _canUseDb() {
         return (this.config.get("db").enabled === true) && this.db;
     }
-    // TODO: block ---- ----
 
-    * _connectOrm() {
+    * connectDB() {
         if (!this._canUseDb()) {
             return;
         }
 
-        yield _.async(this.db.connect.bind(this.db)).catch(function(err) {
-            logger.error(err);
-            throw err;
-        });
+        yield* this.db.connect();
+    }
 
+    * disconnectDB() {
+        if (this._canUseDb() && this.db.connected()) {
+            yield* this.db.disconnect();
+        }
     }
 
     _initExtensions() {
