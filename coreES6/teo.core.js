@@ -79,13 +79,14 @@ class Core extends Base {
 
         return this.app;
     }
+
     /**
      * Create new app
      * @param {Object} options
      * @returns {*}
      * @private
      */
-    _createApp(options) { // TODO: error's handler; generator (yield new App?)
+    _createApp(options) {
         return _.promise(function(resolve, reject) {
             new App(options, function(err, res) {
                 resolve(res);
@@ -179,7 +180,6 @@ class Core extends Base {
 
     /**
      * Complete shutdown of the system
-     * TODO: tests
      */
     * shutdown() {
         // Stop all apps
