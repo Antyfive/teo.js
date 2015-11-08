@@ -26,7 +26,6 @@ class Client extends Base {
     constructor(config, callback) {
         super(config, callback);
 
-        this.app = this.config.app; // TODO: do not pass complete app reference here, only config, and file cache
         // ---- ----
         this.context = new ClientContext({
             req: this.config.req,
@@ -42,6 +41,12 @@ class Client extends Base {
         }
         this.extension = _.getExtension(this.pathname);// TODO: improve
         // ----
+    }
+
+    applyConfig(config) {
+        this.config = config.config;    // receiving app's config
+        this.config.req = config.req;
+        this.config.res = config.res;
     }
 
     // error handlers ---- ----
@@ -107,7 +112,7 @@ class Client extends Base {
             if (this.req.headers["range"]) {
                 var extension = _.getExtension(this.pathname);
                 var contentType = mime.lookup(extension || this.req.headers.accept || "html") ;
-                streamer.stream(this.req, this.res, path.normalize(path.join(this.app.config.appDir, this.pathname)), contentType);
+                streamer.stream(this.req, this.res, path.normalize(path.join(this.config.get("appDir"), this.pathname)), contentType);
             } else {
                 // TODO: cache, read from cache
                 this.sendStatic(this.pathname.match(/\/public/) ?
@@ -153,9 +158,9 @@ class Client extends Base {
             return;
         }
 
-        filePath = path.normalize(path.join(this.app.config.appDir, filePath));
+        filePath = path.normalize(path.join(this.config.get("appDir"), filePath));
 
-        if (filePath.indexOf(this.app.config.appDir) !== 0) {
+        if (filePath.indexOf(this.config.get("appDir")) !== 0) {
             callback(new Error("File was not found"));
             return;
         }
@@ -226,7 +231,7 @@ class Client extends Base {
                 }
                 return;
             }
-            var output = viewHelpers.render(template.toString("utf8"), context.partial, {delimiters: this.app.config.get("delimiters")});
+            var output = viewHelpers.render(template.toString("utf8"), context.partial, {delimiters: this.config.get("delimiters")});
             if (_.isFunction(callback)) {   // if callback - than return output only
                 callback(null, output);
             }
@@ -246,11 +251,11 @@ class Client extends Base {
                             return;
                         }
                         //
-                        let output = viewHelpers.render(template.toString("utf8"), context, {delimiters: this.app.config.get("delimiters")});
+                        let output = viewHelpers.render(template.toString("utf8"), context, {delimiters: this.config.get("delimiters")});
 
-                        if (Object.keys(this.req.params).length === 0 && this.app.config.get("cache").response === true) {       // TODO AT: make caching for routes with changeable params           // TODO AT: make caching for routes with changeable params
+                        /*if (Object.keys(this.req.params).length === 0 && this.config.get("cache").response === true) {       // TODO AT: make caching for routes with changeable params           // TODO AT: make caching for routes with changeable params
                             this.app.cache.add(this.route.path, output);
-                        }
+                        }*/
 
                         this.res.send(output);
                     }.bind(this));
