@@ -39,8 +39,7 @@ class Teo extends Base {
 	}
 
 	_parseOptions() {
-        // TODO: NODE_ENV
-		this.mode = this.config.mode || ((process.argv[2] === "production") ? process.argv[2] : "development");
+		this.mode = this.config.mode || process.env.NODE_ENV || "development";
         this.homeDir = this.config.homeDir || process.cwd().replace(/\\/g, "/");// home dirname ( from where framework is started )
         this.appsDir = this.homeDir + "/apps";    // main apps dir
         this.confDir = this.homeDir + "/config";    // config dir
