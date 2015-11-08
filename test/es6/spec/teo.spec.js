@@ -8,7 +8,8 @@ const Teo = require(teoBase + "/teo"),
 	TeoCore = require(teoBase + "/teo.core"),
     _ = require(teoBase + "/teo.utils"),
 	events = require("events"),
-    co = require("co");
+    co = require("co"),
+    async = generator => done => co(generator).then(done, done);
 
 describe("Testing Teo Main Entry Point", () => {
 
@@ -56,7 +57,7 @@ describe("Testing Teo Main Entry Point", () => {
 
 	});
 
-	it("Should call callback when core created", (done) => {
+	it("Should call callback when core created", async(function* () {
 
         var callbackStub = sinon.stub(teo, "callback", function() {
             assert.isFalse(teo.callback.calledOnce, "Callback should be called once");
@@ -64,11 +65,11 @@ describe("Testing Teo Main Entry Point", () => {
             done();
         });
 
-		teo.createCore();
+		yield* teo.createCore();
 
-	});
+	}));
 
-	it("Should emit 'ready' event when core was initialized", (done) => {
+	it("Should emit 'ready' event when core was initialized", async(function* () {
 
 		var emitSpy = sinon.stub(teo, "emit", function() {
 
@@ -78,14 +79,13 @@ describe("Testing Teo Main Entry Point", () => {
 
             emitSpy.restore();
 
-            done();
-
         });
 
-		teo.createCore();
-	});
+		yield* teo.createCore();
 
-	it("Should start application", (done) => {
+	}));
+
+	it("Should start application", async(function* () {
 
         teo.core.coreAppConfig.get.withArgs("cluster").returns({
             enabled: false
@@ -93,101 +93,68 @@ describe("Testing Teo Main Entry Point", () => {
 
         let runAppLifeCircleActionSpy = sinon.spy(teo, "_runAppLifeCircleAction");
         let startCoreSpy = sinon.spy(teo.core, "start");
-        let callbackStub = sinon.stub();
-        let promise = teo.start("test", callbackStub);
 
-        promise.then(function() {
+        yield* teo.start("test");
 
-            assert.isTrue(callbackStub.calledOnce);
-            assert.isTrue(runAppLifeCircleActionSpy.calledOnce);
-            assert.isTrue(startCoreSpy.calledOnce);
-            assert.equal(runAppLifeCircleActionSpy.args[0][0], "test", "App's name should be correct");
-            assert.equal(runAppLifeCircleActionSpy.args[0][1], "start", "Action name should be correct");
-            assert.isFunction(runAppLifeCircleActionSpy.args[0][2]);
+        assert.isTrue(runAppLifeCircleActionSpy.calledOnce);
+        assert.isTrue(startCoreSpy.calledOnce);
+        assert.equal(runAppLifeCircleActionSpy.args[0][0], "test", "App's name should be correct");
+        assert.equal(runAppLifeCircleActionSpy.args[0][1], "start", "Action name should be correct");
 
-            runAppLifeCircleActionSpy.restore();
-            startCoreSpy.restore();
+        runAppLifeCircleActionSpy.restore();
+        startCoreSpy.restore();
 
-            done();
 
-        });
+    }));
 
-    });
+    it("Should stop application", async(function* () {
 
-    it("Should stop application", (done) => {
-
-        let callbackStub = sinon.stub();
         let runAppLifeCircleActionSpy = sinon.spy(teo, "_runAppLifeCircleAction");
         let stopCoreSpy = sinon.spy(teo.core, "stop");
-        let promise = teo.stop("test", callbackStub);
+        yield* teo.stop("test");
 
-        promise.then(function() {
+        assert.isTrue(runAppLifeCircleActionSpy.calledOnce);
+        assert.isTrue(stopCoreSpy.calledOnce);
+        assert.equal(runAppLifeCircleActionSpy.args[0][0], "test", "App's name should be correct");
+        assert.equal(runAppLifeCircleActionSpy.args[0][1], "stop", "Action name should be correct");
 
-            assert.isTrue(callbackStub.calledOnce);
-            assert.isTrue(runAppLifeCircleActionSpy.calledOnce);
-            assert.isTrue(stopCoreSpy.calledOnce);
-            assert.equal(runAppLifeCircleActionSpy.args[0][0], "test", "App's name should be correct");
-            assert.equal(runAppLifeCircleActionSpy.args[0][1], "stop", "Action name should be correct");
-            assert.isFunction(runAppLifeCircleActionSpy.args[0][2]);
+        runAppLifeCircleActionSpy.restore();
+        stopCoreSpy.restore();
 
-            runAppLifeCircleActionSpy.restore();
-            stopCoreSpy.restore();
+    }));
 
-            done();
+    it("Should restart application", async(function* () {
 
-        });
-
-    });
-
-    it("Should restart application", (done) => {
-
-        let callbackStub = sinon.stub();
         let runAppLifeCircleActionSpy = sinon.spy(teo, "_runAppLifeCircleAction");
         let restartCoreSpy = sinon.spy(teo.core, "restart");
-        let promise = teo.restart("test", callbackStub);
+        yield* teo.restart("test");
 
-        promise.then(function() {
+        assert.isTrue(runAppLifeCircleActionSpy.calledOnce);
+        assert.isTrue(restartCoreSpy.calledOnce);
+        assert.equal(runAppLifeCircleActionSpy.args[0][0], "test", "App's name should be correct");
+        assert.equal(runAppLifeCircleActionSpy.args[0][1], "restart", "Action name should be correct");
 
-            assert.isTrue(callbackStub.calledOnce);
-            assert.isTrue(runAppLifeCircleActionSpy.calledOnce);
-            assert.isTrue(restartCoreSpy.calledOnce);
-            assert.equal(runAppLifeCircleActionSpy.args[0][0], "test", "App's name should be correct");
-            assert.equal(runAppLifeCircleActionSpy.args[0][1], "restart", "Action name should be correct");
-            assert.isFunction(runAppLifeCircleActionSpy.args[0][2]);
+        runAppLifeCircleActionSpy.restore();
+        restartCoreSpy.restore();
 
-            runAppLifeCircleActionSpy.restore();
-            restartCoreSpy.restore();
 
-            done();
+    }));
 
-        });
+    it("Should shutdown application", async(function* () {
 
-    });
-
-    it("Should shutdown application", (done) => {
-
-        let callbackStub = sinon.stub();
         let runAppLifeCircleActionSpy = sinon.spy(teo, "_runAppLifeCircleAction");
         let shutdownSpy = sinon.spy(teo.core, "shutdown");
-        let promise = teo.shutdown(callbackStub);
+        yield* teo.shutdown();
 
-        promise.then(function() {
+        assert.isTrue(runAppLifeCircleActionSpy.calledOnce);
+        assert.isTrue(shutdownSpy.calledOnce);
+        assert.equal(runAppLifeCircleActionSpy.args[0][0], undefined, "App's name should be undefined");
+        assert.equal(runAppLifeCircleActionSpy.args[0][1], "shutdown", "Action name should be correct");
 
-            assert.isTrue(callbackStub.calledOnce);
-            assert.isTrue(runAppLifeCircleActionSpy.calledOnce);
-            assert.isTrue(shutdownSpy.calledOnce);
-            assert.equal(runAppLifeCircleActionSpy.args[0][0], undefined, "App's name should be undefined");
-            assert.equal(runAppLifeCircleActionSpy.args[0][1], "shutdown", "Action name should be correct");
-            assert.isFunction(runAppLifeCircleActionSpy.args[0][2]);
+        runAppLifeCircleActionSpy.restore();
+        shutdownSpy.restore();
 
-            runAppLifeCircleActionSpy.restore();
-            shutdownSpy.restore();
-
-            done();
-
-        });
-
-    });
+    }));
 
     it("Should throw error for unknown life circle action", (done) => {
 

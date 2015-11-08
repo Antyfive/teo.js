@@ -40,13 +40,19 @@ util.generator = function(generator, done) {    // TODO: catch errors
 /**
  * Run async func
  * @param func
+ * @param {Object} context
  * @returns {*}
  * Usage: yield util.async(this.asyncFunc.bind(this, param));
  */
-util.async = function(func) {
+util.async = function(func, context) {
     return co(function* () {
-        yield func();
-    });
+        if (this.isGenerator(func)) {
+            yield* func.call(context);
+        }
+        else {
+            yield func.call(context);
+        }
+    }.bind(this));
 };
 
 util.promise = function(fn) {
@@ -57,6 +63,42 @@ util.promise = function(fn) {
 
 util.getExtension = function( routeStr ) {
     return path.extname(routeStr).replace(".", "").toLowerCase();
+};
+
+/**
+ * Check if generator
+ * @param {*} obj
+ * @returns {Boolean}
+ */
+util.isGenerator = function(obj) {
+
+    /**
+     * Check if `obj` is a generator.
+     *
+     * @param {*} obj
+     * @return {Boolean}
+     * @api private
+     */
+
+    function isGenerator(obj) {
+        return 'function' == typeof obj.next && 'function' == typeof obj.throw;
+    }
+
+    /**
+     * Check if `obj` is a generator function.
+     *
+     * @param {*} obj
+     * @return {Boolean}
+     * @api private
+     */
+    function isGeneratorFunction(obj) {
+        var constructor = obj.constructor;
+        if (!constructor) return false;
+        if ('GeneratorFunction' === constructor.name || 'GeneratorFunction' === constructor.displayName) return true;
+        return isGenerator(constructor.prototype);
+    }
+
+    return (isGeneratorFunction(obj) || isGenerator(obj));
 };
 
 _.mixin(util);

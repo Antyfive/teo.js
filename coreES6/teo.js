@@ -21,88 +21,93 @@ class Teo extends Base {
 		super(config, callback);
 
 		this._parseOptions();
-		this.createCore();
+
+        _.async(this.createCore.bind(this))
+            .catch(err => {
+                logger.error(err.message, err.stack);
+                throw new Error(err.message);
+            })
+            .then(function () {
+                _.isGenerator(this.callback) ?
+                    _.async(this.callback, this) :
+                        this.callback.call(this, this);
+
+                process.nextTick(() => {
+                    this.emit("ready", this);
+                });
+            }.bind(this));
 	}
 
 	_parseOptions() {
+        // TODO: NODE_ENV
 		this.mode = this.config.mode || ((process.argv[2] === "production") ? process.argv[2] : "development");
         this.homeDir = this.config.homeDir || process.cwd().replace(/\\/g, "/");// home dirname ( from where framework is started )
         this.appsDir = this.homeDir + "/apps";    // main apps dir
         this.confDir = this.homeDir + "/config";    // config dir
 	}
 
-	createCore() {
-        var self = this;
-		this.core = new Core({
-            mode: this.mode,
-            homeDir: this.homeDir,
-            appsDir: this.appsDir,
-            confDir: this.confDir
-        }, (err, core) => {
-            if (err) {
-                throw new Error(err);
-            }
-            else {
-                self.callback.call(self, self);
-                process.nextTick(() => {
-                    self.emit("ready", self);
-                });
-            }
+    * createCore() {
+        return _.promise((resolve, reject) => {
+            this.core = new Core({
+                mode: this.mode,
+                homeDir: this.homeDir,
+                appsDir: this.appsDir,
+                confDir: this.confDir
+            }, (err, res) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                resolve(res);
+            });
         });
-	}
+    }
 
     /**
      * Start application
      * @param [appName] :: name of the application to start (or alternatively, start all)
-     * @param callback
      */
-    start(appName, callback) {  // TODO: generator
-        return _.async(function* () {
-            if (this.core.coreAppConfig.get("cluster").enabled) {
-                yield _.promise(function(resolve, reject) {
-                    new Cluster(resolve);
-                }.bind(this));
-            }
-            yield* this._runAppLifeCircleAction(appName, "start", callback);
-        }.bind(this));
+    * start(appName) {
+        if (this.core.coreAppConfig.get("cluster").enabled) {
+            yield _.promise(function(resolve, reject) {
+                new Cluster(resolve);
+            }.bind(this));
+        }
+        yield* this._runAppLifeCircleAction(appName, "start");
     }
 
     /**
      * Stop application
      * @param [appName] :: name of the application to stop (or alternatively, to stop all, if no name)
-     * @param {Function} callback
      */
-    stop(appName, callback) {
-        return _.async(this._runAppLifeCircleAction.bind(this, appName, "stop", callback));
+    * stop(appName) {
+        yield* this._runAppLifeCircleAction(appName, "stop");
     }
 
     /**
      * Restarts application
      * @param [appName] :: name of the application to stop (or alternatively, to stop all, if no name)
-     * @param {Function} callback
      * @returns {*}
      */
-    restart(appName, callback) {
-        return _.async(this._runAppLifeCircleAction.bind(this, appName, "restart", callback));
+    * restart(appName) {
+        yield* this._runAppLifeCircleAction(appName, "restart");
     }
 
     /**
      * Shutdown system
-     * @param {Function} callback
      * @returns {*}
      */
-    shutdown(callback) {
-        return _.async(this._runAppLifeCircleAction.bind(this, undefined, "shutdown", callback));
+    * shutdown() {
+        yield* this._runAppLifeCircleAction(undefined, "shutdown");
     }
 
     /**
      * Run app life circle action
      * @param {String|undefined} appName
      * @param {String} action
-     * @param {Function} callback
      * @private
      */
-    * _runAppLifeCircleAction(appName, action, callback) {
+    * _runAppLifeCircleAction(appName, action) {
         let actions = ["start", "stop", "restart", "shutdown"];
 
         if (actions.indexOf(action) === -1) {
@@ -110,8 +115,6 @@ class Teo extends Base {
         }
 
         yield* this.core[action](appName);
-
-        callback(this);
     }
 }
 
