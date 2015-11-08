@@ -215,7 +215,11 @@ class App extends Base {
 
     _createContext() {
         return function(req, res) {
-            var client = Client.Factory({req: req, res: res, app: this});   // as for now, pass hole app
+            var client = Client.Factory({
+                req: req,
+                res: res,
+                config: this.config
+            });
             this._middleware.run(this.respond, client).catch(function(error) {
                 logger.error(error);
                 client.res.send(500);
