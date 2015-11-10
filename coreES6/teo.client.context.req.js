@@ -11,7 +11,7 @@ const
     url = require("url"),
     querystring = require("querystring");
 
-class TeoReq extends Base {
+class ReqContext extends Base {
     constructor(config) {
         super(config);
 
@@ -69,4 +69,4 @@ class TeoReq extends Base {
     }
 }
 
-module.exports = TeoReq;
+module.exports = ReqContext;
