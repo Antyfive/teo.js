@@ -114,7 +114,49 @@ describe.only("Testing Teo Client", () => {
 
     describe("Getters", () => {
 
+        it("Should return req object", () => {
 
+            let req = client.req;
+
+            assert.isObject(req);
+            assert.instanceOf(req, http.IncomingMessage);
+
+        });
+
+        it("Should return parsed url", () => {
+
+            let url = client.parsedUrl;
+
+            assert.isObject(url);
+            assert.equal(url.path, "/");
+
+        });
+
+        it("Should return pathname", () => {
+
+            let pathname = client.pathname;
+
+            assert.isString(pathname);
+            assert.equal(pathname, "/");
+
+        });
+
+        it("Should return content type", () => {
+
+            let contentType = client.contentType;
+
+            assert.equal(contentType, client.req.contentType);
+
+        });
+
+        it("Should return res object", () => {
+
+            let res = client.res;
+
+            assert.isObject(res);
+            assert.instanceOf(res, http.ServerResponse);
+
+        });
 
     });
 
