@@ -33,7 +33,7 @@ describe("Testing Teo Logger", () => {
 
     });
 
-    it("Should log success message", function() {
+    it("Should log success message", () => {
 
         logger.success(message);
 
@@ -49,7 +49,7 @@ describe("Testing Teo Logger", () => {
 
     });
 
-    it("Should log warn message", function() {
+    it("Should log warn message", () =>  {
 
         logger.warn(message);
 
@@ -57,7 +57,7 @@ describe("Testing Teo Logger", () => {
 
     });
 
-    it("Should log error message", function() {
+    it("Should log error message", () =>  {
 
         logger.error(message);
 
@@ -65,7 +65,7 @@ describe("Testing Teo Logger", () => {
 
     });
 
-    it("Should parse error object and log error stack", function() {
+    it("Should parse error object and log error stack", () =>  {
 
         var error = new Error("My error");
 
@@ -75,7 +75,7 @@ describe("Testing Teo Logger", () => {
 
     });
 
-    it("Should log fatal error message", function() {
+    it("Should log fatal error message", () =>  {
 
         logger.fatal(message);
 
@@ -83,7 +83,7 @@ describe("Testing Teo Logger", () => {
 
     });
 
-    it("Should format final message correctly", function() {
+    it("Should format final message correctly", () =>  {
 
         logger.success(message);
 
@@ -92,7 +92,7 @@ describe("Testing Teo Logger", () => {
 
     });
 
-    it("Should log multiple messages in arguments", function() {
+    it("Should log multiple messages in arguments", () =>  {
 
         logger.success("One", "two");
 
@@ -100,7 +100,7 @@ describe("Testing Teo Logger", () => {
 
     });
 
-    it("Should just log message", function() {
+    it("Should just log message", () =>  {
 
         logger.log("One", "two");
         assert.equal(formatSpy.args[1][2], "One|two", "Message should be formatted correctly");
