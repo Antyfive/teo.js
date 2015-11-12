@@ -87,25 +87,26 @@ class Client extends Base {
     /**
      * Process call on request end
      */
-    process() {
-        this.dispatch();
+    * process() {
+        yield* this.dispatch();
     }
 
     /**
      * Dispatch call after first process is finished
      */
-    dispatch() {
-        if (this.route != null && (this.route.handler && (typeof this.route.handler.callback === "function"))) {
-            var context;
-            try {
-                context = this.route.handler.callback.apply(this, [this.req, this.res]);
-            } catch (e) {
-                logger.error(e);
-                this.res.send(500);
+    * dispatch() {
+        if (this.route != null && (this.route.handler && (typeof this.route.handler === "function"))) {
+            if (!_.isGenerator(this.route.handler)) {
+                throw new Error("Route handler should be a generator function!");
             }
-            // if route's callback returned object, - no render, and automatically send response object
-            if (context != null) {
-                this.res.send(context);
+            try {
+                let context = yield* this.route.handler.apply(this, [this.req, this.res]);
+                if (context != null) {
+                    this.res.send(context);
+                }
+            } catch(e) {
+                logger.error(e.message, e.stack);
+                this.res.send(500);
             }
         }
         else if (this.extension != null) {
@@ -121,8 +122,9 @@ class Client extends Base {
                 );
             }
         }
-        else
+        else {
             this.res.send(404);
+        }
     }
 
     /**
