@@ -36,7 +36,7 @@ class Routes extends Base {
         var routes = this.routes[type.toLowerCase()];
 
         if (routes === undefined || routes.hasOwnProperty(route))
-            return false;
+            return;
 
         routes[route] = {
             "match": pathToRegexp(route),
@@ -77,7 +77,7 @@ class Routes extends Base {
         var namespace = this.getNamespace(route),
             route = (typeof namespace === "string") ? namespace + route : route;
         if ((this.routes[ type.toLowerCase() ].hasOwnProperty(route)))     // ? use multiple handlers for one route ?
-            return false;
+            return;
 
         return this.addRoute(type, route, namespace, handler);
     }
