@@ -229,7 +229,7 @@ class App extends Base {
 
     * respond(next) {
         yield* next;        // run chain of middleware functions
-        this.process();     // client.process
+        yield* this.process();     // client.process
     }
 
     // ---- ----

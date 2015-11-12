@@ -30,9 +30,9 @@ class Routes extends Base {
      * @param {String} type
      * @param {String} route
      * @param {String|*} namespace
-     * @param {Function} callback
+     * @param {Function} handler
      */
-    addRoute(type, route, namespace, callback) { // /get/:id
+    addRoute(type, route, namespace, handler) { // /get/:id
         var routes = this.routes[type.toLowerCase()];
 
         if (routes === undefined || routes.hasOwnProperty(route))
@@ -41,7 +41,7 @@ class Routes extends Base {
         routes[route] = {
             "match": pathToRegexp(route),
             "namespace": namespace,
-            "callback": callback
+            "handler": handler
         };
 
         return routes[route];
@@ -62,7 +62,7 @@ class Routes extends Base {
         for (var r in type) {
             var match = type[r].match(path);
             if (match)
-                return { params: match, handler: type[r], route: r, path: path };
+                return { params: match, handler: type[r].handler, route: r, path: path, namespace: type[r].namespace };
         }
     }
 
@@ -70,65 +70,65 @@ class Routes extends Base {
      * Wrapper of add route
      * @param {String} type
      * @param {String} route
-     * @param {Function} callback
+     * @param {Function} handler
      * @returns {*}
      */
-    newRoute(type, route, callback) {
+    newRoute(type, route, handler) {
         var namespace = this.getNamespace(route),
             route = (typeof namespace === "string") ? namespace + route : route;
         if ((this.routes[ type.toLowerCase() ].hasOwnProperty(route)))     // ? use multiple handlers for one route ?
             return false;
 
-        return this.addRoute(type, route, namespace, callback);
+        return this.addRoute(type, route, namespace, handler);
     }
 
     /**
      * Get type handler
      * @param route :: regexp route
-     * @param callback :: callback
+     * @param handler :: handler
      */
-    get(route, callback) {
-        return this.newRoute("get", route, callback);
+    get(route, handler) {
+        return this.newRoute("get", route, handler);
     }
 
     /**
      * POST
      * @param {String} route
-     * @param {Function} callback
+     * @param {Function} handler
      * @returns {*}
      */
-    post(route, callback) {
-        return this.newRoute("post", route, callback);
+    post(route, handler) {
+        return this.newRoute("post", route, handler);
     }
 
     /**
      * PUT
      * @param {String} route
-     * @param {Function} callback
+     * @param {Function} handler
      * @returns {*}
      */
-    put(route, callback) {
-        return this.newRoute("put", route, callback);
+    put(route, handler) {
+        return this.newRoute("put", route, handler);
     }
 
     /**
      * PATCH
      * @param {String} route
-     * @param {Function} callback
+     * @param {Function} handler
      * @returns {*}
      */
-    patch(route, callback) {
-        return this.newRoute("patch", route, callback);
+    patch(route, handler) {
+        return this.newRoute("patch", route, handler);
     }
 
     /**
      * DELETE
      * @param {String} route
-     * @param {Function} callback
+     * @param {Function} handler
      * @returns {*}
      */
-    delete(route, callback) {
-        return this.newRoute("delete", route, callback);
+    delete(route, handler) {
+        return this.newRoute("delete", route, handler);
     }
 
     /**

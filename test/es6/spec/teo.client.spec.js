@@ -13,7 +13,7 @@ const
     Client = require(`${teoBase}/teo.client`),
     ClientContext = require(`${teoBase}/teo.client.context`);
 
-describe.only("Testing Teo Client", () => {
+describe("Testing Teo Client", () => {
 
     let client,
         appDir = process.cwd().replace( /\\/g, "/"),
