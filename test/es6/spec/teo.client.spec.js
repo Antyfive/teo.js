@@ -21,8 +21,7 @@ describe("Testing Teo Client", () => {
             homeDir : appDir,
             appDir  : appDir + "/apps/test",
             confDir : appDir + "/config",
-            mode    : "test",
-            dilimiters : "{{ }}"
+            mode    : "test"
         },
         paramsStub = {
             "config": {
@@ -40,7 +39,6 @@ describe("Testing Teo Client", () => {
         }).listen(3210);
 
         paramsStub.config.get.withArgs("appDir").returns(params.appDir);
-        paramsStub.config.get.withArgs("delimiters").returns(params.delimiters);
 
         server.once("listening", done);
 

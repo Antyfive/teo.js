@@ -223,7 +223,7 @@ class Client extends Base {
     render(tpl, context, callback) {
         var context = context || {};
 
-        this.readFileSafely("/views/" + tpl + ".template", function(err, template) {
+        this.readFileSafely(`/views/${tpl}.${this.config.get("templateSettings").extension}`, function(err, template) {
             if (err) {
                 if (_.isFunction(callback)) {
                     callback(err);
@@ -233,7 +233,7 @@ class Client extends Base {
                 }
                 return;
             }
-            var output = viewHelpers.render(template.toString("utf8"), context.partial, {delimiters: this.config.get("delimiters")});
+            let output = viewHelpers.render(template.toString("utf8"), context.partial, {delimiters: this.config.get("templateSettings").delimiters});
             if (_.isFunction(callback)) {   // if callback - than return output only
                 callback(null, output);
             }
@@ -247,13 +247,13 @@ class Client extends Base {
                 }*/
                 //else {
                     // _mixinContextObj(obj);
-                    this.readFileSafely("/views/layout.template", function(err, template) {
+                    this.readFileSafely(`/views/layout.${this.config.get("templateSettings").extension}`, function(err, template) {
                         if (err) {
                             this.res.send(500);
                             return;
                         }
                         //
-                        let output = viewHelpers.render(template.toString("utf8"), context, {delimiters: this.config.get("delimiters")});
+                        let output = viewHelpers.render(template.toString("utf8"), context, {delimiters: this.config.get("templateSettings").delimiters});
 
                         /*if (Object.keys(this.req.params).length === 0 && this.config.get("cache").response === true) {       // TODO AT: make caching for routes with changeable params           // TODO AT: make caching for routes with changeable params
                             this.app.cache.add(this.route.path, output);
