@@ -84,8 +84,7 @@
     "url": "git@github.com:Antyfive/teo.js.git"
   },
   "engines": {
-    "node": ">= 0.12.0",
-    "iojs": ">= 2.0.0"
+    "node": ">= 4"
   },
   "main": "./core/index"
 }
