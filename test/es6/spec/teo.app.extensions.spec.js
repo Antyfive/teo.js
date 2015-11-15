@@ -10,7 +10,7 @@
 const
     AppExtensions = require(`${teoBase}/teo.app.extensions`);
 
-describe.only("Testing Teo App Extensions", () => {
+describe("Testing Teo App Extensions", () => {
 
     let extensions,
         extension = () => {
@@ -229,7 +229,7 @@ describe.only("Testing Teo App Extensions", () => {
 
         });
 
-        it.only("Should throw an error if extension is not object", async(function* () {   // check it, when run loaded extension
+        it("Should throw an error if extension is not object", async(function* () {   // check it, when run loaded extension
 
             let findLoadedByNameStub = sinon.stub(extensions, "_findLoadedByName", () => {
                 return undefined;
