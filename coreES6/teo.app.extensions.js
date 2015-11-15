@@ -11,8 +11,7 @@ const
     Base = require("./teo.base"),
     _ = require("./teo.utils"),
     Path = require("path"),
-    Domain = require("domain"),
-    Async = require("async");
+    Domain = require("domain");
 
 module.exports = class Extensions extends Base {
     constructor(config) {
@@ -30,11 +29,11 @@ module.exports = class Extensions extends Base {
      * @param {Array|Object} extensions
      */
     add(extensions) {
-        var extensions = _.isArray(extensions) ? extensions : [extensions];
+        let _extensions = _.isArray(extensions) ? extensions : [extensions];
 
-        extensions.forEach(function(extension) {
+        _extensions.forEach((extension) => {
             this._resolveExtension(extension);
-        }.bind(this));
+        });
     }
 
     /**
@@ -128,17 +127,17 @@ module.exports = class Extensions extends Base {
         var _extension = this._findLoadedByName(name);
 
         if (!_.isObject(_extension)) {
-            throw new Error("Extension '" + name + "' should be an object");
+            throw new Error(`Extension '${name}' should be an object`);
         }
 
         if (!_extension.hasOwnProperty("extension") || !_.isFunction(_extension.extension)) {
-            throw new Error("'" + name + "' should have 'extension' property, and it should be a function");
+            throw new Error(`'${name}' should have 'extension' property, and it should be a function`);
         }
 
         var domain = Domain.create();
 
         domain.on("error", function(err) {
-            logger.error("Extension "+ name + "error:", err);
+            logger.error(`Extension ${name} error:`, err);
         });
 
         yield _.promise(function(resolve) {
