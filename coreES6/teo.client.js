@@ -66,11 +66,11 @@ class Client extends Base {
     }
 
     get pathname() {
-        return this.req.pathname
+        return this.req.pathname;
     }
 
     get contentType() {
-        return this.req.contentType
+        return this.req.contentType;
     }
 
     get res() {
