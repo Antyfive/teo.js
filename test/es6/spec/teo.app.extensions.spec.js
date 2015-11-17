@@ -55,9 +55,9 @@ describe("Testing Teo App Extensions", () => {
 
     it("Should resolve passed extensions on initialization", () => {
 
-        var addStub = sinon.stub(extensions, "add", () => {});
+        let addStub = sinon.stub(AppExtensions.prototype, "add", () => {});
 
-        extensions.constructor({
+        extensions = new AppExtensions({
             extensionsList: [
                 {
                     "name": "my-extension-1",
