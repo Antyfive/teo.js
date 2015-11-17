@@ -65,7 +65,7 @@ describe("Testing Teo DB", () => {
 
         loadOrmStub.reset();
 
-        db.constructor({
+        new Db({
             enabled: false,
             ormName: "waterline",
             adapterName: "teo.db.adapter.waterline",
@@ -80,7 +80,7 @@ describe("Testing Teo DB", () => {
 
         createOrmStub.reset();
 
-        db.constructor({
+        new Db({
             enabled: false,
             ormName: "waterline",
             adapterName: "teo.db.adapter.waterline",

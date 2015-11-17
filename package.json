@@ -43,9 +43,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "NODE_ENV=test gulp test",
-    "test-cov": "make test-cov",
-    "watch": ""
+    "test": "NODE_ENV=test gulp test"
   },
   "config": {
     "blanket": {

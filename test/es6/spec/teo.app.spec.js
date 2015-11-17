@@ -5,6 +5,8 @@
  */
 /* global define, describe, beforeEach, afterEach, it, assert, sinon, teoBase  */
 
+"use strict";
+
 const
     App = require(teoBase + "/teo.app"),
     AppCache = require(teoBase + "/teo.app.cache"),

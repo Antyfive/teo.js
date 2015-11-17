@@ -4,6 +4,8 @@
  * @date 17/6/14
  */
 
+"use strict";
+
 const Base = require(teoBase + "/teo.base"),
 	events = require("events");
 
