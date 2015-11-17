@@ -43,7 +43,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "make test-es6",
+    "test": "NODE_ENV=test gulp test",
     "test-cov": "make test-cov",
     "watch": ""
   },
@@ -76,6 +76,7 @@
     "blanket": "^1.1.6",
     "chai": "^3.0.0",
     "gulp": "^3.9.0",
+    "gulp-mocha": "^2.2.0",
     "mocha": "^2.2.5",
     "run-sequence": "^1.1.4",
     "semver": "^4.3.6",
