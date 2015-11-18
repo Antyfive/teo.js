@@ -7,6 +7,7 @@
 "use strict";
 
 const gulp = require("gulp"),
+    argv = require("yargs").argv,
     runSequence = require("run-sequence"),
     config = require("config");
 
@@ -42,3 +43,33 @@ gulp.task("test", requireTask('./tasks/test', {
 gulp.task("test:watch", requireTask("./tasks/testWatch", {
     src: "test/es6/**/*.spec.js"
 }));
+
+gulp.task("release:patch", requireTask("./tasks/release", {
+    releaseType: "patch"
+}));
+
+gulp.task("release:minor", requireTask("./tasks/release", {
+    releaseType: "minor"
+}));
+
+gulp.task("release:preminor", requireTask("./tasks/release", {
+    releaseType: ["preminor", argv.type]   // gulp release:premajor --type=alpha/beta/rc => bump to next major with set type. E.g. 2.0.0-alpha.0
+}));
+
+gulp.task("release:prepatch", requireTask("./tasks/release", {
+    releaseType: ["prepatch", argv.type]
+}));
+
+gulp.task("release:premajor", requireTask("./tasks/release", {
+    releaseType: ["premajor", argv.type]
+}));
+
+gulp.task("release:major", requireTask("./tasks/release", {
+    releaseType: "major"
+}));
+
+gulp.task("prerelease", requireTask("./tasks/release", {    // gulp prerelease --type=alpha/beta/rc => E.g. 2.0.0-alpha.1 (bumped to alpha.1)
+    releaseType: ["prerelease", argv.type]
+}));
+
+gulp.task("publish", requireTask("./tasks/publish"));

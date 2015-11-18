@@ -15,7 +15,7 @@ module.exports = function(options) {
 
     return function() {
         // config needs the right env
-        assert(process.env.NODE_ENV == "test", "NODE_ENV=test must be set");
+        //assert(process.env.NODE_ENV == "test", "NODE_ENV=test must be set");
 
         return gulp.watch(options.src, ["test"]);
     };
