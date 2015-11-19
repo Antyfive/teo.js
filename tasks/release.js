@@ -33,7 +33,7 @@ module.exports = function(options) {
                 }
                 shell.task([
                     'git commit -m "release ' + packageJSON.version + '" -- package.json',
-                    'git tag "' + packageJSON.version + ' -m "release ' + packageJSON.version + '"'
+                    'git tag "' + packageJSON.version + '" -m "release ' + packageJSON.version + '"'
                 ])(() => {
                     runSequence("publish", done);
                 });
