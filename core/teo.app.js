@@ -397,6 +397,7 @@ var App = Base.extend({
      * @param {Boolean} withListen :: immediately listen to server
      */
     initServer: function(withListen) {
+        debugger;
         this.server = http.createServer(this.getDispatcher());
         if (withListen) {
             this.listenServer();

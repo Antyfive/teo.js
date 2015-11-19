@@ -3,7 +3,7 @@ module.exports = {
     protocol: "http",
     host: "localhost",
     port: 3000,
-    delimiters: '{{ }}',
+    coreAppEnabled: false,  // core app for administrator purposes (in future)
     cache: {
         static: false,     // cache static files
         response: false      // cache response by url
@@ -58,5 +58,9 @@ module.exports = {
                 }
             }
         }
+    },
+    templateSettings: {
+        extension: "tpl",
+        delimiters: "{{ }}"
     }
 };
