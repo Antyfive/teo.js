@@ -183,7 +183,12 @@ class App extends Base {
 
         yield* this.initServer();
 
-        this._modules.runMountedRouters(this, Client.routes);   // TODO: run models
+        let args = [this, Client.routes];
+
+        if (this._canUseDb()) {
+            args.push(this.db.getOrm().getAdapter().addCollection.bind(this.db.getOrm().getAdapter()));
+        }
+        this._modules.runMountedRouters.apply(this._modules, args);   // TODO: run models
     }
 
     * stop() {

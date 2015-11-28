@@ -105,6 +105,13 @@ module.exports = class Modules extends Base {
         //    let files = yield* _.thunkify(fs.readdir)(modelsDir);
         //}
 
+        if (modelFiles.length > 0) {
+            modelFiles = modelFiles.map((fileName) => {
+                return path.join(absoluteModulePath, "models", fileName)
+            });
+            args.push(modelFiles);
+        }
+
         this.modules.set(moduleName, mountModule.apply(this, args));
 
     }
@@ -182,9 +189,15 @@ module.exports = class Modules extends Base {
         this.mountedModules.set(moduleName, moduleMounter.call(context, context));
     }
 
-    runMountedRouters(handlerContext, router) {
+    /**
+     *
+     * @param {Object} handlerContext :: context
+     * @param {Object} router :: router instance
+     * @param {Function} modelRegister :: registers new model
+     */
+    runMountedRouters(handlerContext, router, modelRegister) {
         this.mountedModules.forEach((moduleRouteHandler, moduleName) => {
-            moduleRouteHandler.call(this, handlerContext, router.ns(`/${moduleName}`));    // pass namespaced router. E.g. /users
+            moduleRouteHandler.call(this, handlerContext, router.ns(`/${moduleName}`), modelRegister);    // pass namespaced router. E.g. /users
         });
     }
 
