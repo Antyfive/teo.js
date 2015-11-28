@@ -88,7 +88,7 @@ class TeoRes extends Base {
         }
 
         var response = sendJson ?
-            this.buildRespObject(code, body) :
+            TeoRes.buildRespObject(code, body) :
             (_.isString(body) || Buffer.isBuffer(body) ? body : http.STATUS_CODES[code]);
 
         if (_.isString(response) && !writeHeadObj["Content-Length"]) {

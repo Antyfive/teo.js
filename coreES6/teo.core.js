@@ -29,7 +29,15 @@ class Core extends Base {
             yield* this.loadApps();
 
             return this;
-        }.bind(this), this.callback);
+        }.bind(this), (err, res) => {
+            if (err) {
+                logger.error(err);
+                this.callback(err);
+            }
+            else {
+                this.callback(null, res);
+            }
+        });
 	}
 
     _bindProcessEvents() {
@@ -75,7 +83,7 @@ class Core extends Base {
         if (this.config.get("cluster").enabled) {
             this.setupWorkersLogging();
         }*/
-        this.coreAppConfig = this._app.config;
+        this.coreAppConfig = this.app.config;
 
         return this.app;
     }
@@ -89,7 +97,7 @@ class Core extends Base {
     _createApp(options) {
         return _.promise(function(resolve, reject) {
             new App(options, function(err, res) {
-                resolve(res);
+                err ? reject(err) : resolve(res);
             });
         });
     }

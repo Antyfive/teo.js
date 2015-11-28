@@ -9,13 +9,14 @@
 const
     Base = require("./teo.base"),
     pathToRegexp = require("path-to-regexp-wrap")({end: true}),
-    _ = require("./teo.utils");
+    _ = require("./teo.utils"),
+    path = require("path");
 
 class Routes extends Base {
     constructor(config) {
         super(config);
 
-        this.namespaces = {};
+        this.namespaces = {};       // deprecated
         this.routes = {
             "get": {},
             "post": {},
@@ -74,7 +75,7 @@ class Routes extends Base {
      * @returns {*}
      */
     newRoute(type, route, handler) {
-        var namespace = this.getNamespace(route),
+        var namespace = this.getNamespace(route),   // TODO: deprecated
             route = (typeof namespace === "string") ? namespace + route : route;
         if ((this.routes[ type.toLowerCase() ].hasOwnProperty(route)))     // ? use multiple handlers for one route ?
             return;
@@ -136,7 +137,7 @@ class Routes extends Base {
      * @param {String} ns
      * @param {Array} routes
      */
-    addNamespace(ns, routes) {
+    addNamespace(ns, routes) {  // TODO: deprecated
         (Array.isArray(this.namespaces[ns]) || (this.namespaces[ns] = []));
         this.namespaces[ns].push.apply(this.namespaces[ns], routes);
     }
@@ -146,7 +147,7 @@ class Routes extends Base {
      * @param {String} route
      * @return {String} :: key value of the
      */
-    getNamespace(route) {
+    getNamespace(route) {   // TODO: deprecated
         for (var ns in this.namespaces)
             if (!!~this.namespaces[ns].indexOf(route))
                 return ns;
@@ -160,6 +161,32 @@ class Routes extends Base {
      */
     getRoutes() {
         return this.routes;
+    }
+
+    ns(namespace) {
+        let self = this;
+        return {
+            get(_path, handler) {
+                self.get(path.join(namespace, _path), handler);
+                return this;
+            },
+            post(_path, handler) {
+                self.post(path.join(namespace, _path), handler);
+                return this;
+            },
+            put(_path, handler) {
+                self.put(path.join(namespace, _path), handler);
+                return this;
+            },
+            patch(_path, handler) {
+                self.patch(path.join(namespace, _path), handler);
+                return this;
+            },
+            delete(_path, handler) {
+                self.delete(path.join(namespace, _path), handler);
+                return this;
+            }
+        }
     }
 }
 

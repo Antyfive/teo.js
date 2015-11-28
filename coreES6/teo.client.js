@@ -7,6 +7,7 @@
 "use strict";
 
 const
+    composition = require("composition"),
     Base = require("./teo.base"),
     _ = require("./teo.utils"),
     Routes = require("./teo.client.routes"),
@@ -100,9 +101,15 @@ class Client extends Base {
                 throw new Error("Route handler should be a generator function!");
             }
             try {
-                let context = yield* this.route.handler.apply(this, [this.req, this.res]);
-                if (context != null) {
-                    this.res.send(context);
+                //let context = yield* this.route.handler.apply(this, [this.req, this.res]);
+                let handler = composition([function* (next) {
+                    this.body = yield* this.route.handler.apply(this, [this.req, this.res, next]);
+                }.bind(this)]);
+
+                yield handler.call(this);
+
+                if (this.body != null) {
+                    this.res.send(this.body);
                 }
             } catch(e) {
                 logger.error(e.message, e.stack);

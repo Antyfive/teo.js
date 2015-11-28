@@ -21,7 +21,8 @@ const
     Client = require("./teo.client"),
     Middleware = require("./teo.middleware"),
     Extensions = require("./teo.app.extensions"),
-    Db = require("./db/teo.db");
+    Db = require("./db/teo.db"),
+    Modules = require("./teo.modules");
 
 class App extends Base {
     // TODO: log all errors, and fail in production only
@@ -39,10 +40,16 @@ class App extends Base {
 
     * initApp() {
         yield* this.loadConfig();
-        yield* this.collectExecutableFiles();
-
+        //yield* this.collectExecutableFiles();
         this.initDb();
         this._initExtensions();
+
+        // init modules
+        this._modules = new Modules({
+            config: this.config
+        });
+        yield* this.collectAppModules();
+        this._modules.mountModules(this);
     }
 
     * loadConfig() {
@@ -67,6 +74,10 @@ class App extends Base {
     * collectExecutableFiles() {
         yield _.async(this._readAppDirs.bind(this)).catch(logger.error);
         yield _.async(this._readAppFiles.bind(this)).catch(logger.error);
+    }
+
+    * collectAppModules() {
+        yield* this._modules.collect();
     }
 
     initDb() {
@@ -166,10 +177,13 @@ class App extends Base {
 
     * start() {
         yield* this._runExtensions();
-        yield* this._runAppScripts();
+        //yield* this._runAppScripts();
+        //yield* this._runLoadedModules();
         yield* this.connectDB();
 
         yield* this.initServer();
+
+        this._modules.runMountedRouters(this, Client.routes);   // TODO: run models
     }
 
     * stop() {
@@ -251,6 +265,12 @@ class App extends Base {
                 yield* this._runController(script, [Client.routes, ((this._canUseDb() && this.db.getOrm() || undefined))]);
             }
         }
+    }
+
+    * _runLoadedModules() {// TODO: rename mountModules
+        debugger;
+        this._modules.mountModules(this);
+
     }
 
     * _runController(fileName, args) {
