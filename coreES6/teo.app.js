@@ -6,9 +6,6 @@
 
 "use strict";
 
-// TODO:
-// stop app
-
 const
     fs = require("fs"),
     path = require("path"),
@@ -40,16 +37,11 @@ class App extends Base {
 
     * initApp() {
         yield* this.loadConfig();
-        //yield* this.collectExecutableFiles();
         this.initDb();
         this._initExtensions();
 
         // init modules
-        this._modules = new Modules({
-            config: this.config
-        });
-        yield* this.collectAppModules();
-        this._modules.mountModules(this);
+        yield* this._initModules();
     }
 
     * loadConfig() {
@@ -74,10 +66,6 @@ class App extends Base {
     * collectExecutableFiles() {
         yield _.async(this._readAppDirs.bind(this)).catch(logger.error);
         yield _.async(this._readAppFiles.bind(this)).catch(logger.error);
-    }
-
-    * collectAppModules() {
-        yield* this._modules.collect();
     }
 
     initDb() {
@@ -177,8 +165,6 @@ class App extends Base {
 
     * start() {
         yield* this._runExtensions();
-        //yield* this._runAppScripts();
-        //yield* this._runLoadedModules();
         yield* this.connectDB();
 
         yield* this.initServer();
@@ -253,78 +239,6 @@ class App extends Base {
 
     // ---- ----
 
-    * _runAppScripts() {
-        let scripts = Object.keys(this.cache.get("*")),
-            l = scripts.length;
-
-        for (var i = 0; i < l; i++) {
-            let script = scripts[i];
-            // TODO: improve
-            if (script.match(/\/controllers\//)) {
-                yield* this._runController(script, [Client.routes, ((this._canUseDb() && this.db.getOrm() || undefined))]);
-            }
-            else if (script.match(/\/models\//)) {
-                yield* this._runModel(script);
-            }
-            else { // TODO: do allow execute other scripts?
-                yield* this._runController(script, [Client.routes, ((this._canUseDb() && this.db.getOrm() || undefined))]);
-            }
-        }
-    }
-
-    * _runLoadedModules() {// TODO: rename mountModules
-        debugger;
-        this._modules.mountModules(this);
-
-    }
-
-    * _runController(fileName, args) {
-        let script = this._getScript(fileName);
-
-        if (!_.isFunction(script)) {
-            throw new Error("Trying to run not a function! File path: " + fileName);
-        }
-
-        let d = domain.create();
-
-        d.on("error", function(err) {
-            logger.error("Domain error", err);
-        });
-
-        yield _.promise(function(resolve) {
-            d.run(function() {
-                script.apply(this, args);
-                resolve();
-            }.bind(this));
-        }.bind(this));
-    }
-
-    * _runModel(model) {
-        if (!this._canUseDb()) {
-            logger.warn("Cannot run model " + model + ", as DB usage is disabled in config, or ORM wasn't initialized properly.");
-            return;
-        }
-
-        let collection = this._getScript(model);
-
-        if (!(collection instanceof Object)) {
-            throw new Error("Trying to run not an object as model: " + model);
-        }
-
-        var d = domain.create();
-
-        d.on("error", function(err) {
-            logger.error("Domain error", err);
-        });
-
-        yield _.promise(function(resolve) {
-            d.run(function() {
-                this.db.getOrm().getAdapter().addCollection(collection);
-                resolve();
-            }.bind(this));
-        }.bind(this));
-    }
-
     _canUseDb() {
         return (this.config.get("db").enabled === true) && this.db;
     }
@@ -349,6 +263,15 @@ class App extends Base {
 
     * _runExtensions() {
         yield* this.extensions.runAll();
+    }
+
+    * _initModules() {
+        this._modules = new Modules({
+            config: this.config
+        });
+
+        yield* this._modules.collect();
+        this._modules.mountModules(this);
     }
 
     /**
