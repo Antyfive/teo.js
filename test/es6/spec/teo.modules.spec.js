@@ -59,9 +59,9 @@ describe.only("Testing Teo Modules", () => {
 
         yield* modules.addModule("index", moduleAbsPath);
 
-        assert.equal(modules.modules.size, 1);
+        assert.equal(modules.loadedModules.size, 1);
 
-        assert.isFunction(modules.modules.get("index"), "Module should be wrapped");
+        assert.isFunction(modules.loadedModules.get("index"), "Module should be wrapped");
 
         fsStatSyncStub.restore();
 
