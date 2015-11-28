@@ -174,7 +174,7 @@ class App extends Base {
         if (this._canUseDb()) {
             args.push(this.db.getOrm().getAdapter().addCollection.bind(this.db.getOrm().getAdapter()));
         }
-        this._modules.runMountedRouters.apply(this._modules, args);   // TODO: run models
+        this._modules.runMountedModules.apply(this._modules, args);   // TODO: run models
     }
 
     * stop() {

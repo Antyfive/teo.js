@@ -24,7 +24,9 @@ const
     path = require("path"),
     Base = require("./teo.base"),
     _ = require("./teo.utils"),
-    mountModule = require("../lib/moduleMounter");
+    mountModule = require("../lib/moduleMounter"),
+    lstat = _.thunkify(fs.lstat),
+    readdir = _.thunkify(fs.readdir);
 
 module.exports = class Modules extends Base {
     constructor(config) {
@@ -44,7 +46,7 @@ module.exports = class Modules extends Base {
         }
         let modulesDirName = this.config.get("modulesDirName");
         // TODO: rename "name" to appName
-        let modules = yield _.thunkify(fs.readdir)(path.join(this.config.get("appDir"), modulesDirName));
+        let modules = yield readdir(path.join(this.config.get("appDir"), modulesDirName));
         let l = modules.length;
 
         for (var i = 0; i < l; i++) {
@@ -61,8 +63,8 @@ module.exports = class Modules extends Base {
     * addModule(moduleName, absoluteModulePath) {
         let args = [];
         // index.js and router.js are mandatory files
-        let index = fs.lstatSync(path.join(absoluteModulePath, "index.js"));
-        let router = fs.lstatSync(path.join(absoluteModulePath, "router.js"));
+        let index = yield lstat(path.join(absoluteModulePath, "index.js"));
+        let router = yield lstat(path.join(absoluteModulePath, "router.js"));
         let modelFiles = [];
 
         args.push(moduleName);
@@ -73,20 +75,26 @@ module.exports = class Modules extends Base {
         }
 
         try {
-            modelFiles = fs.readdirSync(path.join(absoluteModulePath, "models"));
+            modelFiles = yield readdir(path.join(absoluteModulePath, "models"));
+            if (modelFiles.length > 0){
+                args.push(this._setModelsAbsPath(modelFiles, absoluteModulePath));
+            }
         } catch(e) {
             logger.error(e);
         }
 
-        if (modelFiles.length > 0) {
-            modelFiles = modelFiles.map((fileName) => {
-                return path.join(absoluteModulePath, "models", fileName)
-            });
-            args.push(modelFiles);
-        }
-
         this.loadedModules.set(moduleName, mountModule.apply(this, args));
+    }
 
+    /**
+     * Set models absolute path
+     * @param modelFiles
+     * @param absoluteModulePath
+     * @returns {Array|*}
+     * @private
+     */
+    _setModelsAbsPath(modelFiles, absoluteModulePath) {
+        return modelFiles.map(fileName => path.join(absoluteModulePath, "models", fileName));
     }
 
     mountModules(context) {
@@ -101,12 +109,12 @@ module.exports = class Modules extends Base {
     }
 
     /**
-     *
+     * Runs previously modules modules
      * @param {Object} handlerContext :: context
      * @param {Object} router :: router instance
      * @param {Function} modelRegister :: registers new model
      */
-    runMountedRouters(handlerContext, router, modelRegister) {
+    runMountedModules(handlerContext, router, modelRegister) {
         this.mountedModules.forEach((moduleRouteHandler, moduleName) => {
             moduleRouteHandler.call(this, handlerContext, router.ns(`/${moduleName}`), modelRegister);    // pass namespaced router. E.g. /users
         });

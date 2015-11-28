@@ -43,18 +43,14 @@ describe.only("Testing Teo Modules", () => {
     it("Should add module to registry", async(function* () {
 
         let moduleAbsPath = path.join(params.appDir, "modules", "index");
-        let fsStatSyncStub = sinon.stub(fs, "lstatSync");
-
-        fsStatSyncStub.withArgs(path.join(moduleAbsPath, "index.js")).returns({
-            isFile() {
-                return true;
-            }
+        let lstatStub = sinon.stub(fs, "lstat", (args, cb) => {
+            cb(null, {
+                isFile: function() {return false}
+            })
         });
 
-        fsStatSyncStub.withArgs(path.join(moduleAbsPath, "router.js")).returns({
-            isFile() {
-                return true;
-            }
+        let readdirStub = sinon.stub(fs, "readdir", (args, cb) => {
+           cb(null, []);
         });
 
         yield* modules.addModule("index", moduleAbsPath);
@@ -63,7 +59,8 @@ describe.only("Testing Teo Modules", () => {
 
         assert.isFunction(modules.loadedModules.get("index"), "Module should be wrapped");
 
-        fsStatSyncStub.restore();
+        lstatStub.restore();
+        readdirStub.restore();
 
     }));
 
