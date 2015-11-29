@@ -12,7 +12,7 @@ const
     path = require("path"),
     Modules = require(`${teoBase}/teo.modules`);
 
-describe.only("Testing Teo Modules", () => {
+describe("Testing Teo Modules", () => {
 
     let appDir = process.cwd().replace( /\\/g, "/"),
         params = {

@@ -44,13 +44,12 @@ describe("Testing Teo App", () => {
 
     describe("Initialization", () => {
 
-        let initAppSpy, loadConfigSpy, collectExecutableFilesSpy, initDbSpy, initExtensionsSpy;
+        let initAppSpy, loadConfigSpy, initDbSpy, initExtensionsSpy;
 
         beforeEach((done) => {
 
             initAppSpy = sinon.spy(App.prototype, "initApp");
             loadConfigSpy = sinon.spy(App.prototype, "loadConfig");
-            collectExecutableFilesSpy = sinon.spy(App.prototype, "collectExecutableFiles");
             initDbSpy = sinon.spy(App.prototype, "initDb");
             initExtensionsSpy = sinon.spy(App.prototype, "_initExtensions");
 
@@ -64,7 +63,6 @@ describe("Testing Teo App", () => {
 
             initAppSpy.restore();
             loadConfigSpy.restore();
-            collectExecutableFilesSpy.restore();
             initDbSpy.restore();
             initExtensionsSpy.restore();
 
@@ -74,7 +72,6 @@ describe("Testing Teo App", () => {
 
             assert.isTrue(initAppSpy.calledOnce);
             assert.isTrue(loadConfigSpy.calledOnce);
-            assert.isTrue(collectExecutableFilesSpy.calledOnce);
             assert.isTrue(initAppSpy.calledOnce);
             assert.isTrue(initExtensionsSpy.calledOnce);
 
@@ -370,23 +367,19 @@ describe("Testing Teo App", () => {
 
         describe("Start Stop", () => {
 
-            let runExtensionsStub,runAppScriptsStub, connectDBStub; //initServerStub;
+            let runExtensionsStub, connectDBStub;
 
             beforeEach(() => {
 
                 runExtensionsStub = sinon.stub(app, "_runExtensions", function* () {});
-                runAppScriptsStub = sinon.stub(app, "_runAppScripts", function* () {});
                 connectDBStub = sinon.stub(app, "connectDB", function* () {});
-                //initServerStub = sinon.stub(app, "initServer", function() {});
 
             });
 
             afterEach(() => {
 
                 runExtensionsStub.restore();
-                runAppScriptsStub.restore();
                 connectDBStub.restore();
-                //initServerStub.restore();
 
             });
 
