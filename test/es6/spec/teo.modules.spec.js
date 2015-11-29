@@ -64,4 +64,46 @@ describe.only("Testing Teo Modules", () => {
 
     }));
 
+    it("Should mount loaded module", () => {
+
+        let wrappedModule = sinon.stub();
+        wrappedModule.returns({1: "1"});
+        let context = {test: true};
+        let mountModuleSpy = sinon.spy(modules, "mountModule");
+
+        modules.loadedModules.set("test", wrappedModule);
+
+        modules.mountModules(context);
+
+        assert.isTrue(mountModuleSpy.calledOnce);
+        assert.deepEqual(mountModuleSpy.args[0], [wrappedModule, "test", context]);
+
+        assert.equal(modules.mountedModules.size, 1);
+        assert.deepEqual(modules.mountedModules.get("test"), {1: "1"});
+
+        mountModuleSpy.restore();
+
+    });
+
+    it("Should run mounted modules", () => {
+
+        let mountedModuleStub = sinon.stub(),
+            contextStub = {test: true},
+            routerStub = {
+                ns: sinon.stub()
+            },
+            modelRegisterStub = function() {};
+
+        modules.mountedModules.set("Test", mountedModuleStub);
+
+        modules.runMountedModules(contextStub, routerStub, modelRegisterStub);
+
+        assert.isTrue(mountedModuleStub.calledOnce);
+        assert.equal(mountedModuleStub.args[0].length, 3);
+
+        assert.isTrue(routerStub.ns.calledOnce);
+        assert.equal(routerStub.ns.args[0][0], "/test");
+
+    });
+
 });

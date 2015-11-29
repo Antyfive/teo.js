@@ -116,7 +116,7 @@ module.exports = class Modules extends Base {
      */
     runMountedModules(handlerContext, router, modelRegister) {
         this.mountedModules.forEach((moduleRouteHandler, moduleName) => {
-            moduleRouteHandler.call(this, handlerContext, router.ns(`/${moduleName}`), modelRegister);    // pass namespaced router. E.g. /users
+            moduleRouteHandler.call(this, handlerContext, router.ns(`/${moduleName.toLowerCase()}`), modelRegister);    // pass namespaced router. E.g. /users
         });
     }
 
