@@ -16,7 +16,6 @@ class Routes extends Base {
     constructor(config) {
         super(config);
 
-        this.namespaces = {};       // deprecated
         this.routes = {
             "get": {},
             "post": {},
@@ -30,10 +29,9 @@ class Routes extends Base {
      * Add new route
      * @param {String} type
      * @param {String} route
-     * @param {String|*} namespace
      * @param {Function} handler
      */
-    addRoute(type, route, namespace, handler) { // /get/:id
+    addRoute(type, route, handler) { // /get/:id
         var routes = this.routes[type.toLowerCase()];
 
         if (routes === undefined || routes.hasOwnProperty(route))
@@ -41,7 +39,6 @@ class Routes extends Base {
 
         routes[route] = {
             "match": pathToRegexp(route),
-            "namespace": namespace,
             "handler": handler
         };
 
@@ -62,8 +59,9 @@ class Routes extends Base {
 
         for (var r in type) {
             var match = type[r].match(path);
-            if (match)
-                return { params: match, handler: type[r].handler, route: r, path: path, namespace: type[r].namespace };
+            if (match) {
+                return {params: match, handler: type[r].handler, route: r, path: path};
+            }
         }
     }
 
@@ -75,12 +73,10 @@ class Routes extends Base {
      * @returns {*}
      */
     newRoute(type, route, handler) {
-        var namespace = this.getNamespace(route),   // TODO: deprecated
-            route = (typeof namespace === "string") ? namespace + route : route;
-        if ((this.routes[ type.toLowerCase() ].hasOwnProperty(route)))     // ? use multiple handlers for one route ?
+        if ((this.routes[type.toLowerCase()].hasOwnProperty(route)))     // ? use multiple handlers for one route ?
             return;
 
-        return this.addRoute(type, route, namespace, handler);
+        return this.addRoute(type, route, handler);
     }
 
     /**
@@ -132,27 +128,6 @@ class Routes extends Base {
         return this.newRoute("delete", route, handler);
     }
 
-    /**
-     * Add namespace for route
-     * @param {String} ns
-     * @param {Array} routes
-     */
-    addNamespace(ns, routes) {  // TODO: deprecated
-        (Array.isArray(this.namespaces[ns]) || (this.namespaces[ns] = []));
-        this.namespaces[ns].push.apply(this.namespaces[ns], routes);
-    }
-
-    /**
-     * Getter of namespace by route
-     * @param {String} route
-     * @return {String} :: key value of the
-     */
-    getNamespace(route) {   // TODO: deprecated
-        for (var ns in this.namespaces)
-            if (!!~this.namespaces[ns].indexOf(route))
-                return ns;
-    }
-
     // getters ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
     /**
@@ -163,6 +138,11 @@ class Routes extends Base {
         return this.routes;
     }
 
+    /**
+     * Namespaces support
+     * @param {String} namespace
+     * @returns {*}
+     */
     ns(namespace) {
         let self = this;
         return {

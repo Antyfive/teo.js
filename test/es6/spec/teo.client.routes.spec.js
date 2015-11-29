@@ -103,22 +103,23 @@ describe("Testing Teo Client Routes", () => {
 
     });
 
-    it("Should add namespace for the route", () => {
+    it("Should add route with namespace", () => {
 
-        routes.addNamespace("/index", [ "/", "/:id"]);
-        assert.isArray(routes.namespaces["/index"], "Namespace routes holder should be an array");
+        let getTypeSpy = sinon.spy(routes, "get");
 
-    });
+        routes.ns("/users")
+            .get("/:id", function* () {});
 
-    it("Should get namespace by route", () => {
 
-        routes.addNamespace("/index", [ "/", "/:id"]);
+        assert.isTrue(getTypeSpy.calledOnce);
+        assert.equal(getTypeSpy.args[0][0], "/users/:id", "Route should be correct");
 
-        let route1 = routes.getNamespace("/");
-        let route2 = routes.getNamespace("/:id");
+        let matchedRoute = routes.matchRoute("get", "/users/1");
 
-        assert.equal(route1, "/index", "Namespace should be found");
-        assert.equal(route2, "/index", "Namespace should be found");
+        assert.equal(matchedRoute.params.id, "1", "Should have params parsed from route");
+        assert.equal(matchedRoute.route, "/users/:id", "Should find correct route");
+
+        getTypeSpy.restore();
 
     });
 
