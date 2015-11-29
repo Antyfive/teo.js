@@ -1,15 +1,13 @@
 /*!
  * Model example
  * @author Andrew Teologov <teologov.and@gmail.com>
- * @date 3/22/15
  */
-
 module.exports = {
-    identity: 'test',
+    identity: 'users',
     connection: 'myLocalDisk',
 
     attributes: {
-        name: 'string',
-        breed: 'string'
+        first_name: 'string',
+        last_name: 'string'
     }
 };
