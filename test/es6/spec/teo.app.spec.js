@@ -410,6 +410,24 @@ describe("Testing Teo App", () => {
 
             }));
 
+            it("Should restart app", async(function* () {
+
+                let closeServerStub = sinon.stub(app, "closeServer", function* () {});
+                let disconnectDBStub = sinon.stub(app, "disconnectDB", function* () {});
+                let startStub = sinon.stub(app, "start", function* () {});
+
+                yield* app.restart();
+
+                assert.isTrue(closeServerStub.calledOnce);
+                assert.isTrue(disconnectDBStub.calledOnce);
+                assert.isTrue(startStub.calledOnce);
+
+                closeServerStub.restore();
+                disconnectDBStub.restore();
+                startStub.restore();
+
+            }));
+
         });
 
 

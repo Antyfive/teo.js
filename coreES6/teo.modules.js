@@ -5,19 +5,6 @@
  */
 
 "use strict";
-// app registers application, and runs middlewares from app
-// => register modules through middlewares
-// => use lazy require of modules (via index.js?)
-// automatically find index to mount it to "/"
-
-// module directory consists of:
-// controllers
-// models
-// templates
-// client files ?
-// try to load index => wrap router
-
-// read module ((<<module>>)) => (wrapped index() => (wrapped router() => requires handler() => dispatch route)))
 
 const
     fs = require("fs"),
@@ -45,7 +32,6 @@ module.exports = class Modules extends Base {
             return;
         }
         let modulesDirName = this.config.get("modulesDirName");
-        // TODO: rename "name" to appName
         let modules = yield readdir(path.join(this.config.get("appDir"), modulesDirName));
         let l = modules.length;
 

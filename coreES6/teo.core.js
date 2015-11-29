@@ -150,6 +150,7 @@ class Core extends Base {
             appDir: appDir,
             confDir: appDir + "/config",
             homeDir: this.config.homeDir,
+            // TODO: rename "name" to appName
             name: appName,
             mode: this.config.mode,
             coreConfig: this.coreAppConfig
@@ -207,7 +208,7 @@ class Core extends Base {
         let actions = ["start", "stop", "restart"];
 
         if (actions.indexOf(action) === -1) {
-            throw new Error("Not supported action `" +action+ "` was received");
+            throw new Error(`Not supported action ${action} was received`);
         }
 
         if (this.coreAppConfig.get("coreAppEnabled") === true) {

@@ -22,7 +22,6 @@ const
     Modules = require("./teo.modules");
 
 class App extends Base {
-    // TODO: log all errors, and fail in production only
     constructor(config, callback) {
         super(config, callback);
 
@@ -49,7 +48,7 @@ class App extends Base {
         let filesCount = configFiles.length;
 
         if (filesCount > 0) {
-            for (var f in configFiles) {
+            for (let f in configFiles) {
                 let file = configFiles[f],
                     confFile = path.join(this.config.confDir, file);
 
@@ -83,7 +82,7 @@ class App extends Base {
     // ---- ----
 
     _getScript(filePath) {
-        var context = this.cache.get(filePath);
+        let context = this.cache.get(filePath);
         if (context) {
             return context;
         }
@@ -120,7 +119,7 @@ class App extends Base {
         let dirs = this.config.get("appDirs") || [];
         let l = dirs.length;
 
-        for (var i = 0; i < l; i++) {
+        for (let i = 0; i < l; i++) {
             let currentDir = dirs[i];
             yield* this.__collectAppDirFiles(path.join(this.config.appDir, currentDir));
         }
@@ -130,7 +129,7 @@ class App extends Base {
         let files = yield _.thunkify(fs.readdir)(dir);
         let l = files.length;
 
-        for (var i = 0; i < l; i++) {
+        for (let i = 0; i < l; i++) {
             let file = path.join(dir, files[i]);
             yield* this.__loadFile(file);
         }
@@ -155,7 +154,7 @@ class App extends Base {
          let files = this.config.get("appFiles");
          let l = files.length;
 
-         for (var i = 0; i < l; i++) {
+         for (let i = 0; i < l; i++) {
              let file = path.join(this.config.appDir, files[i]);
              yield* this.__loadFile(file);
          }
@@ -182,12 +181,10 @@ class App extends Base {
         yield* this.disconnectDB();
     }
 
-    * restart() {   // TODO:
-
-    }
-
-    * shutdown() {
-
+    * restart() {
+        yield* this.closeServer();
+        yield* this.disconnectDB();
+        yield* this.start();
     }
 
     // ---- ----
@@ -219,17 +216,17 @@ class App extends Base {
     }
 
     _createContext() {
-        return function(req, res) {
-            var client = Client.Factory({
+        return (req, res) => {
+            let client = Client.Factory({
                 req: req,
                 res: res,
                 config: this.config
             });
-            this._middleware.run(this.respond, client).catch(function(error) {
+            this._middleware.run(this.respond, client).catch((error) => {
                 logger.error(error);
                 client.res.send(500);
             });
-        }.bind(this);
+        };
     }
 
     * respond(next) {
