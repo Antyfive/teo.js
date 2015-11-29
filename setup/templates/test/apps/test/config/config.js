@@ -18,7 +18,11 @@ module.exports = {
         }
     },
     // common params could be without mode as well
-    delimiters: '{{ }}',
+    templateSettings: {
+        extension: "template",
+        delimiters: '{{ }}'
+    },
+    compressOutput: true,
     cookie: {
         keys: ["signed key"]    // default signed key
     },
@@ -33,9 +37,6 @@ module.exports = {
     csrf: {
         keyName: "_csrfToken",
         secret: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-    },
-    cluster: {
-        enabled: false
     },
     db: {
         enabled: false,
