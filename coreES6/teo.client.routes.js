@@ -9,13 +9,13 @@
 const
     Base = require("./teo.base"),
     pathToRegexp = require("path-to-regexp-wrap")({end: true}),
-    _ = require("./teo.utils");
+    _ = require("./teo.utils"),
+    path = require("path");
 
 class Routes extends Base {
     constructor(config) {
         super(config);
 
-        this.namespaces = {};
         this.routes = {
             "get": {},
             "post": {},
@@ -29,10 +29,9 @@ class Routes extends Base {
      * Add new route
      * @param {String} type
      * @param {String} route
-     * @param {String|*} namespace
      * @param {Function} handler
      */
-    addRoute(type, route, namespace, handler) { // /get/:id
+    addRoute(type, route, handler) { // /get/:id
         var routes = this.routes[type.toLowerCase()];
 
         if (routes === undefined || routes.hasOwnProperty(route))
@@ -40,7 +39,6 @@ class Routes extends Base {
 
         routes[route] = {
             "match": pathToRegexp(route),
-            "namespace": namespace,
             "handler": handler
         };
 
@@ -61,8 +59,9 @@ class Routes extends Base {
 
         for (var r in type) {
             var match = type[r].match(path);
-            if (match)
-                return { params: match, handler: type[r].handler, route: r, path: path, namespace: type[r].namespace };
+            if (match) {
+                return {params: match, handler: type[r].handler, route: r, path: path};
+            }
         }
     }
 
@@ -74,12 +73,10 @@ class Routes extends Base {
      * @returns {*}
      */
     newRoute(type, route, handler) {
-        var namespace = this.getNamespace(route),
-            route = (typeof namespace === "string") ? namespace + route : route;
-        if ((this.routes[ type.toLowerCase() ].hasOwnProperty(route)))     // ? use multiple handlers for one route ?
+        if ((this.routes[type.toLowerCase()].hasOwnProperty(route)))     // ? use multiple handlers for one route ?
             return;
 
-        return this.addRoute(type, route, namespace, handler);
+        return this.addRoute(type, route, handler);
     }
 
     /**
@@ -131,27 +128,6 @@ class Routes extends Base {
         return this.newRoute("delete", route, handler);
     }
 
-    /**
-     * Add namespace for route
-     * @param {String} ns
-     * @param {Array} routes
-     */
-    addNamespace(ns, routes) {
-        (Array.isArray(this.namespaces[ns]) || (this.namespaces[ns] = []));
-        this.namespaces[ns].push.apply(this.namespaces[ns], routes);
-    }
-
-    /**
-     * Getter of namespace by route
-     * @param {String} route
-     * @return {String} :: key value of the
-     */
-    getNamespace(route) {
-        for (var ns in this.namespaces)
-            if (!!~this.namespaces[ns].indexOf(route))
-                return ns;
-    }
-
     // getters ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
     /**
@@ -160,6 +136,37 @@ class Routes extends Base {
      */
     getRoutes() {
         return this.routes;
+    }
+
+    /**
+     * Namespaces support
+     * @param {String} namespace
+     * @returns {*}
+     */
+    ns(namespace) {
+        let self = this;
+        return {
+            get(_path, handler) {
+                self.get(path.join(namespace, _path), handler);
+                return this;
+            },
+            post(_path, handler) {
+                self.post(path.join(namespace, _path), handler);
+                return this;
+            },
+            put(_path, handler) {
+                self.put(path.join(namespace, _path), handler);
+                return this;
+            },
+            patch(_path, handler) {
+                self.patch(path.join(namespace, _path), handler);
+                return this;
+            },
+            delete(_path, handler) {
+                self.delete(path.join(namespace, _path), handler);
+                return this;
+            }
+        }
     }
 }
 

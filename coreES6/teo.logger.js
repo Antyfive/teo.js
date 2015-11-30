@@ -91,14 +91,14 @@ module.exports = {
         try {
             let errors = _parseErrors.apply(this, [].slice.call(arguments));
             let message = _parseMessage.apply(this, errors);
-            _log(util.format("Error: %s", message).red);
+            _log(util.format("%s", message).red);
         } catch(e) {
             console.error(e.stack);
         }
     },
     fatal() {
         let message = _parseMessage.apply(this, [].slice.call(arguments));
-        _log(util.format("Fatal Error: %s", message).red);
+        _log(util.format("Fatal: %s", message).red);
     },
     log() {
         let message = _parseMessage.apply(this, [].slice.call(arguments));

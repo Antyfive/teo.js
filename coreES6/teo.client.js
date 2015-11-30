@@ -7,6 +7,7 @@
 "use strict";
 
 const
+    composition = require("composition"),
     Base = require("./teo.base"),
     _ = require("./teo.utils"),
     Routes = require("./teo.client.routes"),
@@ -100,12 +101,18 @@ class Client extends Base {
                 throw new Error("Route handler should be a generator function!");
             }
             try {
-                let context = yield* this.route.handler.apply(this, [this.req, this.res]);
-                if (context != null) {
-                    this.res.send(context);
+                //let context = yield* this.route.handler.apply(this, [this.req, this.res]);
+                let handler = composition([function* (next) {
+                    this.body = yield* this.route.handler.apply(this, [this.req, this.res, next]);
+                }.bind(this)]);
+
+                yield handler.call(this);
+
+                if (this.body != null) {
+                    this.res.send(this.body);
                 }
             } catch(e) {
-                logger.error(e.message, e.stack);
+                logger.error(e);
                 this.res.send(500);
             }
         }
@@ -122,7 +129,7 @@ class Client extends Base {
                 );
             }
         }
-        else {
+        else { // TODO: refactor this behaviour. Try to send file and that's it.
             this.res.send(404);
         }
     }
@@ -160,7 +167,7 @@ class Client extends Base {
             return;
         }
 
-        filePath = path.normalize(path.join(this.config.get("appDir"), filePath));
+        //filePath = path.normalize(path.join(this.config.get("appDir"), filePath));
 
         if (filePath.indexOf(this.config.get("appDir")) !== 0) {
             callback(new Error("File was not found"));
@@ -223,7 +230,7 @@ class Client extends Base {
     render(tpl, context, callback) {
         var context = context || {};
 
-        this.readFileSafely(`/views/${tpl}.${this.config.get("templateSettings").extension}`, function(err, template) {
+        this.readFileSafely(path.join(this.templatesDir, `${tpl}213.${this.config.get("templateSettings").extension}`), (err, template) => {
             if (err) {
                 if (_.isFunction(callback)) {
                     callback(err);
@@ -231,6 +238,7 @@ class Client extends Base {
                 else {
                     this.res.send(_.isNumber(err) ? err : 500);
                 }
+                logger.error(err);
                 return;
             }
             let output = viewHelpers.render(template.toString("utf8"), context.partial, {delimiters: this.config.get("templateSettings").delimiters});
@@ -247,7 +255,8 @@ class Client extends Base {
                 }*/
                 //else {
                     // _mixinContextObj(obj);
-                    this.readFileSafely(`/views/layout.${this.config.get("templateSettings").extension}`, function(err, template) {
+                // TODO: allow multiple layouts per module
+                    this.readFileSafely(`/templates/layout.${this.config.get("templateSettings").extension}`, function(err, template) {
                         if (err) {
                             this.res.send(500);
                             return;
@@ -263,7 +272,7 @@ class Client extends Base {
                     }.bind(this));
                 //}
             }
-        }.bind(this));
+        });
     }
     // ---- ---- ---- ---- ---- ----
 }

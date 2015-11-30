@@ -6,9 +6,6 @@
 
 "use strict";
 
-// TODO:
-// stop app
-
 const
     fs = require("fs"),
     path = require("path"),
@@ -21,10 +18,10 @@ const
     Client = require("./teo.client"),
     Middleware = require("./teo.middleware"),
     Extensions = require("./teo.app.extensions"),
-    Db = require("./db/teo.db");
+    Db = require("./db/teo.db"),
+    Modules = require("./teo.modules");
 
 class App extends Base {
-    // TODO: log all errors, and fail in production only
     constructor(config, callback) {
         super(config, callback);
 
@@ -39,10 +36,11 @@ class App extends Base {
 
     * initApp() {
         yield* this.loadConfig();
-        yield* this.collectExecutableFiles();
-
         this.initDb();
         this._initExtensions();
+
+        // init modules
+        yield* this._initModules();
     }
 
     * loadConfig() {
@@ -50,7 +48,7 @@ class App extends Base {
         let filesCount = configFiles.length;
 
         if (filesCount > 0) {
-            for (var f in configFiles) {
+            for (let f in configFiles) {
                 let file = configFiles[f],
                     confFile = path.join(this.config.confDir, file);
 
@@ -84,7 +82,7 @@ class App extends Base {
     // ---- ----
 
     _getScript(filePath) {
-        var context = this.cache.get(filePath);
+        let context = this.cache.get(filePath);
         if (context) {
             return context;
         }
@@ -121,7 +119,7 @@ class App extends Base {
         let dirs = this.config.get("appDirs") || [];
         let l = dirs.length;
 
-        for (var i = 0; i < l; i++) {
+        for (let i = 0; i < l; i++) {
             let currentDir = dirs[i];
             yield* this.__collectAppDirFiles(path.join(this.config.appDir, currentDir));
         }
@@ -131,7 +129,7 @@ class App extends Base {
         let files = yield _.thunkify(fs.readdir)(dir);
         let l = files.length;
 
-        for (var i = 0; i < l; i++) {
+        for (let i = 0; i < l; i++) {
             let file = path.join(dir, files[i]);
             yield* this.__loadFile(file);
         }
@@ -156,7 +154,7 @@ class App extends Base {
          let files = this.config.get("appFiles");
          let l = files.length;
 
-         for (var i = 0; i < l; i++) {
+         for (let i = 0; i < l; i++) {
              let file = path.join(this.config.appDir, files[i]);
              yield* this.__loadFile(file);
          }
@@ -166,10 +164,16 @@ class App extends Base {
 
     * start() {
         yield* this._runExtensions();
-        yield* this._runAppScripts();
         yield* this.connectDB();
 
         yield* this.initServer();
+
+        let args = [this, Client.routes];
+
+        if (this._canUseDb()) {
+            args.push(this.db.getOrm().getAdapter().addCollection.bind(this.db.getOrm().getAdapter()));
+        }
+        this._modules.runMountedModules.apply(this._modules, args);   // TODO: run models
     }
 
     * stop() {
@@ -177,12 +181,10 @@ class App extends Base {
         yield* this.disconnectDB();
     }
 
-    * restart() {   // TODO:
-
-    }
-
-    * shutdown() {
-
+    * restart() {
+        yield* this.closeServer();
+        yield* this.disconnectDB();
+        yield* this.start();
     }
 
     // ---- ----
@@ -214,17 +216,17 @@ class App extends Base {
     }
 
     _createContext() {
-        return function(req, res) {
-            var client = Client.Factory({
+        return (req, res) => {
+            let client = Client.Factory({
                 req: req,
                 res: res,
                 config: this.config
             });
-            this._middleware.run(this.respond, client).catch(function(error) {
+            this._middleware.run(this.respond, client).catch((error) => {
                 logger.error(error);
                 client.res.send(500);
             });
-        }.bind(this);
+        };
     }
 
     * respond(next) {
@@ -233,72 +235,6 @@ class App extends Base {
     }
 
     // ---- ----
-
-    * _runAppScripts() {
-        let scripts = Object.keys(this.cache.get("*")),
-            l = scripts.length;
-
-        for (var i = 0; i < l; i++) {
-            let script = scripts[i];
-            // TODO: improve
-            if (script.match(/\/controllers\//)) {
-                yield* this._runController(script, [Client.routes, ((this._canUseDb() && this.db.getOrm() || undefined))]);
-            }
-            else if (script.match(/\/models\//)) {
-                yield* this._runModel(script);
-            }
-            else { // TODO: do allow execute other scripts?
-                yield* this._runController(script, [Client.routes, ((this._canUseDb() && this.db.getOrm() || undefined))]);
-            }
-        }
-    }
-
-    * _runController(fileName, args) {
-        let script = this._getScript(fileName);
-
-        if (!_.isFunction(script)) {
-            throw new Error("Trying to run not a function! File path: " + fileName);
-        }
-
-        let d = domain.create();
-
-        d.on("error", function(err) {
-            logger.error("Domain error", err);
-        });
-
-        yield _.promise(function(resolve) {
-            d.run(function() {
-                script.apply(this, args);
-                resolve();
-            }.bind(this));
-        }.bind(this));
-    }
-
-    * _runModel(model) {
-        if (!this._canUseDb()) {
-            logger.warn("Cannot run model " + model + ", as DB usage is disabled in config, or ORM wasn't initialized properly.");
-            return;
-        }
-
-        let collection = this._getScript(model);
-
-        if (!(collection instanceof Object)) {
-            throw new Error("Trying to run not an object as model: " + model);
-        }
-
-        var d = domain.create();
-
-        d.on("error", function(err) {
-            logger.error("Domain error", err);
-        });
-
-        yield _.promise(function(resolve) {
-            d.run(function() {
-                this.db.getOrm().getAdapter().addCollection(collection);
-                resolve();
-            }.bind(this));
-        }.bind(this));
-    }
 
     _canUseDb() {
         return (this.config.get("db").enabled === true) && this.db;
@@ -324,6 +260,15 @@ class App extends Base {
 
     * _runExtensions() {
         yield* this.extensions.runAll();
+    }
+
+    * _initModules() {
+        this._modules = new Modules({
+            config: this.config
+        });
+
+        yield* this._modules.collect();
+        this._modules.mountModules(this);
     }
 
     /**

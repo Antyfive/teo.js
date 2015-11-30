@@ -61,7 +61,7 @@ describe("Testing Teo Logger", () => {
 
         logger.error(message);
 
-        assert.deepEqual(formatSpy.args[0], ["Error: %s", message], "Message should be formatted correctly");
+        assert.deepEqual(formatSpy.args[0], ["%s", message], "Message should be formatted correctly");
 
     });
 
@@ -71,7 +71,7 @@ describe("Testing Teo Logger", () => {
 
         logger.error(error);
 
-        assert.deepEqual(formatSpy.args[0], ["Error: %s", error.stack], "Error message should be formatted correctly");
+        assert.deepEqual(formatSpy.args[0], ["%s", error.stack], "Error message should be formatted correctly");
 
     });
 
@@ -79,7 +79,7 @@ describe("Testing Teo Logger", () => {
 
         logger.fatal(message);
 
-        assert.deepEqual(formatSpy.args[0], ["Fatal Error: %s", message], "Message should be formatted correctly");
+        assert.deepEqual(formatSpy.args[0], ["Fatal: %s", message], "Message should be formatted correctly");
 
     });
 
