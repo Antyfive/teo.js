@@ -12,6 +12,7 @@ const
     Base = require("./teo.base"),
     _ = require("./teo.utils"),
     mountModule = require("../lib/moduleMounter"),
+    mountModuleRouter = require("../lib/routerMounter"),
     lstat = _.thunkify(fs.lstat),
     readdir = _.thunkify(fs.readdir);
 
@@ -62,7 +63,7 @@ module.exports = class Modules extends Base {
 
         try {
             modelFiles = yield readdir(path.join(absoluteModulePath, "models"));
-            if (modelFiles.length > 0){
+            if (modelFiles.length > 0) {
                 args.push(this._setModelsAbsPath(modelFiles, absoluteModulePath));
             }
         } catch(e) {
@@ -102,7 +103,15 @@ module.exports = class Modules extends Base {
      */
     runMountedModules(handlerContext, router, modelRegister) {
         this.mountedModules.forEach((moduleRouteHandler, moduleName) => {
-            moduleRouteHandler.call(this, handlerContext, router.ns(`/${moduleName.toLowerCase()}`), modelRegister);    // pass namespaced router. E.g. /users
+            // we need to add middleware somewhere, which will set templateDir for each module
+            moduleRouteHandler.call(
+                this,
+                handlerContext,
+                //router.ns(`/${moduleName.toLowerCase()}`),
+                // router mounter. Wraps router methods with namespace (/moduleName/) and some middleware
+                mountModuleRouter.call(handlerContext, router, moduleName),
+                modelRegister
+            );
         });
     }
 
