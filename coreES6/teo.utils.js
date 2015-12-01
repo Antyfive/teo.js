@@ -61,7 +61,7 @@ util.promise = function(fn) {
     });
 };
 
-util.getExtension = function( routeStr ) {
+util.getExtension = function(routeStr) {
     return path.extname(routeStr).replace(".", "").toLowerCase();
 };
 

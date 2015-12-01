@@ -116,21 +116,16 @@ class Client extends Base {
                 this.res.send(500);
             }
         }
-        else if (this.extension != null) {
-            if (this.req.headers["range"]) {
-                var extension = _.getExtension(this.pathname);
-                var contentType = mime.lookup(extension || this.req.headers.accept || "html") ;
-                streamer.stream(this.req, this.res, path.normalize(path.join(this.config.get("appDir"), this.pathname)), contentType);
-            } else {
-                // TODO: cache, read from cache
-                this.sendStatic(this.pathname.match(/\/public/) ?
-                    this.pathname :
-                        path.join("/public", this.pathname)
-                );
-            }
+        if (this.req.headers.range) {
+            var contentType = mime.lookup(this.extension || this.req.headers.accept || "html") ;
+            streamer.stream(this.req, this.res, path.normalize(path.join(this.config.get("appDir"), this.pathname)), contentType);
         }
-        else { // TODO: refactor this behaviour. Try to send file and that's it.
-            this.res.send(404);
+        else {
+            // TODO: cache, read from cache
+            this.sendStatic(this.pathname.match(/\/public/) ?
+                this.pathname :
+                    path.join("/public", this.pathname)
+            );
         }
     }
 
@@ -167,7 +162,7 @@ class Client extends Base {
             return;
         }
 
-        //filePath = path.normalize(path.join(this.config.get("appDir"), filePath));
+        filePath = path.normalize(path.join(this.config.get("appDir"), filePath));
 
         if (filePath.indexOf(this.config.get("appDir")) !== 0) {
             callback(new Error("File was not found"));
@@ -230,7 +225,7 @@ class Client extends Base {
     render(tpl, context, callback) {
         var context = context || {};
 
-        this.readFileSafely(path.join(this.templatesDir, `${tpl}213.${this.config.get("templateSettings").extension}`), (err, template) => {
+        this.readFileSafely(path.join(this.templatesDir, `${tpl}.${this.config.get("templateSettings").extension}`), (err, template) => {
             if (err) {
                 if (_.isFunction(callback)) {
                     callback(err);
