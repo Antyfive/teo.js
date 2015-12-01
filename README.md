@@ -6,4 +6,4 @@
 
 [![NPM](https://nodei.co/npm/teo.js.png?downloads=true&stars=true)](https://nodei.co/npm/teo.js/)
 
-Teo.js 1.0.0 documentation is in progress.
+Teo.js [Wiki](https://github.com/Antyfive/teo.js/wiki) page.
