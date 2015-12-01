@@ -34,6 +34,7 @@ class Teo extends Base {
 
                 process.nextTick(() => {
                     this.emit("ready", this);
+                    logger.showLogo();
                 });
             }.bind(this));
 	}
