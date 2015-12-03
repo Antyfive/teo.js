@@ -1,4 +1,4 @@
-# Teo.js
+# Teo.JS
 [![node](https://img.shields.io/badge/node-%3E%3D%204.x-brightgreen.svg)](https://github.com/Antyfive/teo.js)
 [![Travis Build Status](https://travis-ci.org/Antyfive/teo.js.svg)](https://travis-ci.org/Antyfive/teo.js)
 [![npm](https://img.shields.io/npm/v/npm.svg)](https://github.com/Antyfive/teo.js)
