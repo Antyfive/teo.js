@@ -6,4 +6,14 @@
 
 [![NPM](https://nodei.co/npm/teo.js.png?downloads=true&stars=true)](https://nodei.co/npm/teo.js/)
 
+## Requirements
+- node >= 4.x
+
+## Getting Started
+
+**Installation**
+```bash
+$ npm i teo.js -g
+```
+
 Teo.js [Wiki](https://github.com/Antyfive/teo.js/wiki) page.
