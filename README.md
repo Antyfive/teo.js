@@ -1,7 +1,6 @@
 # Teo.js
-[![node](https://img.shields.io/node/v/gh-badges.svg)](https://github.com/Antyfive/teo.js)
+[![node](https://img.shields.io/badge/node-%3E%3D%204.x-brightgreen.svg)](https://github.com/Antyfive/teo.js)
 [![Travis Build Status](https://travis-ci.org/Antyfive/teo.js.svg)](https://travis-ci.org/Antyfive/teo.js)
-[![GitHub issues](https://img.shields.io/github/issues/badges/shields.svg)](https://github.com/Antyfive/teo.js)
 [![npm](https://img.shields.io/npm/v/npm.svg)](https://github.com/Antyfive/teo.js)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/Antyfive/teo.js/master/LICENSE)
 
