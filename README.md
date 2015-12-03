@@ -6,7 +6,7 @@
 
 [![NPM](https://nodei.co/npm/teo.js.png?downloads=true&stars=true)](https://nodei.co/npm/teo.js/)
 
-**Teo.js** is a next generation web framework, built using new **ECMAScript 2015 (ES6)**. 
+**Teo.JS** is a next generation web framework, built using new **ECMAScript 2015 (ES6)**. 
 [Wiki](https://github.com/Antyfive/teo.js/wiki).
 
 ## Requirements
