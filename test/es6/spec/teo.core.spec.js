@@ -176,7 +176,10 @@ describe("Testing Teo Core", function () {
 
             let coreAppStartStub = sinon.stub(core.app, "start", function* (){});
             let appStartStub = sinon.stub(core.apps.test, "start", function* () {});
-            core.coreAppConfig.coreAppEnabled = true;
+
+            let coreAppConfigStub = sinon.stub(core.coreAppConfig, "get");
+
+            coreAppConfigStub.withArgs("coreAppEnabled").returns(true);
 
             yield core.start();
 
@@ -187,7 +190,7 @@ describe("Testing Teo Core", function () {
             coreAppStartStub.restore();
             appStartStub.restore();
 
-            core.coreAppConfig.coreAppEnabled = false;
+            coreAppConfigStub.restore();
 
         }));
 
@@ -241,7 +244,9 @@ describe("Testing Teo Core", function () {
             let coreAppStopStub = sinon.stub(core.app, "stop", function* (){});
             let appStopStub = sinon.stub(core.apps.test, "stop", function* () {});
 
-            core.coreAppConfig.coreAppEnabled = true;
+            let coreAppConfigStub = sinon.stub(core.coreAppConfig, "get");
+
+            coreAppConfigStub.withArgs("coreAppEnabled").returns(true);
 
             yield core.stop();
 
@@ -251,7 +256,7 @@ describe("Testing Teo Core", function () {
             coreAppStopStub.restore();
             appStopStub.restore();
 
-            core.coreAppConfig.coreAppEnabled = false;
+            coreAppConfigStub.restore();
 
         }));
 
@@ -306,7 +311,9 @@ describe("Testing Teo Core", function () {
             let coreAppRestartStub = sinon.stub(core.app, "restart", function* (){});
             let appRestartStub = sinon.stub(core.apps.test, "restart", function* () {});
 
-            core.coreAppConfig.coreAppEnabled = true;
+            let coreAppConfigStub = sinon.stub(core.coreAppConfig, "get");
+
+            coreAppConfigStub.withArgs("coreAppEnabled").returns(true);
 
             yield core.restart();
 
@@ -316,7 +323,7 @@ describe("Testing Teo Core", function () {
             coreAppRestartStub.restore();
             appRestartStub.restore();
 
-            core.coreAppConfig.coreAppEnabled = false;
+            coreAppConfigStub.restore();
 
         }));
 

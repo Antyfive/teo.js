@@ -13,6 +13,7 @@ const
     Middleware = require(teoBase + "/teo.middleware"),
     Db = require(teoBase + "/db/teo.db"),
     _ = require(teoBase + "/teo.utils"),
+    configLib = require(teoBase + "/../lib/config"),
     co = require("co"),
     fs = require("fs"),
     path = require("path"),
@@ -26,7 +27,7 @@ describe("Testing Teo App", () => {
         params = {
             homeDir : appDir,
             appDir  : appDir + "/apps/test",
-            confDir : appDir + "/config",
+            confDir : appDir + "/apps/test/config",
             mode    : "test"
         };
 
@@ -76,32 +77,6 @@ describe("Testing Teo App", () => {
             assert.isTrue(initExtensionsSpy.calledOnce);
 
         });
-
-        it("Should load config", async(function* () {
-
-            let readdirStub = sinon.stub(fs, "readdir", function(args, cb) {
-                return cb(null, ["test.js"]);
-            });
-
-            let getScriptStub = sinon.stub(app, "_getScript", function() {
-                return {test: "123"};
-            });
-
-            let applyConfigStub = sinon.stub(app, "_applyConfig", function() {});
-
-            yield app.loadConfig();
-
-            assert.isTrue(readdirStub.calledOnce);
-            assert.isTrue(getScriptStub.calledOnce);
-            assert.equal(getScriptStub.args[0][0],  path.join(app.config.confDir, "test.js"), "Script path should be correct");
-            assert.isTrue(applyConfigStub.calledOnce);
-            assert.deepEqual(applyConfigStub.args[0][0], {test: "123"}, "Correct config should be applied");
-
-            readdirStub.restore();
-            getScriptStub.restore();
-            applyConfigStub.restore();
-
-        }));
 
         it("Should collect executable files", async(function* () {
 
@@ -213,13 +188,15 @@ describe("Testing Teo App", () => {
                 "second"
             ]);
 
+            configGetStub.withArgs("appDir").returns(params.appDir);
+
             let collectAppDirFilesStub = sinon.stub(app, "__collectAppDirFiles", function* () {});
 
             yield app._readAppDirs();
 
             assert.isTrue(collectAppDirFilesStub.calledTwice);
             assert.deepEqual(collectAppDirFilesStub.args, [
-                [path.join(app.config.appDir, "first")], [path.join(app.config.appDir, "second")]
+                [path.join(params.appDir, "first")], [path.join(params.appDir, "second")]
             ]);
 
             collectAppDirFilesStub.restore();
@@ -303,13 +280,15 @@ describe("Testing Teo App", () => {
                 "second.js"
             ]);
 
+            configGetStub.withArgs("appDir").returns(params.appDir);
+
             let loadFileStub = sinon.stub(app, "__loadFile", function* () {});
 
             yield app._readAppFiles();
 
             assert.isTrue(loadFileStub.calledTwice);
             assert.deepEqual(loadFileStub.args, [
-                [path.join(app.config.appDir, "first.js")], [path.join(app.config.appDir, "second.js")]
+                [path.join(params.appDir, "first.js")], [path.join(params.appDir, "second.js")]
             ]);
 
             loadFileStub.restore();
@@ -321,43 +300,86 @@ describe("Testing Teo App", () => {
         let config;
 
         beforeEach(() => {
-            config = {myConfig: true};
-            app.config = {
-                appConfig: "123",
-                coreConfig: {
-                    coreParam: "1"
-                },
-                mode: "test",
-                test: { // test mode
-                    key: "testmode"
-                },
-                key2: "hi"
+
+            app.initialConfig.myKey = 123;
+
+        });
+
+        afterEach(() => {
+
+            delete app.initialConfig.myKey;
+
+        });
+
+        it("Should load config", () => {
+
+            let loadConfigSpy = sinon.spy(configLib, "loadConfig");
+
+            app.loadConfig();
+
+            assert.isTrue(loadConfigSpy.calledOnce);
+            assert.equal(loadConfigSpy.args[0][0], params.confDir, "Path to config directory should be passed");
+
+            loadConfigSpy.restore();
+
+        });
+
+        it("Should have getter function", () => {
+
+            assert.isFunction(app.config.get, "Getter should be a function");
+
+        });
+
+        it("Should return parameter by key", () => {
+
+            assert.equal(app.config.get("port"), 3100, "Port should be equal to value defined in app's development config");
+
+        });
+
+        it("Should check on get initial config first", () => {
+
+            assert.equal(app.config.get("myKey"), 123);
+
+        });
+
+        it("Should check app's config if no such key in initial config", () => {
+
+            let hasSpy = sinon.spy(app.config, "has");
+
+            // 1) get from initial config ---- ---- ----
+
+            assert.equal(app.config.get("myKey"), 123);
+
+            delete app.initialConfig.myKey;
+
+            // 2) get from app's config ---- ---- ----
+
+            assert.isUndefined(app.config.get("myKey"));
+
+            assert.isTrue(hasSpy.calledOnce);
+
+            // 3) get from core config ---- ---- ----
+
+            let coreConfigGetStub = sinon.stub();
+            let coreConfigHasStub = sinon.stub();
+
+            app.initialConfig.coreConfig = {
+                get: coreConfigGetStub,
+                has: coreConfigHasStub
             };
 
-            app._applyConfig(config);
-        });
+            coreConfigGetStub.returns("myVal");
+            coreConfigHasStub.returns(true);
 
-        it("Should apply config object", () => {
+            assert.equal(app.config.get("myKey"), "myVal");
 
-            assert.deepEqual(_.omit(app.config, "get"), {
-                coreParam: "1",
-                appConfig: "123",
-                myConfig: true,
-                mode: "test",
-                test: {
-                    key: "testmode"
-                },
-                key2: "hi"
-            });
+            assert.isTrue(hasSpy.calledTwice);
 
-            assert.isFunction(app.config.get, "Config getter should be applied");
+            assert.isTrue(coreConfigHasStub.calledOnce);
+            assert.isTrue(coreConfigGetStub.calledOnce);
 
-        });
-
-        it("Should get parameter by key", () => {
-
-            assert.equal(app.config.get("key"), "testmode", "Should get key from run mode property");
-            assert.equal(app.config.get("key2"), "hi", "Should get key from non-mode properties");
+            hasSpy.restore();
+            delete app.initialConfig.coreConfig;
 
         });
 
