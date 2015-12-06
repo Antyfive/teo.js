@@ -12,7 +12,7 @@ const
     co = require("co"),
     fs = require("fs"),
     async = require("async"),
-    Path = require("path"),
+    path = require("path"),
     cluster = require("cluster"),
     _ = require("./teo.utils"),
     Base = require("./teo.base"),
@@ -74,7 +74,7 @@ class Core extends Base {
         this.app = yield this._createApp({
             homeDir: this.config.homeDir,
             appDir: this.config.appsDir,
-            confDir: Path.normalize(__dirname + "/../config"),
+            confDir: path.normalize(__dirname + "/../config"),
             mode: this.config.mode
         });
         // TODO:
@@ -125,7 +125,7 @@ class Core extends Base {
         var l = apps.length;
         for (var i = 0; i < l; i++) {
             let appName = apps[i];
-            let appDir = appsDir + "/" + appName;
+            let appDir = path.join(appsDir, appName);
             let stat = yield _.thunkify(fs.lstat)(appDir);
 
             if (stat.isDirectory()) {
@@ -141,14 +141,14 @@ class Core extends Base {
      * @returns {*}
      */
     * registerApp(appName) {
-        var appDir = this.config.appsDir + '/' + appName,
+        let appDir = path.join(this.config.appsDir, appName),
             application,
             apps = this.apps;
 
 
         application = yield this._createApp({
             appDir: appDir,
-            confDir: appDir + "/config",
+            confDir: path.join(appDir, "/config"),
             homeDir: this.config.homeDir,
             // TODO: rename "name" to appName
             name: appName,

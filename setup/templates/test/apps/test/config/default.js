@@ -1,22 +1,10 @@
+/*!
+ * Default config
+ * @author Andrew Teologov <teologov.and@gmail.com>
+ * @date 12/5/15
+ */
+
 module.exports = {
-    "production": {       // production
-        protocol: "http",
-        host: "localhost",
-        port: 3000,
-        cache: {
-            "static": true,     // cache static files
-            "response": true    // cache response by url
-        }
-    },
-    "development": {
-        protocol: "http",
-        host: "localhost",
-        port: 3100,
-        cache: {
-            "static": false,
-            "response": false
-        }
-    },
     // common params could be without mode as well
     templateSettings: {
         extension: "template",
@@ -39,7 +27,7 @@ module.exports = {
         secret: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
     },
     db: {
-        enabled: false,
+        enabled: true,
         // as default adapter. it should check "./appName/db/adapters", if not found in framework
         // all adapters should be placed into separate modules, when plugin (extension system) will be presented
         // basic algorithm should work before extension system will be finished
@@ -70,5 +58,5 @@ module.exports = {
         }
     },
     appDirs: ["models", "controllers"], // app's directories to read and collect files inside, on system start
-    appFiles: ["app.js"]    // app's files to read and cache on system start
+    appFiles: ["app.js"],    // app's files to read and cache on system start
 };

@@ -19,7 +19,8 @@ const
     Middleware = require("./teo.middleware"),
     Extensions = require("./teo.app.extensions"),
     Db = require("./db/teo.db"),
-    Modules = require("./teo.modules");
+    Modules = require("./teo.modules"),
+    configLib = require("../lib/config");
 
 class App extends Base {
     constructor(config, callback) {
@@ -34,8 +35,12 @@ class App extends Base {
         }.bind(this), this.callback);
     }
 
+    applyConfig(config) {
+        this.initialConfig = config;
+    }
+
     * initApp() {
-        yield* this.loadConfig();
+        this.loadConfig();
         this.initDb();
         this._initExtensions();
 
@@ -43,23 +48,29 @@ class App extends Base {
         yield* this._initModules();
     }
 
-    * loadConfig() {
-        let configFiles = yield _.thunkify(fs.readdir)(this.config.confDir);
-        let filesCount = configFiles.length;
-
-        if (filesCount > 0) {
-            for (let f in configFiles) {
-                let file = configFiles[f],
-                    confFile = path.join(this.config.confDir, file);
-
-                if (confFile.indexOf(".js") !== -1) {
-                    let config = this._getScript(confFile);
-                    this._applyConfig(config);
-                }
+    /**
+     * Loads app's config
+     */
+    loadConfig() {
+        // set node config dir to app's home dir
+        this.config = configLib.loadConfig(this.initialConfig.confDir);
+        // node-config get function
+        let nodeConfigGetter = this.config.get.bind(this.config);
+        // wrap with it's own get
+        this.config.get = (key) => {
+            // firstly, find it in the pure js object (initial config), which is passed in the app's constructor
+            if (this.initialConfig.hasOwnProperty(key)) {
+                return this.initialConfig[key];
             }
-        }
-
-        return this.config || {};
+            // then try to find it in app's config
+            if (this.config.has(key)) {
+                return nodeConfigGetter(key);
+            }
+            // otherwise, look into core config, to get default value
+            else if (this.initialConfig.hasOwnProperty("coreConfig") && this.initialConfig.coreConfig.has(key)) {
+                return this.initialConfig.coreConfig.get(key);
+            }
+        };
     }
 
     * collectExecutableFiles() {
@@ -96,23 +107,6 @@ class App extends Base {
         return context;
     }
 
-    _applyConfig(conf) {
-        let app = this,
-            config = (typeof conf === "object" ? conf : {});
-
-        this.config = _.omit(_.extend(this.config.coreConfig || {}, this.config, config), ["coreConfig"]);
-
-        /**
-         * Getter of config by mode ( development or production )
-         * @returns {*}
-         */
-        this.config.get = function(key) {
-            let config = app.config;
-            // try to get app mode config key, otherwise, try to get default or common value
-            return config[config.mode] && config[config.mode][key] || config[key];
-        };
-    }
-
     // ---- ----
 
     * _readAppDirs() {
@@ -121,7 +115,7 @@ class App extends Base {
 
         for (let i = 0; i < l; i++) {
             let currentDir = dirs[i];
-            yield* this.__collectAppDirFiles(path.join(this.config.appDir, currentDir));
+            yield* this.__collectAppDirFiles(path.join(this.config.get("appDir"), currentDir));
         }
     }
 
@@ -155,7 +149,7 @@ class App extends Base {
          let l = files.length;
 
          for (let i = 0; i < l; i++) {
-             let file = path.join(this.config.appDir, files[i]);
+             let file = path.join(this.config.get("appDir"), files[i]);
              yield* this.__loadFile(file);
          }
     }
@@ -281,8 +275,8 @@ class App extends Base {
 
     // getters & setters ----
 
-    get name() {
-        return this.config.name;
+    get name() {    // TODO: rename to appName
+        return this.config.get("name");
     }
 }
 
