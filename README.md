@@ -10,7 +10,7 @@
 [Wiki](https://github.com/Antyfive/teo.js/wiki).
 
 ## Requirements
-- node >= **4.x**
+* node >= **4.x**
 
 ## Getting Started
 
@@ -18,3 +18,15 @@
 ```bash
 $ npm i teo.js -g
 ```
+
+## Quick Start
+
+* `mkdir myproject`
+* `cd myproject/`
+* `npm i teo.js` (or alternatevly, `npm i teo.js -g` to install it globally)
+* `teo setup demo` (will setup, and generate new demo project)
+* `node app.js`
+
+If `teo` executable is not working, update your PATH variable:
+
+`export PATH="$PATH:./node_modules/.bin"`
