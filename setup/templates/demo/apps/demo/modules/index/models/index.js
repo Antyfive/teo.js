@@ -9,7 +9,6 @@ module.exports = {
     connection: 'myLocalDisk',
 
     attributes: {
-        name: 'string',
-        breed: 'string'
+        name: 'string'
     }
 };
