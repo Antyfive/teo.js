@@ -9,5 +9,5 @@
  * @param {Object} client :: client API
  */
 module.exports = function(client) {
-    // app specific logic here, like middleware, etc.
+    // app specific logic here, like middlewares, etc.
 };
