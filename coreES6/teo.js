@@ -27,7 +27,7 @@ class Teo extends Base {
                 logger.error(err.message, err.stack);
                 throw new Error(err.message);
             })
-            .then(function () {
+            .then(() => {
                 _.isGenerator(this.callback) ?
                     _.async(this.callback, this) :
                         this.callback.call(this, this);
@@ -38,7 +38,7 @@ class Teo extends Base {
                         logger.showLogo();
                     }
                 });
-            }.bind(this));
+            });
 	}
 
 	_parseOptions() {
@@ -71,9 +71,9 @@ class Teo extends Base {
      */
     * start(appName) {
         if (this.core.coreAppConfig.get("cluster").enabled) {
-            yield _.promise(function(resolve, reject) {
+            yield _.promise((resolve, reject) => {
                 new Cluster(resolve);
-            }.bind(this));
+            });
         }
         yield* this._runAppLifeCircleAction(appName, "start");
     }
