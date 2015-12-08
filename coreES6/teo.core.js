@@ -11,7 +11,6 @@
 const
     co = require("co"),
     fs = require("fs"),
-    async = require("async"),
     path = require("path"),
     cluster = require("cluster"),
     _ = require("./teo.utils"),

@@ -7,22 +7,36 @@
 "use strict";
 
 const
+    _ = require("lodash"),
     Base = require("./teo.base"),
     ResContext = require("./teo.client.context.res"),
-    ReqContext = require("./teo.client.context.req");
+    ReqContext = require("./teo.client.context.req"),
+    clientContextMixins = require("./teo.client.context.mixins");
 
 class ClientContext extends Base {
     constructor(config) {
         super(config);
 
         this.req = new ReqContext({
-            req: this.config.req
+            req: this.initialConfig.req // pass pure req
         });
 
         this.res = new ResContext({
-            res: this.config.res,
+            res: this.initialConfig.res, // pass pure res
             req: this.req
         });
+        // mixin context with methods, which will be available inside route handler in controllers
+        this.mixinContext();
+    }
+
+    applyConfig(config) {
+        // passed app's config
+        this.config = config.config;
+
+        this.initialConfig = {
+            req: config.req,
+            res: config.res
+        };
     }
 
     // getters setters ---- ---- ---- ---- ---- ---- ---- ----
@@ -42,6 +56,10 @@ class ClientContext extends Base {
 
     set res(val) {
         this._res = val;
+    }
+
+    mixinContext() {
+        _.extend(this, clientContextMixins);
     }
 }
 

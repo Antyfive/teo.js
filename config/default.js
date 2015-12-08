@@ -68,6 +68,8 @@ module.exports = {
     },
     templateSettings: {
         extension: "tpl",
-        delimiters: "{{ }}"
+        delimiters: "{{ }}",
+        engine: "hogan",
+        cache: false
     }
 };
