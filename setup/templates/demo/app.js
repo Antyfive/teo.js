@@ -11,5 +11,5 @@ const Teo = require("teo.js");
 
 let app = new Teo(function* () {
     yield* this.start();
-    logger.log("Teo.JS demo app been started: http://localhost:3100");
+    logger.log("Teo.JS demo app has been started: http://localhost:3100/index");
 });

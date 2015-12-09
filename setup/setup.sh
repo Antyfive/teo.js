@@ -6,4 +6,5 @@ mkdir $3/config
 
 echo "Creating" $1 "app."
 cp -r $2/apps/$1 $3/apps
+cp $2/app.js $3/app.js
 echo "Done!"

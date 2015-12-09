@@ -16,7 +16,7 @@ program
 
         console.log("setup for %s env(s)", env);
 
-        if (env === "dev" || env === "test") {
+        if (env === "demo" || env === "test") {
             childProcess.exec(__dirname + "/../setup/setup.sh" + " " + env + " " + __dirname + "/../setup/templates/" + env + " " + homeDir,
                 function(error, stdout, stderr) {
                     stdout && console.log(stdout.green);
