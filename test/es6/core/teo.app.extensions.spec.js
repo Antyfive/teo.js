@@ -68,7 +68,7 @@ describe("Testing Teo App Extensions", () => {
 
     });
 
-    it.only("Should resolve passed extensions on initialization", () => {
+    it("Should resolve passed extensions on initialization", () => {
 
         let addStub = sinon.stub(AppExtensions.prototype, "add", () => {});
 
