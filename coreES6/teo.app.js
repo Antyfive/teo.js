@@ -250,7 +250,8 @@ class App extends Base {
     }
 
     _initExtensions() {
-        this.extensions = new Extensions(_.extend({app: this}, this.config.get("extensions")));
+        // TODO: don't pass app, only config
+        this.extensions = new Extensions({app: this, config: this.config});
     }
 
     * _runExtensions() {

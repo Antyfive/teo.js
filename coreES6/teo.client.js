@@ -115,7 +115,7 @@ class Client extends Base {
                 this.res.send(500);
             }
         }
-        if (this.req.headers.range) {
+        else if (this.req.headers.range) {
             let contentType = mime.lookup(this.extension || this.req.headers.accept || "html") ;
             streamer.stream(this.req, this.res, path.normalize(path.join(this.config.get("appDir"), this.pathname)), contentType);
         }

@@ -24,41 +24,30 @@ describe("Testing Teo App Extensions", () => {
                 extension: function(app) {
                     app.middleware(function* (next) {
                         this.req.setHeader("X-Powered-By", "Teo.js");
-                        yield* next;
+                        yield next;
                     });
                 }
             }
-        };
+        },
+        configGetStub;
 
     beforeEach(() => {
 
+        configGetStub = sinon.stub();
+
         extensions = new AppExtensions({
-            filePath: "/extensions",
+            config: {
+                get: configGetStub
+            },
             app: {
                 test: "true"
             }
         });
 
-    });
-
-    afterEach(() => {
-
-        extensions = null;
-
-    });
-
-    it("Should parse passed config on init", () => {
-
-        assert.equal(extensions.config.filePath, "/extensions", "File path should be set");
-
-    });
-
-    it("Should resolve passed extensions on initialization", () => {
-
-        let addStub = sinon.stub(AppExtensions.prototype, "add", () => {});
-
-        extensions = new AppExtensions({
-            extensionsList: [
+        configGetStub.withArgs("localExtensionsDirPath").returns("/extensions");
+        configGetStub.withArgs("appDir").returns("/myAppDir");
+        configGetStub.withArgs("extensions").returns(
+            [
                 {
                     "name": "my-extension-1",
                     "module": "my-module-name-1"
@@ -68,6 +57,28 @@ describe("Testing Teo App Extensions", () => {
                     "file": "my-module-name-2"
                 }
             ]
+        );
+
+    });
+
+    afterEach(() => {
+
+        extensions = null;
+        configGetStub = null;
+
+    });
+
+    it.only("Should resolve passed extensions on initialization", () => {
+
+        let addStub = sinon.stub(AppExtensions.prototype, "add", () => {});
+
+        extensions = new AppExtensions({
+            config: {
+                get: configGetStub
+            },
+            app: {
+                test: "true"
+            }
         });
 
         assert.isTrue(addStub.calledOnce, "Extensions should be added");
@@ -162,7 +173,7 @@ describe("Testing Teo App Extensions", () => {
 
         let requireStub = sinon.stub(extensions, "__requireExtension");
 
-        requireStub.withArgs("my-file-name-1").returns({
+        requireStub.returns({
             // is used in app config with this namespace
             configNamespace: "my-file-config",
             // module's config
@@ -178,7 +189,8 @@ describe("Testing Teo App Extensions", () => {
             "file": "my-file-name-1"
         });
 
-        assert.equal(requireStub.args[0][0], "/extensions/my-file-name-1", "Extension path should be correct");
+        assert.isTrue(requireStub.calledOnce);
+        assert.equal(requireStub.args[0][0], "/myAppDir/extensions/my-file-name-1", "Extension path should be correct");
 
         resolveSpy.restore();
         requireStub.restore();
@@ -192,7 +204,7 @@ describe("Testing Teo App Extensions", () => {
                 "name": "my-extension-1",
                 "file": "my-file-name-1"
             });
-        }, "Cannot find module '/extensions/my-file-name-1'")
+        }, "Cannot find module '/myAppDir/extensions/my-file-name-1'")
 
     });
 
