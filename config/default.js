@@ -71,5 +71,16 @@ module.exports = {
         delimiters: "{{ }}",
         engine: "hogan",
         cache: false
-    }
+    },
+    // Path to local extensions directory. Should be relative to the app
+    localExtensionsDirPath: "/extensions",
+    extensions: [
+        // e.g.
+        /*{
+            "name": "powered-by",   // name in registry of extensions
+            "module": "teo-powered-by-extension"    // npm module
+            // if you want to provide your personal, local extension
+            "file": "myFileName"
+        },*/
+    ]
 };

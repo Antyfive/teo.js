@@ -10,8 +10,7 @@
 const
     Base = require("./teo.base"),
     _ = require("./teo.utils"),
-    Path = require("path"),
-    Domain = require("domain");
+    Path = require("path");
 
 module.exports = class Extensions extends Base {
     constructor(config) {
@@ -20,10 +19,16 @@ module.exports = class Extensions extends Base {
         this._loadedExtensions = {};
         this._installedExtensions = [];
 
-        if (this.config.extensionsList) {
-            this.add(this.config.extensionsList);
+        if (this.config.get("extensions")) {
+            this.add(this.config.get("extensions"));
         }
     }
+
+    applyConfig(config) {
+        this.app = config.app;
+        this.config = config.config;
+    }
+
     /**
      * Add new extension
      * @param {Array|Object} extensions
@@ -55,7 +60,7 @@ module.exports = class Extensions extends Base {
         }
 
         let pathToExt = extension.hasOwnProperty("file") ?
-                Path.join(this.config.filePath, extension.file) :  // local extension
+                Path.join(this.config.get("appDir"), this.config.get("localExtensionsDirPath"), extension.file) :  // local extension
                     extension.module;   // module
 
         this._loadedExtensions[extension.name] = this.__requireExtension(pathToExt);
@@ -134,18 +139,16 @@ module.exports = class Extensions extends Base {
             throw new Error(`'${name}' should have 'extension' property, and it should be a function`);
         }
 
-        var domain = Domain.create();
-
-        domain.on("error", function(err) {
+        try {
+            if (_.isGenerator(_extension.extension)) {
+                yield* _extension.extension.call(this.app, this.app);
+            }
+            else {
+                _extension.extension.call(this.app, this.app);
+            }
+            this._installedExtensions.push(name);
+        } catch(err) {
             logger.error(`Extension ${name} error:`, err);
-        });
-
-        yield _.promise(function(resolve) {
-            domain.run(function () {
-                _extension.extension.call(this.config.app, this.config.app);
-                this._installedExtensions.push(name);
-                resolve();
-            }.bind(this));
-        }.bind(this));
+        }
     }
 };
