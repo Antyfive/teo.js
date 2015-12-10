@@ -10,7 +10,7 @@
 const
     AppExtensions = require(`${teoBase}/teo.app.extensions`);
 
-describe.only("Testing Teo App Extensions", () => {
+describe("Testing Teo App Extensions", () => {
 
     let extensions,
         extension = () => {
