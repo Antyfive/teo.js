@@ -9,3 +9,4 @@ install:
 before_script: "./bin/teo setup test"
 script:
   - npm test
+after_script: "gulp travis-test-cov && npm install coveralls@2 && cat ./coverage/lcov.info | coveralls"

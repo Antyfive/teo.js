@@ -8,7 +8,6 @@
 
 const gulp = require("gulp"),
     argv = require("yargs").argv,
-    runSequence = require("run-sequence"),
     config = require("config");
 
 process.on("uncaughtException", (err) => {
@@ -32,7 +31,7 @@ gulp.on("err", (gulpErr) => {
     }
 });
 
-// tasks ---- ---- ---- ---- ---- ---- ---- ---- ----
+// test tasks ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 gulp.task("test", requireTask('./tasks/test', {
     src: "test/es6/**/*.spec.js",
@@ -43,6 +42,11 @@ gulp.task("test", requireTask('./tasks/test', {
 gulp.task("test:watch", requireTask("./tasks/testWatch", {
     src: "test/es6/**/*.spec.js"
 }));
+
+gulp.task("test-cov", requireTask("./tasks/testCov"));
+gulp.task("travis-test-cov", requireTask("./tasks/travisTestCov"));
+
+// release tasks ---- ---- ---- ---- ---- ---- ---- ----
 
 gulp.task("release:patch", requireTask("./tasks/release", {
     releaseType: "patch"

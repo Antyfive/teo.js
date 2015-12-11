@@ -73,12 +73,12 @@
   },
   "devDependencies": {
     "babel": "^5.4.3",
-    "blanket": "^1.1.6",
     "chai": "^3.0.0",
     "gulp": "^3.9.0",
     "gulp-mocha": "^2.2.0",
     "gulp-shell": "^0.5.1",
     "gulp-util": "^3.0.7",
+    "istanbul": "^0.4.1",
     "mocha": "^2.2.5",
     "run-sequence": "^1.1.4",
     "semver": "^4.3.6",
