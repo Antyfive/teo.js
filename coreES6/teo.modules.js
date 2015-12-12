@@ -24,10 +24,6 @@ module.exports = class Modules extends Base {
         this.mountedModules = new Map();
     }
 
-    applyConfig(obj) {
-        this.config = obj.config;
-    }
-
     * collect() {
         if (!this.config.get("name")) {     // means, core app
             return;

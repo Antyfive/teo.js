@@ -259,9 +259,7 @@ class App extends Base {
     }
 
     * _initModules() {
-        this._modules = new Modules({
-            config: this.config
-        });
+        this._modules = new Modules(this.config);
 
         yield* this._modules.collect();
         this._modules.mountModules(this);
