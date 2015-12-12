@@ -24,11 +24,6 @@ module.exports = class Extensions extends Base {
         }
     }
 
-    applyConfig(config) {
-        this.app = config.app;
-        this.config = config.config;
-    }
-
     /**
      * Add new extension
      * @param {Array|Object} extensions
@@ -115,10 +110,11 @@ module.exports = class Extensions extends Base {
 
     /**
      * Run loaded extensions
+     * @param {Object} context
      */
-    * runAll() {
-        for (var extension in this._getLoaded()) {
-            yield _.async(this.runSingle.bind(this, extension)).catch(logger.error);
+    * runAll(context) {
+        for (let extension in this._getLoaded()) {
+            yield _.async(this.runSingle.bind(this, extension, context)).catch(logger.error);
         }
 
         return this;
@@ -127,8 +123,9 @@ module.exports = class Extensions extends Base {
     /**
      * Run single extension by extension name
      * @param {String} name
+     * @param {Object} context :: context in what to run extension
      */
-    * runSingle(name) {
+    * runSingle(name, context) {
         var _extension = this._findLoadedByName(name);
 
         if (!_.isObject(_extension)) {
@@ -141,10 +138,10 @@ module.exports = class Extensions extends Base {
 
         try {
             if (_.isGenerator(_extension.extension)) {
-                yield* _extension.extension.call(this.app, this.app);
+                yield* _extension.extension.call(context, context);
             }
             else {
-                _extension.extension.call(this.app, this.app);
+                _extension.extension.call(context, context);
             }
             this._installedExtensions.push(name);
         } catch(err) {

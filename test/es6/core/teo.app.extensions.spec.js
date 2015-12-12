@@ -36,12 +36,7 @@ describe("Testing Teo App Extensions", () => {
         configGetStub = sinon.stub();
 
         extensions = new AppExtensions({
-            config: {
-                get: configGetStub
-            },
-            app: {
-                test: "true"
-            }
+            get: configGetStub
         });
 
         configGetStub.withArgs("localExtensionsDirPath").returns("/extensions");
@@ -73,12 +68,7 @@ describe("Testing Teo App Extensions", () => {
         let addStub = sinon.stub(AppExtensions.prototype, "add", () => {});
 
         extensions = new AppExtensions({
-            config: {
-                get: configGetStub
-            },
-            app: {
-                test: "true"
-            }
+            get: configGetStub
         });
 
         assert.isTrue(addStub.calledOnce, "Extensions should be added");
@@ -292,10 +282,10 @@ describe("Testing Teo App Extensions", () => {
                 "module": "my-module-name-1"
             });
 
-            yield* extensions.runAll();
+            yield* extensions.runAll({test: "true"});
 
             assert.isTrue(extensionSpy.calledOnce, "Extension method should be called once");
-            assert.deepEqual(extensionSpy.args[0][0], {test: "true"}, "App should be passed as argument");
+            assert.deepEqual(extensionSpy.args[0][0], {test: "true"}, "Context should be passed as argument");
             assert.deepEqual(extensions._installedExtensions, ["my-extension-1"], "Installed extensions registry should be updated");
 
             assert.isTrue(runSingleSpy.calledOnce, "Runner of extension should be called once");
