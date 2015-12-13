@@ -33,7 +33,7 @@ module.exports = {
             );
         } catch(err) {
             logger.error(err);
-            this.res.send(_.isNumber(err) ? err : 500);
+            this.res.send(500);
             return;
         }
         this.res.send(layoutHTML);

@@ -72,4 +72,18 @@ describe("Testing Teo.JS Client Context Mixins", () => {
 
     }));
 
+    it("Should catch an error and send 500 response code", async(function* () {
+
+        let loggerErrorSpy = sinon.spy(logger, "error");
+
+        renderStub.restore();
+
+        yield* mixins.render.bind(self)("index", {test: true}, {});
+
+        assert.isTrue(loggerErrorSpy.calledOnce);
+        assert.isTrue(self.res.send.calledOnce);
+        assert.equal(self.res.send.args[0][0], 500, "Should end response with 500 error");
+
+    }));
+
 });
