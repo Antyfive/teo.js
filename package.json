@@ -72,7 +72,6 @@
     "waterline": "^0.10.24"
   },
   "devDependencies": {
-    "babel": "^5.4.3",
     "chai": "^3.0.0",
     "gulp": "^3.9.0",
     "gulp-mocha": "^2.2.0",
