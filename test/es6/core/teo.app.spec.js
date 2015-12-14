@@ -9,7 +9,6 @@
 
 const
     App = require(teoBase + "/teo.app"),
-    AppCache = require(teoBase + "/teo.app.cache"),
     Middleware = require(teoBase + "/teo.middleware"),
     Db = require(teoBase + "/db/teo.db"),
     _ = require(teoBase + "/teo.utils"),
@@ -78,21 +77,6 @@ describe("Testing Teo App", () => {
 
         });
 
-        it("Should collect executable files", async(function* () {
-
-            let readAppDirsStub = sinon.stub(app, "_readAppDirs", function* () {});
-            let readAppFilesStub = sinon.stub(app, "_readAppFiles", function* () {});
-
-            yield app.collectExecutableFiles();
-
-            assert.isTrue(readAppDirsStub.calledOnce);
-            assert.isTrue(readAppFilesStub.calledOnce);
-
-            readAppDirsStub.restore();
-            readAppFilesStub.restore();
-
-        }));
-
     });
 
     describe("Init DB", () => {
@@ -159,71 +143,11 @@ describe("Testing Teo App", () => {
 
         });
 
-        it("Should get script from cache", () => {
-
-            let cacheStub = sinon.stub(app.cache, "get");
-
-            cacheStub.withArgs("myFilePath").returns({test: true});
-
-            let file = app._getScript("myFilePath");
-
-            assert.isTrue(cacheStub.calledOnce);
-            assert.equal(cacheStub.args[0][0], "myFilePath");
-            assert.deepEqual(file, {test: true});
-
-            cacheStub.restore();
-
-        });
-
         it("Should load script if no in cache", () => {
 
             assert.throws(app._getScript.bind(app, "myFilePath"), "Cannot find module 'myFilePath'");
 
         });
-
-        it("Should read app's directories", async(function* () {
-
-            configGetStub.withArgs("appDirs").returns([
-                "first",
-                "second"
-            ]);
-
-            configGetStub.withArgs("appDir").returns(params.appDir);
-
-            let collectAppDirFilesStub = sinon.stub(app, "__collectAppDirFiles", function* () {});
-
-            yield app._readAppDirs();
-
-            assert.isTrue(collectAppDirFilesStub.calledTwice);
-            assert.deepEqual(collectAppDirFilesStub.args, [
-                [path.join(params.appDir, "first")], [path.join(params.appDir, "second")]
-            ]);
-
-            collectAppDirFilesStub.restore();
-
-        }));
-
-        it("Should collect files inside directory", async(function* () {
-
-            let readdirStub = sinon.stub(fs, "readdir", function(args, cb) {
-                cb(null, ["one.js", "two.js"]);
-            });
-
-            let loadFileStub = sinon.stub(app, "__loadFile", function* () {});
-
-            yield app.__collectAppDirFiles("test");
-
-            assert.isTrue(readdirStub.calledOnce);
-            assert.equal(readdirStub.args[0][0], "test");
-            assert.isTrue(loadFileStub.calledTwice);
-            assert.deepEqual(loadFileStub.args, [
-                ["test/one.js"], ["test/two.js"]
-            ]);
-
-            readdirStub.restore();
-            loadFileStub.restore();
-
-        }));
 
         it("Should load single file", async(function* () {
 
@@ -237,8 +161,6 @@ describe("Testing Teo App", () => {
                 return "script";
             });
 
-            let cacheAddSpy = sinon.stub(app.cache, "add");
-
             yield app.__loadFile("/mypath");
 
             assert.isTrue(lstatStub.calledOnce);
@@ -246,12 +168,8 @@ describe("Testing Teo App", () => {
 
             assert.isTrue(getScriptStub.calledOnce);
 
-            assert.isTrue(cacheAddSpy.calledOnce);
-            assert.deepEqual(cacheAddSpy.args[0], ["/mypath", "script"]);
-
             lstatStub.restore();
             getScriptStub.restore();
-            cacheAddSpy.restore();
 
         }));
 

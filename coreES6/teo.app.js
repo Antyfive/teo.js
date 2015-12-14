@@ -9,7 +9,6 @@
 const
     fs = require("fs"),
     path = require("path"),
-    domain = require("domain"),
     http = require("http"),
     co = require("co"),
     Base = require("./teo.base"),
@@ -41,9 +40,15 @@ class App extends Base {
 
     * initApp() {
         this.loadConfig();
+
+        if (this.initialConfig.coreApp === true) {
+            return;
+        }
+
         this.initDb();
         this._initExtensions();
-
+        // init app.js
+        yield* this._readAppFiles();
         // init modules
         yield* this._initModules();
     }
@@ -73,11 +78,6 @@ class App extends Base {
         };
     }
 
-    * collectExecutableFiles() {
-        yield _.async(this._readAppDirs.bind(this)).catch(logger.error);
-        yield _.async(this._readAppFiles.bind(this)).catch(logger.error);
-    }
-
     initDb() {
         if (this.config.get("db").enabled === false) {
             return;
@@ -93,41 +93,15 @@ class App extends Base {
     // ---- ----
 
     _getScript(filePath) {
-        let context = this.cache.get(filePath);
-        if (context) {
-            return context;
-        }
         try {
-            context = require(filePath);
+            return require(filePath);
         } catch(e) {
             logger.error(e);
-
             throw new Error(e);
         }
-        return context;
     }
 
     // ---- ----
-
-    * _readAppDirs() {
-        let dirs = this.config.get("appDirs") || [];
-        let l = dirs.length;
-
-        for (let i = 0; i < l; i++) {
-            let currentDir = dirs[i];
-            yield* this.__collectAppDirFiles(path.join(this.config.get("appDir"), currentDir));
-        }
-    }
-
-    * __collectAppDirFiles(dir) {
-        let files = yield _.thunkify(fs.readdir)(dir);
-        let l = files.length;
-
-        for (let i = 0; i < l; i++) {
-            let file = path.join(dir, files[i]);
-            yield* this.__loadFile(file);
-        }
-    }
 
     * __loadFile(filePath) {
         let stat = yield _.thunkify(fs.lstat)(filePath);
@@ -136,10 +110,7 @@ class App extends Base {
             throw new Error("Not a file was found!");
         }
 
-        let script = this._getScript(filePath);
-        this.cache.add(filePath, script);
-
-        return script;
+        return this._getScript(filePath);
     }
 
     // ----
@@ -150,7 +121,13 @@ class App extends Base {
 
          for (let i = 0; i < l; i++) {
              let file = path.join(this.config.get("appDir"), files[i]);
-             yield* this.__loadFile(file);
+
+             try {
+                 let script = yield* this.__loadFile(file);
+                 script.call(this, this);
+             } catch(e) {
+                 logger.error(e);
+             }
          }
     }
 

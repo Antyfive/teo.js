@@ -16,7 +16,7 @@ module.exports = {
     modulesDirName: "modules",
     dirsInModule: ["models", "controllers"], // app's directories to read and collect files inside, on system start
     moduleEntryPoints: ["router"], // these files will be wrapped by lazy loaded (for optimization)
-    appFiles: ["app.js"],    // app's files to read and cache on system start
+    appFiles: ["app.js"],    // app's files to read automatically on system start (before any others)
     cookie: {
         keys: ["signed key"]    // default signed key
     },

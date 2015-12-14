@@ -74,7 +74,8 @@ class Core extends Base {
             homeDir: this.config.homeDir,
             appDir: this.config.appsDir,
             confDir: path.normalize(__dirname + "/../config"),
-            mode: this.config.mode
+            mode: this.config.mode,
+            coreApp: true
         });
         // TODO:
         /*
@@ -210,6 +211,7 @@ class Core extends Base {
             throw new Error(`Not supported action ${action} was received`);
         }
 
+        // TODO: dead code
         if (this.coreAppConfig.get("coreAppEnabled") === true) {
             yield this.app[action]();
         }
@@ -218,14 +220,14 @@ class Core extends Base {
             var app = this.getApp(name);
 
             if (app) {
-                yield app[action]();
+                yield* app[action]();
             }
 
             return app;
         }
         else {
             for (var app in this.apps) {    // perform action on all apps
-                yield this.apps[app][action]();
+                yield* this.apps[app][action]();
             }
         }
 
