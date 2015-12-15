@@ -13,7 +13,6 @@ const
     co = require("co"),
     Base = require("./teo.base"),
     _ = require("./teo.utils"),
-    AppCache = require("./teo.app.cache"),
     Client = require("./teo.client"),
     Middleware = require("./teo.middleware"),
     Extensions = require("./teo.app.extensions"),
@@ -25,7 +24,6 @@ class App extends Base {
     constructor(config, callback) {
         super(config, callback);
 
-        this.cache = new AppCache();
         this._middleware = new Middleware();
 
         _.generator(function* () {
