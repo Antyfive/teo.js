@@ -158,5 +158,21 @@ describe("Testing Teo Client", () => {
 
     });
 
+    describe("Dispatcher", () => {
+
+        it("Should process request", async(function* () {
+
+            let dispatchStub = sinon.stub(client, "dispatch", function* () {});
+
+            yield* client.process();
+
+            assert.isTrue(dispatchStub.calledOnce);
+
+            dispatchStub.restore();
+
+        }));
+
+    });
+
 
 });
