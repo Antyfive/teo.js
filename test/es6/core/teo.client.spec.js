@@ -172,6 +172,20 @@ describe("Testing Teo Client", () => {
 
         }));
 
+        it("Should throw an error if route handler is not generator function", async(function* () {
+
+            client.route = {
+                handler: function() {}
+            };
+
+            try {
+                yield* client.dispatch()
+            } catch(e) {
+                assert.equal(e.message, "Route handler should be a generator function!")
+            }
+
+        }));
+
     });
 
 
