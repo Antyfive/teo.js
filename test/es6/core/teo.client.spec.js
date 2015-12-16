@@ -10,8 +10,12 @@
 
 const
     http = require("http"),
+    composition = require("composition"),
     Client = require(`${teoBase}/teo.client`),
-    ClientContext = require(`${teoBase}/teo.client.context`);
+    ClientContext = require(`${teoBase}/teo.client.context`),
+    ClientContextRes = require(`${teoBase}/teo.client.context.res`),
+    ClientContextReq = require(`${teoBase}/teo.client.context.req`),
+    _ = require(`${teoBase}/teo.utils`);
 
 describe("Testing Teo Client", () => {
 
@@ -160,6 +164,24 @@ describe("Testing Teo Client", () => {
 
     describe("Dispatcher", () => {
 
+        let isGeneratorStub, resSendStub;
+
+        beforeEach(() => {
+
+            isGeneratorStub = sinon.stub(_, "isGenerator");
+            isGeneratorStub.returns(true);
+
+            resSendStub = sinon.stub(client.res, "send", function() {});
+
+        });
+
+        afterEach(() => {
+
+            isGeneratorStub.restore();
+            resSendStub.restore();
+
+        });
+
         it("Should process request", async(function* () {
 
             let dispatchStub = sinon.stub(client, "dispatch", function* () {});
@@ -183,6 +205,50 @@ describe("Testing Teo Client", () => {
             } catch(e) {
                 assert.equal(e.message, "Route handler should be a generator function!")
             }
+
+        }));
+
+        it("Should handle request", async(function* () {
+
+            client.route = {
+                handler: function* () {}
+            };
+
+            let handlerStub = sinon.stub(client.route, "handler", function* (req, res, next) {
+                return "123";
+            });
+
+            yield* client.dispatch();
+
+            assert.isTrue(handlerStub.calledOnce);
+            assert.equal(handlerStub.args[0].length, 3);
+            assert.instanceOf(handlerStub.args[0][0], http.IncomingMessage);
+            assert.instanceOf(handlerStub.args[0][1], http.ServerResponse);
+            assert.instanceOf(handlerStub.args[0][2], composition.Wrap);
+
+            assert.isTrue(resSendStub.calledOnce);
+            assert.equal(resSendStub.args[0][0], "123");
+
+            handlerStub.restore();
+
+        }));
+
+        it("Should send 500 response if error was thrown inside handler", async(function* () {
+
+            client.route = {
+                handler: function* () {}
+            };
+
+            let handlerStub = sinon.stub(client.route, "handler", function* (req, res, next) {
+                throw new Error("My error");
+            });
+
+            yield* client.dispatch();
+
+            assert.isTrue(resSendStub.calledOnce);
+            assert.equal(resSendStub.args[0][0], 500);
+
+            handlerStub.restore();
 
         }));
 
