@@ -11,10 +11,12 @@
 const
     http = require("http"),
     composition = require("composition"),
+    mime = require("mime"),
     Client = require(`${teoBase}/teo.client`),
     ClientContext = require(`${teoBase}/teo.client.context`),
     ClientContextRes = require(`${teoBase}/teo.client.context.res`),
     ClientContextReq = require(`${teoBase}/teo.client.context.req`),
+    streamer = require(`${teoBase}/teo.client.streamer`),
     _ = require(`${teoBase}/teo.utils`);
 
 describe("Testing Teo Client", () => {
@@ -249,6 +251,41 @@ describe("Testing Teo Client", () => {
             assert.equal(resSendStub.args[0][0], 500);
 
             handlerStub.restore();
+
+        }));
+
+        it("Should stream if range header exisits", async(function* () {
+
+            client.req.headers.range = true;
+
+            let streamStub = sinon.stub(streamer, "stream", function() {}),
+                mimeLookup = sinon.stub(mime, "lookup");
+
+            yield* client.dispatch();
+
+            assert.isTrue(streamStub.calledOnce);
+            assert.isTrue(mimeLookup.calledOnce);
+
+            assert.equal(mimeLookup.args[0][0], "html");
+            assert.deepEqual(streamStub.args[0], [client.req, client.res, `${params.appDir}/`, undefined]);
+
+            delete client.req.headers.range;
+
+            streamStub.restore();
+            mimeLookup.restore();
+
+        }));
+
+        it("Should try to read file if no route and range header", async(function* () {
+
+            let readFileSafely = sinon.stub(client, "readFileSafely", function() {});
+
+            yield* client.dispatch();
+
+            assert.isTrue(readFileSafely.calledOnce);
+            assert.equal(readFileSafely.args[0][0], "/public/");
+
+            readFileSafely.restore();
 
         }));
 

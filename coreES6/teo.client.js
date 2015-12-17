@@ -8,6 +8,7 @@
 
 const
     composition = require("composition"),
+    mime = require("mime"),
     Base = require("./teo.base"),
     _ = require("./teo.utils"),
     Routes = require("./teo.client.routes"),
