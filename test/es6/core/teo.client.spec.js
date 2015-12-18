@@ -12,12 +12,14 @@ const
     http = require("http"),
     composition = require("composition"),
     mime = require("mime"),
+    co = require("co"),
     Client = require(`${teoBase}/teo.client`),
     ClientContext = require(`${teoBase}/teo.client.context`),
     ClientContextRes = require(`${teoBase}/teo.client.context.res`),
     ClientContextReq = require(`${teoBase}/teo.client.context.req`),
     streamer = require(`${teoBase}/teo.client.streamer`),
-    _ = require(`${teoBase}/teo.utils`);
+    _ = require(`${teoBase}/teo.utils`),
+    fileReader = require(`${teoLibDir}/fileReader`);
 
 describe("Testing Teo Client", () => {
 
@@ -34,13 +36,20 @@ describe("Testing Teo Client", () => {
                 "get": sinon.stub()
             }
         },
-        server, req, res;
+        server, req, res, matchRouteStub;
 
     before((done) => {
 
+        matchRouteStub = sinon.stub(Client.routes, "matchRoute");
+        matchRouteStub.returns({
+            params: {
+                testParam: true
+            }
+        });
         server = http.createServer((_req, _res) => {
             paramsStub.req = _req;
             paramsStub.res = _res;
+
             _res.end();
         }).listen(3210);
 
@@ -68,6 +77,7 @@ describe("Testing Teo Client", () => {
     after((done) => {
 
         req = res = params = appDir = paramsStub = null;
+        matchRouteStub.restore();
         server.close(done);
 
     });
@@ -87,6 +97,12 @@ describe("Testing Teo Client", () => {
 
         });
 
+        it("Should apply route parameters", () => {
+
+            assert.deepEqual(client.req.params, {testParam: true});
+
+        });
+
         it("Should handle request error event fired by client.req", () => {
 
             let resSendStub = sinon.stub(client.res, "send", function() {});
@@ -103,7 +119,7 @@ describe("Testing Teo Client", () => {
         it("Shouldn't match route not existing route", () => {
 
             assert.isTrue(client.hasOwnProperty("route"));
-            assert.isUndefined(client.route);
+            assert.isTrue(client.route.params.testParam);
 
         });
 
@@ -201,9 +217,10 @@ describe("Testing Teo Client", () => {
             client.route = {
                 handler: function() {}
             };
+            isGeneratorStub.returns(false);
 
             try {
-                yield* client.dispatch()
+                yield* client.dispatch();
             } catch(e) {
                 assert.equal(e.message, "Route handler should be a generator function!")
             }
@@ -288,6 +305,45 @@ describe("Testing Teo Client", () => {
             readFileSafely.restore();
 
         }));
+
+        it("Should read file safely and response content", () => {
+
+            let fileReaderStub = sinon.stub(fileReader, "readFileSafely", function(path, callback) {
+                callback(null, "123");
+            });
+
+            client.readFileSafely("/path");
+
+            process.nextTick(() => {
+
+                assert.isTrue(fileReaderStub.calledOnce);
+                assert.isTrue(resSendStub.calledOnce);
+                assert.equal(resSendStub.args[0][0], "123");
+
+                fileReaderStub.restore();
+
+            })
+
+        });
+
+        it("Should read file safely and response an error", () => {
+
+            let fileReaderStub = sinon.stub(fileReader, "readFileSafely", function(path, callback) {
+                callback("Error", "123");
+            });
+
+            client.readFileSafely("/path");
+
+            process.nextTick(() => {
+
+                assert.isTrue(fileReaderStub.calledOnce);
+                assert.isTrue(resSendStub.calledOnce);
+                assert.equal(resSendStub.args[0][0], 404);
+
+                fileReaderStub.restore();
+            })
+
+        });
 
     });
 
