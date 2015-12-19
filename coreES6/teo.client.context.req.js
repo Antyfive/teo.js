@@ -21,16 +21,28 @@ class ReqContext extends Base {
         this.req.contentType = this.contentType = this.req.headers["content-type"];
         this.req.query = this.parsedUrl.query;
 
-        this.bindEvents()
+        this.parseBody();
     }
 
     get req() {
         return this.config.req;
     }
 
-    bindEvents() {
-        this.req.on("end", this.onEnd.bind(this));
-        this.req.on("data", this.onData.bind(this));
+    parseBody() {
+        if (this.contentType && this.contentType.startsWith("multipart")) {
+            this.parseForm();
+        }
+        else {
+            this.endListener = this.onEnd.bind(this);
+            this.dataListener = this.onData.bind(this);
+            this.req
+                .on("end", this.endListener)
+                .on("data", this.dataListener);
+        }
+    }
+
+    parseForm() {// TODO: parse multipart/*
+
     }
 
     onData(chunk) {
@@ -38,25 +50,15 @@ class ReqContext extends Base {
     }
 
     onEnd() {
-        var body = this.chunks.join();
-        var parsedBody;
+        let bodyChunks = Buffer.concat(this.chunks).toString();
 
         try {
-            // TODO: multipart
-            parsedBody = (this.contentType === "application/json") ? JSON.parse(body) : querystring.parse(body);
-            this.req.body = parsedBody;
+            this.req.body = (this.contentType === "application/json") ? JSON.parse(bodyChunks) : querystring.parse(bodyChunks);
         } catch(e) {
             this.emit("error", 500, e.message);
-            return;
         }
-        // ----
-        /*var csrfToken = payload[this.req.csrf.keyName];
 
-         if (csrfToken !== this.req.csrf.getToken()) {
-         this.res.send(403, "Invalid CSRF token!");
-         return;
-         }*/
-        this.emit("reqEnd");
+        this.cleanup();
     }
 
     /**
@@ -66,6 +68,15 @@ class ReqContext extends Base {
      */
     set params(val) {
         this.req.params = val;
+    }
+
+    /**
+     * Remove listeners
+     */
+    cleanup() {
+        this.req
+            .removeListener("end", this.endListener)
+            .removeListener("data", this.dataListener);
     }
 }
 
