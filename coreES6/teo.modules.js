@@ -103,9 +103,13 @@ module.exports = class Modules extends Base {
             moduleRouteHandler.call(
                 this,
                 handlerContext,
-                //router.ns(`/${moduleName.toLowerCase()}`),
                 // router mounter. Wraps router methods with namespace (/moduleName/) and some middleware
-                mountModuleRouter.call(handlerContext, router, moduleName),
+                mountModuleRouter.call(handlerContext,
+                    router,
+                    moduleName,
+                    // replace "someModuleName" namespace with "" if it's an index
+                    (this.config.get("indexPageModuleName") === moduleName) ? "" : undefined
+                ),
                 modelRegister
             );
         });

@@ -30,7 +30,7 @@ describe("Testing Teo Modules", () => {
 
     beforeEach(() => {
 
-        modules = new Modules(configStub);
+        modules = new Modules(configStub.config);
 
     });
 

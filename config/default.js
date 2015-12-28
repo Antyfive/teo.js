@@ -14,6 +14,8 @@ module.exports = {
     },
     // was appDirs
     modulesDirName: "modules",
+    // this module namespace will be replaced with an empty string. I.e. "http://mysite.com/index" module will be available as "http://mysite.com/" instead.
+    indexPageModuleName: "index",
     dirsInModule: ["models", "controllers"], // app's directories to read and collect files inside, on system start
     moduleEntryPoints: ["router"], // these files will be wrapped by lazy loaded (for optimization)
     appFiles: ["app.js"],    // app's files to read automatically on system start (before any others)
