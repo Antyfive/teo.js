@@ -62,7 +62,7 @@ class TeoRes extends Base {
         var extension = _.getExtension(this.pathname);
         var contentType = mime.lookup(args[2] || extension || this.config.req.headers.accept || "html");
         var writeHeadObj = {
-            "Content-Type": contentType + ";charset=UTF-8"
+            "Content-Type": contentType + "; charset=UTF-8"
         };
 
         if (args.length === 1) {
