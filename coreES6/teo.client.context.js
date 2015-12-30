@@ -25,6 +25,8 @@ class ClientContext extends Base {
             res: this.initialConfig.res, // pass pure res
             req: this.req
         });
+
+        this._req.on("error", (e) => {});   // TODO: improve errors handling.
         // mixin context with methods, which will be available inside route handler in controllers
         this.mixinContext();
     }

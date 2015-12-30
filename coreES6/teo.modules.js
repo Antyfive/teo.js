@@ -99,6 +99,7 @@ module.exports = class Modules extends Base {
      */
     runMountedModules(handlerContext, router, modelRegister) {
         this.mountedModules.forEach((moduleRouteHandler, moduleName) => {
+            // TODO: handle errors on mount
             // we need to add middleware somewhere, which will set templateDir for each module
             moduleRouteHandler.call(
                 this,
