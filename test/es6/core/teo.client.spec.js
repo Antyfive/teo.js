@@ -284,7 +284,7 @@ describe("Testing Teo Client", () => {
             assert.isTrue(mimeLookup.calledOnce);
 
             assert.equal(mimeLookup.args[0][0], "html");
-            assert.deepEqual(streamStub.args[0], [client.req, client.res, `${params.appDir}/`, undefined]);
+            assert.deepEqual(streamStub.args[0], [client.req, client.res, client.config, `${params.appDir}/`, undefined]);
 
             delete client.req.headers.range;
 
