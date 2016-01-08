@@ -118,7 +118,7 @@ class Client extends Base {
         }
         else if (this.req.headers.range) {
             let contentType = mime.lookup(this.extension || this.req.headers.accept || "html") ;
-            streamer.stream(this.req, this.res, path.normalize(path.join(this.config.get("appDir"), this.pathname)), contentType);
+            streamer.stream(this.req, this.res, this.config, path.normalize(path.join(this.config.get("appDir"), this.pathname)), contentType);
         }
         else {
             // TODO: cache, read from cache
