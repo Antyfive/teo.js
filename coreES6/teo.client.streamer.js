@@ -101,9 +101,9 @@ function isNumber(n) {
 
 // A tiny subset of http://phpjs.org/functions/pack:880
 function pack(format) {
-    var result = "";
+    let result = "";
 
-    for (var pos = 1, len = arguments.length; pos < len; pos++) {
+    for (let pos = 1, len = arguments.length; pos < len; pos++) {
         if (format[pos - 1] == "N") {
             result += String.fromCharCode(arguments[pos] >> 24 & 0xFF);
             result += String.fromCharCode(arguments[pos] >> 16 & 0xFF);
@@ -118,8 +118,7 @@ function pack(format) {
 }
 
 function downloadHeader(res, info, settings) {
-    var code = 200;
-    var header;
+    let code = 200, header;
 
     if (settings.forceDownload) {
         header = {
@@ -158,65 +157,3 @@ function downloadHeader(res, info, settings) {
 
     res.writeHead(code, header);
 }
-
-
-/**
- * Streamer
- * @param {Object} req :: http req
- * @param {Object} res :: http res
- * @param {String} filePath :: path to file
- * @param {String} contentType
- */
-exports._stream = function(req, res, filePath, contentType) {
-
-    var streamPath = filePath;
-    //Calculate the size of the file
-    var stat = fs.statSync(streamPath);
-    var total = stat.size;
-    var file;
-
-    // Chunks based streaming
-    if (req.headers.range) {
-        var range = req.headers.range;
-        var parts = range.replace(/bytes=/, "").split("-");
-        var partialstart = parts[0];
-        var partialend = parts[1];
-
-        var start = parseInt(partialstart, 10);
-        var end = partialend ? parseInt(partialend, 10) : total - 1;
-        var chunksize = (end - start) + 1;
-        logger.log("Streamer range: " + start + " - " + end + " = " + chunksize);
-
-        file = fs.createReadStream(streamPath, {
-            start: start,
-            end: end
-        });
-        res.writeHead(206, {
-            "Content-Range": "bytes " + start + "-" + end + "/" + total,
-            "Accept-Ranges": "bytes",
-            "Content-Length": chunksize,
-            "Content-Type": contentType
-        });
-        res.openedFile = file;
-        file.pipe(res);
-    } else {
-        logger.log("ALL: " + total);
-        file = fs.createReadStream(streamPath);
-        res.writeHead(200, {
-            "Content-Length": total,
-            "Content-Type": contentType
-        });
-        res.openedFile = file;
-        file.pipe(res);
-    }
-
-    res.on("close", function() {
-        logger.log("Streamer response closed");
-        if (res.openedFile) {
-            res.openedFile.unpipe(this);
-            if (this.openedFile.fd) {
-                fs.close(this.openedFile.fd);
-            }
-        }
-    });
-};
