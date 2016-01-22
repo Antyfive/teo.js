@@ -7,33 +7,11 @@ module.exports = {
     protocol: "http",
     host: "localhost",
     port: 3000,
-    coreAppEnabled: false,  // core app for administrator purposes (in future)
-    cache: {
-        static: false,     // cache static files
-        response: false      // cache response by url
-    },
-    // was appDirs
+    //coreAppEnabled: false,  // core app for administrator purposes (in future)
     modulesDirName: "modules",
     // this module namespace will be replaced with an empty string. I.e. "http://mysite.com/index" module will be available as "http://mysite.com/" instead.
     indexPageModuleName: "index",
-    dirsInModule: ["models", "controllers"], // app's directories to read and collect files inside, on system start
-    moduleEntryPoints: ["router"], // these files will be wrapped by lazy loaded (for optimization)
-    appFiles: ["app.js"],    // app's files to read automatically on system start (before any others)
-    cookie: {
-        keys: ["signed key"]    // default signed key
-    },
-    session: {
-        sessionKeyName: "SID",
-        secret: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
-        lifetime: {
-            session: 60 * 60 * 24 * 10 // in seconds, ten days by default
-        },
-        storageType: "memory" // only memory storage type at the moment
-    },
-    csrf: {
-        keyName: "_csrfToken",
-        secret: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-    },
+    appFiles: ["app.js"],    // app's files to read and run automatically on system start (before any others)
     cluster: {
         enabled: false
     },
@@ -85,6 +63,7 @@ module.exports = {
             "file": "myFileName"
         },*/
     ],
+    // config for streaming. (videos etc.)
     streamer: {
         // download file instead of streaming
         forceDownload: false,
