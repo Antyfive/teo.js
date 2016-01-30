@@ -10,6 +10,8 @@
 const
     App = require(teoBase + "/teo.app"),
     Middleware = require(teoBase + "/teo.middleware"),
+    Client = require(teoBase + "/teo.client"),
+    Extensions = require(teoBase + "/teo.app.extensions"),
     Db = require(teoBase + "/db/teo.db"),
     _ = require(teoBase + "/teo.utils"),
     configLib = require(teoBase + "/../lib/config"),
@@ -312,7 +314,7 @@ describe("Testing Teo App", () => {
 
             beforeEach(() => {
 
-                runExtensionsStub = sinon.stub(app, "_runExtensions", function* () {});
+                runExtensionsStub = sinon.stub(app, "runExtensions", function* () {});
                 connectDBStub = sinon.stub(app, "connectDB", function* () {});
                 createServerSpy = sinon.spy(http, "createServer");
                 listenStub = sinon.stub(http.Server.prototype, "listen", (port, host, callback) => {
@@ -343,8 +345,24 @@ describe("Testing Teo App", () => {
                 yield* app.start();
 
                 assert.isTrue(initServerStub.calledOnce);
+                assert.isTrue(runExtensionsStub.calledOnce);
 
                 initServerStub.restore();
+
+            }));
+
+            it("Should run extensions", async(function* () {
+
+                runExtensionsStub.restore();
+
+                let runAllStub = sinon.stub(app.extensions, "runAll", function* () {});
+
+                yield* app.runExtensions();
+
+                assert.isTrue(runAllStub.called);
+                assert.equal(runAllStub.args[0][0], app, "App context should be passed");
+
+                runAllStub.restore();
 
             }));
 
@@ -405,6 +423,125 @@ describe("Testing Teo App", () => {
 
                 assert.isTrue(closeStub.calledOnce);
 
+
+            }));
+
+        });
+
+        describe("Initial Req Dispatch", () => {
+
+            let dispatcher, createClientContextSpy, middlewareRunSpy, server, req, res, respondSpy,
+                clientProcessSpy;
+
+            beforeEach(async(function* () {
+
+                createClientContextSpy = sinon.spy(app, "createClientContext");
+                middlewareRunSpy = sinon.spy(Middleware.prototype, "run");
+                respondSpy = sinon.spy(app, "respond");
+                clientProcessSpy = sinon.spy(Client.prototype, "process");
+
+                dispatcher = app.getDispatcher();
+
+                server = http.createServer((_req, _res) => {
+                    req = _req;
+                    res = _res;
+
+                    res.end();
+                }).listen(3210);
+
+                yield function(callback) {
+                    server.once("listening", () => {
+                        http.get("http://localhost:3210", () => {
+                            callback();
+                        });
+                    });
+                };
+
+            }));
+
+            afterEach(async(function* () {
+
+                assert.isTrue(clientProcessSpy.calledOnce);
+
+                dispatcher = null;
+                createClientContextSpy.restore();
+                middlewareRunSpy.restore();
+                respondSpy.restore();
+                clientProcessSpy.restore();
+
+                req = null;
+                res = null;
+
+                yield function(callback) {
+                    server.close(callback);
+                };
+
+
+            }));
+
+            it("Should dispatch request", () => {
+
+                // emulate dispatching of the request
+                dispatcher(req, res);
+
+                assert.isTrue(createClientContextSpy.calledOnce);
+                assert.isTrue(middlewareRunSpy.calledOnce);
+                assert.isTrue(respondSpy.calledOnce);
+
+            });
+
+        });
+
+        describe("Db life circle", () => {
+
+            let connectDbStub, canUseDbStub, connectedDbStub, disconnectDbStub;
+
+            beforeEach(() => {
+
+                connectDbStub = sinon.stub(app.db, "connect", function* () {});
+                canUseDbStub = sinon.stub(app, "canUseDb");
+                connectedDbStub = sinon.stub(app.db, "connected");
+                disconnectDbStub = sinon.stub(app.db, "disconnect", function* () {});
+
+            });
+
+            afterEach(() => {
+
+                connectDbStub.restore();
+                canUseDbStub.restore();
+                connectedDbStub.restore();
+                disconnectDbStub.restore();
+
+            });
+
+            it("Should connect DB", async(function* () {
+
+                canUseDbStub.returns(true);
+
+                yield* app.connectDB();
+
+                assert.isTrue(connectDbStub.calledOnce);
+
+            }));
+
+            it("Shouldn't connect DB if connect isn't allowed", async(function* () {
+
+                canUseDbStub.returns(false);
+
+                yield* app.connectDB();
+
+                assert.isFalse(connectDbStub.called);
+
+            }));
+
+            it("Should disconnect DB if it's allowed to use it and it's connected", async(function* () {
+
+                canUseDbStub.returns(true);
+                connectedDbStub.returns(true);
+
+                yield* app.disconnectDB();
+
+                assert.isTrue(disconnectDbStub.calledOnce);
 
             }));
 

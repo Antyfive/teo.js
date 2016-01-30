@@ -132,14 +132,14 @@ class App extends Base {
     // ---- ----
 
     * start() {
-        yield* this._runExtensions();
+        yield* this.runExtensions();
         yield* this.connectDB();
 
         yield* this.initServer();
 
         let args = [this, Client.routes];
 
-        if (this._canUseDb()) {
+        if (this.canUseDb()) {
             args.push(this.db.getOrm().getAdapter().addCollection.bind(this.db.getOrm().getAdapter()));
         }
         // TODO: mount this.runAppFiles(); this.runModules();
@@ -181,22 +181,32 @@ class App extends Base {
         }.bind(this);
     }
 
+    /**
+     * Server request dispatcher getter
+     * @returns {Function}
+     */
     getDispatcher() {
-        return this._createContext();
-    }
-
-    _createContext() {
         return (req, res) => {
-            let client = Client.Factory({
-                req: req,
-                res: res,
-                config: this.config
-            });
+            let client = this.createClientContext(req, res);
             this._middleware.run(this.respond, client).catch((error) => {
                 logger.error(error);
                 client.res.send(500);
             });
         };
+    }
+
+    /**
+     * Creates client context for dispatching of the request
+     * @param {Object} req :: Request
+     * @param {Object} res :: Response
+     * @returns {Function}
+     */
+    createClientContext(req, res) {
+        return Client.Factory({
+            req: req,
+            res: res,
+            config: this.config
+        });
     }
 
     * respond(next) {
@@ -206,12 +216,12 @@ class App extends Base {
 
     // ---- ----
 
-    _canUseDb() {
+    canUseDb() {
         return (this.config.get("db").enabled === true) && this.db;
     }
 
     * connectDB() {
-        if (!this._canUseDb()) {
+        if (!this.canUseDb()) {
             return;
         }
 
@@ -219,7 +229,7 @@ class App extends Base {
     }
 
     * disconnectDB() {
-        if (this._canUseDb() && this.db.connected()) {
+        if (this.canUseDb() && this.db.connected()) {
             yield* this.db.disconnect();
         }
     }
@@ -228,7 +238,7 @@ class App extends Base {
         this.extensions = new Extensions(this.config);
     }
 
-    * _runExtensions() {
+    * runExtensions() {
         let context = this;
         yield* this.extensions.runAll(context);
     }
