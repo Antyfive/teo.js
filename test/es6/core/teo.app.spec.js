@@ -17,7 +17,8 @@ const
     fs = require("fs"),
     path = require("path"),
     // generator test case
-    async = generator => done => co(generator).then(done, done);
+    async = generator => done => co(generator).then(done, done),
+    http = require("http");
 
 describe("Testing Teo App", () => {
 
@@ -307,12 +308,20 @@ describe("Testing Teo App", () => {
 
         describe("Start Stop", () => {
 
-            let runExtensionsStub, connectDBStub;
+            let runExtensionsStub, connectDBStub, createServerSpy, listenStub, closeStub, getDispatcherSpy;
 
             beforeEach(() => {
 
                 runExtensionsStub = sinon.stub(app, "_runExtensions", function* () {});
                 connectDBStub = sinon.stub(app, "connectDB", function* () {});
+                createServerSpy = sinon.spy(http, "createServer");
+                listenStub = sinon.stub(http.Server.prototype, "listen", (port, host, callback) => {
+                    callback();
+                });
+                closeStub = sinon.stub(http.Server.prototype, "close", (callback) => {
+                    callback();
+                });
+                getDispatcherSpy = sinon.spy(app, "getDispatcher");
 
             });
 
@@ -320,6 +329,10 @@ describe("Testing Teo App", () => {
 
                 runExtensionsStub.restore();
                 connectDBStub.restore();
+                createServerSpy.restore();
+                listenStub.restore();
+                closeStub.restore();
+                getDispatcherSpy.restore();
 
             });
 
@@ -365,6 +378,33 @@ describe("Testing Teo App", () => {
                 closeServerStub.restore();
                 disconnectDBStub.restore();
                 startStub.restore();
+
+            }));
+
+            it("Should init server", async(function* () {
+
+                yield* app.initServer();
+
+                assert.isTrue(createServerSpy.calledOnce);
+                assert.isTrue(getDispatcherSpy.calledOnce, "Dispatcher getter should be called");
+
+
+                assert.equal(listenStub.args[0][0], "3100", "Post should be correct");
+                assert.equal(listenStub.args[0][1], "localhost", "Host should be correct");
+                assert.isFunction(listenStub.args[0][2], "Callback for yieldable function should be passed");
+
+            }));
+
+            it("Should close listening server", async(function* () {
+
+                yield* app.initServer();
+
+                assert.isFalse(closeStub.called, "Close method should not be closed");
+
+                yield* app.closeServer();
+
+                assert.isTrue(closeStub.calledOnce);
+
 
             }));
 
