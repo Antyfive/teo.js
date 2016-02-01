@@ -19,7 +19,7 @@ class ReqContext extends Base {
         this.req.parsedUrl = this.parsedUrl = url.parse(this.req.url, true); // parse query string as well (second argument)
         this.req.pathname = this.pathname = this.parsedUrl.pathname;
         this.req.contentType = this.contentType = this.req.headers["content-type"];
-        this.req.query = this.parsedUrl.query;
+        this.req.query = this.query = this.parsedUrl.query;
 
         this.parseBody();
     }
@@ -36,8 +36,8 @@ class ReqContext extends Base {
             this.endListener = this.onEnd.bind(this);
             this.dataListener = this.onData.bind(this);
             this.req
-                .on("end", this.endListener)
-                .on("data", this.dataListener);
+                .on("data", this.dataListener)
+                .on("end", this.endListener);
         }
     }
 
