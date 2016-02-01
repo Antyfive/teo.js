@@ -84,6 +84,8 @@ describe("Testing Teo.JS Client Context Mixins", () => {
         assert.isTrue(self.res.send.calledOnce);
         assert.equal(self.res.send.args[0][0], 500, "Should end response with 500 error");
 
+        loggerErrorSpy.restore();
+
     }));
 
 });

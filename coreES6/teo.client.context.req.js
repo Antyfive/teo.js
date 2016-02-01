@@ -54,11 +54,10 @@ class ReqContext extends Base {
 
         try {
             if (bodyChunks.length > 0) {
-                this.req.body = (this.contentType === "application/json") ? JSON.parse(bodyChunks) : querystring.parse(bodyChunks);
+                this.req.body = (this.contentType && this.contentType.startsWith("application/json")) ? JSON.parse(bodyChunks) : querystring.parse(bodyChunks);
             }
         } catch(e) {
             logger.error(e);
-            //this.emit("error", e);
         }
 
         this.cleanup();

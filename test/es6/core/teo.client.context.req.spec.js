@@ -9,11 +9,12 @@
 /* global define, describe, beforeEach, afterEach, it, assert, sinon, teoBase, teoLibDir  */
 
 const http = require("http"),
-    ReqContext = require(teoBase + "/teo.client.context.req");
+    ReqContext = require(teoBase + "/teo.client.context.req"),
+    querystring = require("querystring");
 
 describe("Testing teo.client.context.req", () => {
 
-    let server, req, res, reqContext, parseBodySpy, parseFormSpy, reqOnSpy;
+    let server, req, res, reqContext, parseBodySpy, parseFormSpy, reqOnSpy, jsonParseStub, querystringParseStub;
 
     beforeEach(async(function* () {
 
@@ -28,6 +29,9 @@ describe("Testing teo.client.context.req", () => {
 
         parseBodySpy = sinon.spy(ReqContext.prototype, "parseBody");
         parseFormSpy = sinon.spy(ReqContext.prototype, "parseForm");
+
+        jsonParseStub = sinon.stub(JSON, "parse");
+        querystringParseStub = sinon.stub(querystring, "parse");
 
         yield function(callback) {
             server.once("listening", () => {
@@ -52,6 +56,9 @@ describe("Testing teo.client.context.req", () => {
         yield function(callback) {
             server.close(callback);
         };
+
+        jsonParseStub.restore();
+        querystringParseStub.restore();
 
     }));
 
@@ -109,6 +116,66 @@ describe("Testing teo.client.context.req", () => {
         assert.equal(reqOnSpy.args[1][0], "end", "Event name should be correct");
         assert.isFunction(reqOnSpy.args[1][1], "Event handler should be passed");
 
+
+    });
+
+    it("Should add chunk on data event", () => {
+
+        assert.equal(reqContext.chunks.length, 0);
+
+        req.emit("data", 1);
+
+        assert.equal(reqContext.chunks.length, 1);
+
+    });
+
+    it("Should handle request end event and parse json body", () => {
+
+        jsonParseStub.returns({test: true});
+
+        reqContext.contentType = "application/json";
+
+        reqContext.chunks.push(new Buffer(1));
+
+        req.emit("end");
+
+        assert.isTrue(jsonParseStub.calledOnce);
+        assert.deepEqual(req.body, {test: true});
+
+    });
+
+    it("Should try to parse query string of it's not json", () => {
+
+        querystringParseStub.returns({test: true});
+
+        reqContext.chunks.push(new Buffer(1));
+
+        reqContext.contentType = "myType";
+
+        req.emit("end");
+
+        assert.isTrue(querystringParseStub.calledOnce);
+        assert.deepEqual(req.body, {test: true});
+
+    });
+
+    it("Should remove listeners on request end", () => {
+
+        let cleanupSpy = sinon.spy(reqContext, "cleanup");
+
+        req.emit("end");
+
+        assert.isTrue(cleanupSpy.calledOnce);
+
+        cleanupSpy.restore();
+
+    });
+
+    it("Should set req params", () => {
+
+        reqContext.params = "123";
+
+        assert.equal(req.params, "123");
 
     });
 
