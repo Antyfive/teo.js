@@ -60,7 +60,8 @@ class TeoRes extends Base {
             code = 200, body;
 
         let extension = _.getExtension(this.pathname);
-        let contentType = mime.lookup(args[2] || extension || this.req.headers.accept || "octet");
+
+        let contentType = mime.lookup(args[2] || extension || (this.req.headers.accept && this.req.headers.accept.match(/text\/html/) ? "text/html" : this.req.headers.accept) || "octet");
         let writeHeadObj = {};
 
         if (args.length === 1) {    // send just code or just body without a code

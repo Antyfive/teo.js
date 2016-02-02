@@ -230,6 +230,23 @@ describe("Testing teo.client.context.res", () => {
 
             });
 
+            it("Should set HTML MIME type based on req.headers.accept recieved from browser", () => {
+
+                req.headers.accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
+
+                res.send();
+
+                assert.isTrue(resEndStub.calledOnce);
+                assert.deepEqual(resEndStub.args[0], ["OK"], "Response body should be correct");
+
+                assert.isTrue(writeHeadStub.calledOnce);
+                assert.deepEqual(writeHeadStub.args[0], [200, {
+                    "Content-Length": 2,
+                    "Content-Type": "text/html; charset=UTF-8"
+                }]);
+
+            });
+
             it("Should send json if response body is object", () => {
 
                 res.send({test: true});
