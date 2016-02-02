@@ -8,9 +8,10 @@
 "use strict";
 
 const http = require("http"),
-    ResContext = require(teoBase + "/teo.client.context.res");
+    ResContext = require(teoBase + "/teo.client.context.res"),
+    Stream = require("stream");
 
-describe.only("Testing teo.client.context.res", () => {
+describe("Testing teo.client.context.res", () => {
 
     let server, req, res, resContext;
 
@@ -107,7 +108,7 @@ describe.only("Testing teo.client.context.res", () => {
             assert.isTrue(writeHeadStub.calledOnce);
             assert.deepEqual(writeHeadStub.args[0], [200, {
                 "Content-Length": 2,
-                "Content-Type": "text/html; charset=UTF-8"
+                "Content-Type": "application/octet-stream; charset=UTF-8"
             }]);
 
         });
@@ -122,7 +123,7 @@ describe.only("Testing teo.client.context.res", () => {
             assert.isTrue(writeHeadStub.calledOnce);
             assert.deepEqual(writeHeadStub.args[0], [200, {
                 "Content-Length": 7,
-                "Content-Type": "text/html; charset=UTF-8"
+                "Content-Type": "application/octet-stream; charset=UTF-8"
             }]);
 
         });
@@ -139,7 +140,7 @@ describe.only("Testing teo.client.context.res", () => {
             assert.isTrue(writeHeadStub.calledOnce);
             assert.deepEqual(writeHeadStub.args[0], [200, {
                 "Content-Length": 4,
-                "Content-Type": "text/html; charset=UTF-8"
+                "Content-Type": "application/octet-stream; charset=UTF-8"
             }]);
 
         });
@@ -156,7 +157,7 @@ describe.only("Testing teo.client.context.res", () => {
                 assert.isTrue(writeHeadStub.calledOnce);
                 assert.deepEqual(writeHeadStub.args[0], [500, {
                     "Content-Length": 7,
-                    "Content-Type": "text/html; charset=UTF-8"
+                    "Content-Type": "application/octet-stream; charset=UTF-8"
                 }]);
 
             });
@@ -171,7 +172,7 @@ describe.only("Testing teo.client.context.res", () => {
                 assert.isTrue(writeHeadStub.calledOnce);
                 assert.deepEqual(writeHeadStub.args[0], [200, {
                     "Content-Length": 7,
-                    "Content-Type": "text/html; charset=UTF-8"
+                    "Content-Type": "application/octet-stream; charset=UTF-8"
                 }]);
 
             });
@@ -246,6 +247,38 @@ describe.only("Testing teo.client.context.res", () => {
                 }]);
 
             });
+
+        });
+
+        it("Should pipe response if body is a stream", () => {
+
+            let stream = new Stream();
+
+            let pipeSpy = sinon.stub(Stream.prototype, "pipe");
+
+            resContext.send(stream);
+
+            assert.isTrue(pipeSpy.calledOnce);
+
+            pipeSpy.restore();
+
+        });
+
+        it("Shouldn't send body for HEAD req method", () => {
+
+            req.method = "HEAD";
+
+            resContext.send("body");
+
+            assert.isTrue(resEndStub.calledOnce);
+            assert.isUndefined(resEndStub.args[0][0], "Response body format should be empty");
+
+            assert.isTrue(writeHeadStub.calledOnce);
+            assert.deepEqual(writeHeadStub.args[0], [200, {
+                "Content-Length": 4,
+                "Content-Type": "application/octet-stream; charset=UTF-8"
+            }]);
+
 
         });
 

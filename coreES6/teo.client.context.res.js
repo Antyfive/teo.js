@@ -10,6 +10,7 @@ const
     _ = require("lodash"),
     http = require("http"),
     mime = require("mime"),
+    Stream = require("stream"),
     Base = require("./teo.base");
 
 // ---- mime types additional settings
@@ -59,7 +60,7 @@ class TeoRes extends Base {
             code = 200, body;
 
         let extension = _.getExtension(this.pathname);
-        let contentType = mime.lookup(args[2] || extension || this.req.headers.accept || "html");
+        let contentType = mime.lookup(args[2] || extension || this.req.headers.accept || "octet");
         let writeHeadObj = {};
 
         if (args.length === 1) {    // send just code or just body without a code
@@ -84,6 +85,11 @@ class TeoRes extends Base {
 
         TeoRes.setContentTypeHeader(writeHeadObj, contentType);
 
+        if (body instanceof Stream) {
+            body.pipe(this.res);
+            return;
+        }
+
         let sendJson = (contentType.match(/json/) || (_.isObject(body) && !Buffer.isBuffer(body)));
 
         if (sendJson === true) {
@@ -99,9 +105,16 @@ class TeoRes extends Base {
             (_.isString(body) || Buffer.isBuffer(body) ? body : http.STATUS_CODES[code]);
 
         if (_.isString(response) && !writeHeadObj["Content-Length"]) {
-            writeHeadObj["Content-Length"] = new Buffer(response, "utf8").length;
+            writeHeadObj["Content-Length"] = Buffer.byteLength(response);
         }
+
         this.res.writeHead(code, writeHeadObj);
+
+        if (this.req.method === "HEAD") {
+            this.res.end();
+            return;
+        }
+
         this.res.end(response);
     }
 
