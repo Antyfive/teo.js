@@ -8,10 +8,10 @@
 ![dependencies](https://img.shields.io/david/Antyfive/teo.js.svg)
 ![dev dependencies](https://img.shields.io/david/dev/Antyfive/teo.js.svg)
 
+[![NPM](https://nodei.co/npm/teo.js.png?compact=true)](https://nodei.co/npm/teo.js/)
+
 [![npm](https://img.shields.io/npm/v/npm.svg)](https://github.com/Antyfive/teo.js)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/Antyfive/teo.js/master/LICENSE)
-
-[![NPM](https://nodei.co/npm/teo.js.png?compact=true)](https://nodei.co/npm/teo.js/)
 
 **Teo.JS** is a next generation web framework, built using new **ECMAScript 2015 (ES6)**. 
 [Wiki](https://github.com/Antyfive/teo.js/wiki).
