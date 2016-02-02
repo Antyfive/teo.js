@@ -179,4 +179,20 @@ describe("Testing teo.client.context.req", () => {
 
     });
 
+    it("Should log an error if body parsing threw an error", () => {
+
+        let loggerErrorStub = sinon.spy(logger, "error");
+
+        reqContext.chunks.push(new Buffer(1));
+
+        querystringParseStub.throws("Test error");
+
+        req.emit("end");
+
+        assert.isTrue(loggerErrorStub.calledOnce);
+
+        loggerErrorStub.restore();
+
+    });
+
 });
