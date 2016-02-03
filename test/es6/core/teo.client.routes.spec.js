@@ -103,7 +103,7 @@ describe("Testing Teo Client Routes", () => {
 
     });
 
-    it("Should add route with namespace", () => {
+    it("Should add GET route with namespace", () => {
 
         let getTypeSpy = sinon.spy(routes, "get");
 
@@ -120,6 +120,104 @@ describe("Testing Teo Client Routes", () => {
         assert.equal(matchedRoute.route, "/users/:id", "Should find correct route");
 
         getTypeSpy.restore();
+
+    });
+
+    it("Should add POST route with namespace", () => {
+
+        let postTypeSpy = sinon.spy(routes, "post");
+
+        routes.ns("/users")
+            .post("/:id", function* () {});
+
+
+        assert.isTrue(postTypeSpy.calledOnce);
+        assert.equal(postTypeSpy.args[0][0], "/users/:id", "Route should be correct");
+
+        let matchedRoute = routes.matchRoute("post", "/users/1");
+
+        assert.equal(matchedRoute.params.id, "1", "Should have params parsed from route");
+        assert.equal(matchedRoute.route, "/users/:id", "Should find correct route");
+
+        postTypeSpy.restore();
+
+    });
+
+    it("Should add PUT route with namespace", () => {
+
+        let putTypeSpy = sinon.spy(routes, "put");
+
+        routes.ns("/users")
+            .put("/:id", function* () {});
+
+
+        assert.isTrue(putTypeSpy.calledOnce);
+        assert.equal(putTypeSpy.args[0][0], "/users/:id", "Route should be correct");
+
+        let matchedRoute = routes.matchRoute("put", "/users/1");
+
+        assert.equal(matchedRoute.params.id, "1", "Should have params parsed from route");
+        assert.equal(matchedRoute.route, "/users/:id", "Should find correct route");
+
+        putTypeSpy.restore();
+
+    });
+
+    it("Should add PATCH route with namespace", () => {
+
+        let patchTypeSpy = sinon.spy(routes, "patch");
+
+        routes.ns("/users")
+            .patch("/:id", function* () {});
+
+
+        assert.isTrue(patchTypeSpy.calledOnce);
+        assert.equal(patchTypeSpy.args[0][0], "/users/:id", "Route should be correct");
+
+        let matchedRoute = routes.matchRoute("patch", "/users/1");
+
+        assert.equal(matchedRoute.params.id, "1", "Should have params parsed from route");
+        assert.equal(matchedRoute.route, "/users/:id", "Should find correct route");
+
+        patchTypeSpy.restore();
+
+    });
+
+    it("Should add DELETE route with namespace", () => {
+
+        let deleteTypeSpy = sinon.spy(routes, "delete");
+
+        routes.ns("/users")
+            .delete("/:id", function* () {});
+
+
+        assert.isTrue(deleteTypeSpy.calledOnce);
+        assert.equal(deleteTypeSpy.args[0][0], "/users/:id", "Route should be correct");
+
+        let matchedRoute = routes.matchRoute("delete", "/users/1");
+
+        assert.equal(matchedRoute.params.id, "1", "Should have params parsed from route");
+        assert.equal(matchedRoute.route, "/users/:id", "Should find correct route");
+
+        deleteTypeSpy.restore();
+
+    });
+
+    it("Shouldn't add the same route second time", () => {
+
+        let route1 = routes.get("/test/:id", function route() {});
+        let route2 = routes.get("/test/:id", () => {});
+
+        assert.isObject(route1);
+        assert.isUndefined(route2);
+
+    });
+
+    it("Shouldn't match route if method is not registered", () => {
+
+        let route = routes.matchRoute("customMethod");
+
+        assert.isFalse(route);
 
     });
 

@@ -32,10 +32,11 @@ class Routes extends Base {
      * @param {Function} handler
      */
     addRoute(type, route, handler) { // /get/:id
-        var routes = this.routes[type.toLowerCase()];
+        let routes = this.routes[type.toLowerCase()];
 
-        if (routes === undefined || routes.hasOwnProperty(route))
+        if (routes === undefined || routes.hasOwnProperty(route)) {
             return;
+        }
 
         routes[route] = {
             "match": pathToRegexp(route),
@@ -47,20 +48,21 @@ class Routes extends Base {
 
     /**
      * Matcher of the route
-     * @param {String} type
+     * @param {String} method :: request method
      * @param {String} path
      * @returns {*}
      */
-    matchRoute(type, path) {
-        var type = this.getRoutes()[type.toLowerCase()];
+    matchRoute(method, path) {
+        let routes = this.getRoutes()[method.toLowerCase()];
 
-        if (type === undefined)
+        if (!routes) {
             return false;
+        }
 
-        for (var r in type) {
-            var match = type[r].match(path);
+        for (let r in routes) {
+            let match = routes[r].match(path);
             if (match) {
-                return {params: match, handler: type[r].handler, route: r, path: path};
+                return {params: match, handler: routes[r].handler, route: r, path: path};
             }
         }
     }
