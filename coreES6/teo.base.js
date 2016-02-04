@@ -1,5 +1,5 @@
 /*!
- * Base class for Teo.js
+ * Base class for Teo.JS
  * @author Andrew Teologov <teologov.and@gmail.com>
  * @date 17/6/14
  */

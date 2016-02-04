@@ -1,5 +1,5 @@
 /*!
- * Teo.js entry point
+ * Teo.JS entry point
  * @author Andrew Teologov <teologov.and@gmail.com>
  * @date 6/14/15
  */

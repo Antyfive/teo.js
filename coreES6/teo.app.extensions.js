@@ -1,5 +1,5 @@
 /*!
- * Teo.js modules system.
+ * Teo.JS modules system.
  * It can be used to extend existing functionality
  * @author Andrew Teologov <teologov.and@gmail.com>
  * @date 7/2/15

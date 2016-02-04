@@ -1,5 +1,5 @@
 /*!
- * Teo.js core
+ * Teo.JS core
  * @author Andrew Teologov <teologov.and@gmail.com>
  * @date {24.05.15}
  */
@@ -64,7 +64,7 @@ class Core extends Base {
             logger.error(err);
         }
         if (options.exit) {
-            logger.info("Closing Teo.js");
+            logger.info("Closing Teo.JS");
             process.exit(err ? 1 : 0);
         }
     }

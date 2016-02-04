@@ -1,5 +1,5 @@
 /*!
- * Teo.js ORM implementation
+ * Teo.JS ORM implementation
  * @author Andrew Teologov <teologov.and@gmail.com>
  * @date 7/5/15
  */

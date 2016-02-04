@@ -1,5 +1,5 @@
 /*!
- * Teo.js framework
+ * Teo.JS utils
  * @author Andrew Teologov <teologov.and@gmail.com>
  * @date {24.05.15}
  */

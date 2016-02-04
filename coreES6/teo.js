@@ -1,5 +1,5 @@
 /*!
- * Teo.js framework
+ * Teo.JS framework
  * @author Andrew Teologov <teologov.and@gmail.com>
  * @date {22.05.15}
  */
@@ -13,7 +13,7 @@ const
 
 // ----
 global.version = require("../package.json").version;
-global.copyright = "Powered by Teo.js";
+global.copyright = "Powered by Teo.JS";
 global.logger = require("./teo.logger");
 
 class Teo extends Base {
