@@ -9,7 +9,7 @@
 const
     fs = require("fs"),
     path = require("path"),
-    Base = require("./teo.base"),
+    Base = require("teo-base"),
     _ = require("./teo.utils"),
     mountModule = require("../lib/moduleMounter"),
     mountModuleRouter = require("../lib/routerMounter"),

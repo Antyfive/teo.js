@@ -11,7 +11,7 @@ const
     http = require("http"),
     mime = require("mime"),
     Stream = require("stream"),
-    Base = require("./teo.base");
+    Base = require("teo-base");
 
 // ---- mime types additional settings
 mime.default_type = "application/octet-stream";

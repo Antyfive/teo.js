@@ -11,7 +11,7 @@ const
     path = require("path"),
     http = require("http"),
     co = require("co"),
-    Base = require("./teo.base"),
+    Base = require("teo-base"),
     _ = require("./teo.utils"),
     Client = require("./teo.client"),
     Middleware = require("./teo.middleware"),

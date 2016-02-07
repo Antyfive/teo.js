@@ -7,7 +7,7 @@
 "use strict";
 
 const
-    Base = require("../teo.base"),
+    Base = require("teo-base"),
     _ = require("../teo.utils");
 
 module.exports = class TeoDB extends Base {

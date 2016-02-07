@@ -8,7 +8,7 @@
 
 const
     _ = require("lodash"),
-    Base = require("./teo.base"),
+    Base = require("teo-base"),
     ResContext = require("./teo.client.context.res"),
     ReqContext = require("./teo.client.context.req"),
     clientContextMixins = require("./teo.client.context.mixins");

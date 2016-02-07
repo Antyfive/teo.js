@@ -8,7 +8,7 @@
 "use strict";
 
 const
-    Base = require("./teo.base"),
+    Base = require("teo-base"),
     _ = require("./teo.utils"),
     Path = require("path");
 

@@ -14,7 +14,7 @@ const
     path = require("path"),
     cluster = require("cluster"),
     _ = require("./teo.utils"),
-    Base = require("./teo.base"),
+    Base = require("teo-base"),
     App = require("./teo.app");
 
 class Core extends Base {

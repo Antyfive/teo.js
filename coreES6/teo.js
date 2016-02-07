@@ -7,7 +7,7 @@
 
 const
     _ = require("./teo.utils"),
-    Base = require("./teo.base"),
+    Base = require("teo-base"),
     Cluster = require("./teo.cluster"),
     Core = require("./teo.core");
 

@@ -8,7 +8,7 @@
 
 const
     _ = require("../../teo.utils"),
-    Base = require("../../teo.base");
+    Base = require("teo-base");
 
 module.exports = class WaterlineAdapter extends Base {
     constructor(config) {

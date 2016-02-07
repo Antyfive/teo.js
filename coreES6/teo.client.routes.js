@@ -7,7 +7,7 @@
 "use strict";
 
 const
-    Base = require("./teo.base"),
+    Base = require("teo-base"),
     pathToRegexp = require("path-to-regexp-wrap")({end: true}),
     _ = require("./teo.utils"),
     path = require("path");
