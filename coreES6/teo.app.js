@@ -16,7 +16,7 @@ const
     Client = require("./teo.client"),
     Middleware = require("./teo.middleware"),
     Extensions = require("./teo.app.extensions"),
-    Db = require("./db/teo.db"),
+    Db = require("teo-db"),
     Modules = require("./teo.modules"),
     configLib = require("../lib/config");
 
@@ -139,7 +139,7 @@ class App extends Base {
 
         let args = [this, Client.routes];
 
-        if (this.canUseDb()) {
+        if (this.canUseDb()) {  // TODO: refactor db usage
             args.push(this.db.getOrm().getAdapter().addCollection.bind(this.db.getOrm().getAdapter()));
         }
         // TODO: mount this.runAppFiles(); this.runModules();

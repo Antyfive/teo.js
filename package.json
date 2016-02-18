@@ -67,11 +67,9 @@
     "mkdirp": "^0.5.1",
     "moment": "^2.9.0",
     "path-to-regexp-wrap": "*",
-    "sails-disk": "^0.10.8",
-    "sails-mysql": "^0.10.12",
     "teo-base": "^1.0.0",
-    "throttle": "^1.0.3",
-    "waterline": "^0.10.24"
+    "teo-db": "^1.0.3",
+    "throttle": "^1.0.3"
   },
   "devDependencies": {
     "chai": "^3.0.0",
