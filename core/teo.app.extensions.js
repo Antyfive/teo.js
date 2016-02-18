@@ -82,7 +82,7 @@ exports = module.exports = Base.extend({
             _extension = require(path);
         } catch(e) {
             logger.error(e);
-            throw new Error(e.message);
+            throw e;
         }
 
         return _extension;

@@ -95,7 +95,7 @@ class App extends Base {
             return require(filePath);
         } catch(e) {
             logger.error(e);
-            throw new Error(e);
+            throw e;
         }
     }
 

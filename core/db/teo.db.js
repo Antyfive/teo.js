@@ -17,7 +17,7 @@ module.exports = Base.extend({
                 this._createOrm();
             } catch(e) {
                 logger.error(e);
-                throw new Error(e.message);
+                throw e;
             }
         }
     },

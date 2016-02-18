@@ -25,7 +25,7 @@ class Teo extends Base {
         _.async(this.createCore.bind(this))
             .catch(err => {
                 logger.error(err.message, err.stack);
-                throw new Error(err.message);
+                throw err;
             })
             .then(() => {
                 _.isGenerator(this.callback) ?

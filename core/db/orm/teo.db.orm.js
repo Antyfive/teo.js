@@ -21,7 +21,7 @@ exports = module.exports = Base.extend({
             this.createAdapter();
         } catch(e) {
             logger.error(e);
-            throw new Error(e.message);
+            throw e;
         }
     },
 
@@ -92,7 +92,7 @@ exports = module.exports = Base.extend({
         this.getAdapter().connect(function(err, models) {
             if (err) {
                 logger.error(err);
-                throw new Error(err.message);
+                throw err;
             }
             else {
                 this._collections = models.collections;
