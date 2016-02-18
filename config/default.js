@@ -15,25 +15,16 @@ module.exports = {
     cluster: {
         enabled: false
     },
-    db: {
+    db: {   // example of db config
         enabled: false,
-        // as default adapter. it should check "./appName/db/adapters", if not found in framework
-        // all adapters should be placed into separate modules, when plugin (extension system) will be presented
-        // basic algorithm should work before extension system will be finished
-        ormName: "waterline",
-        // teo.js orm adapter
-        adapterName: "teo.db.adapter.waterline",
-        // Build adapter config
         adapterConfig: {
-            // each teo.js ORM can have each own adapters related to the particular third party ORM
+            /*adapterPrefix: "teo.db.adapter.",
+            adapterName: "waterline",
             adapters: {
-                // adapters should be installed as packages via npm
                 "default": "sails-disk",
                 disk: "sails-disk",
                 mysql: "sails-mysql"
             },
-            // Connections Config
-            // Setup connections using the named adapter configs
             connections: {
                 myLocalDisk: {
                     adapter: "disk"
@@ -43,7 +34,7 @@ module.exports = {
                     host: "localhost",
                     database: "foobar"
                 }
-            }
+            }*/
         }
     },
     templateSettings: {
