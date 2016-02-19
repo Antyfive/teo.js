@@ -6,7 +6,7 @@ global.expect = global.chai.expect;
 global.assert = global.chai.assert;
 global.supertest = require("supertest");
 global.co = require("co");
-global.teoBase = "../../../coreES6";
+global.teoBase = "../../../core";
 global.teoLibDir = "../../../lib";
 global.async = generator => done => co(generator).then(done, done);
 

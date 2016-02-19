@@ -93,5 +93,5 @@
   "engines": {
     "node": ">= 4"
   },
-  "main": "./coreES6/index"
+  "main": "./core/index"
 }
