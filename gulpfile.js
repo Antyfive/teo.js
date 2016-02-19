@@ -34,13 +34,13 @@ gulp.on("err", (gulpErr) => {
 // test tasks ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 gulp.task("test", requireTask('./tasks/test', {
-    src: "test/es6/**/*.spec.js",
+    src: "test/specs/**/*.spec.js",
     reporter: "spec",
-    require: ["./test/es6/common.js"]
+    require: ["./test/specs/common.js"]
 }));
 
 gulp.task("test:watch", requireTask("./tasks/testWatch", {
-    src: "test/es6/**/*.spec.js"
+    src: "test/specs/**/*.spec.js"
 }));
 
 gulp.task("test-cov", requireTask("./tasks/testCov"));
