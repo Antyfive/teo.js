@@ -99,20 +99,23 @@ module.exports = class Modules extends Base {
      */
     runMountedModules(handlerContext, router, modelRegister) {
         this.mountedModules.forEach((moduleRouteHandler, moduleName) => {
-            // TODO: handle errors on mount
-            // we need to add middleware somewhere, which will set templateDir for each module
-            moduleRouteHandler.call(
-                this,
-                handlerContext,
-                // router mounter. Wraps router methods with namespace (/moduleName/) and some middleware
-                mountModuleRouter.call(handlerContext,
-                    router,
-                    moduleName,
-                    // replace "someModuleName" namespace with "" if it's an index
-                    (this.config.get("indexPageModuleName") === moduleName) ? "" : undefined
-                ),
-                modelRegister
-            );
+            try {
+                moduleRouteHandler.call(
+                    this,
+                    handlerContext,
+                    // router mounter. Wraps router methods with namespace (/moduleName/) and some middleware
+                    mountModuleRouter.call(handlerContext,
+                        router,
+                        moduleName,
+                        // replace "someModuleName" namespace with "" if it's an index
+                        (this.config.get("indexPageModuleName") === moduleName) ? "" : undefined
+                    ),
+                    modelRegister
+                );
+            } catch(e) {
+                logger.error(e);
+                throw e;
+            }
         });
     }
 
