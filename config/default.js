@@ -15,17 +15,20 @@ module.exports = {
     cluster: {
         enabled: false
     },
-    db: {   // example of db config
+    db: {
         enabled: false,
         adapterConfig: {
-            /*adapterPrefix: "teo.db.adapter.",
-            adapterName: "waterline",
-            adapters: {
-                "default": "sails-disk",
-                disk: "sails-disk",
-                mysql: "sails-mysql"
-            },
-            connections: {
+            // example of the config for local adapter file
+            //adapterName: "teo.db.adapter.waterline",
+            //adapterPath: "/absolute/path/to/adapter/directory",
+            //adapterPrefix: "teo.db.adapter.",
+            //adapterModule: "teo-db-adapter-waterline",
+            /*waterlineAdapters: {
+                "default": require("sails-disk"),
+                disk: require("sails-disk")
+                //mysql: "sails-mysql"
+            },*/
+            /*connections: {
                 myLocalDisk: {
                     adapter: "disk"
                 },

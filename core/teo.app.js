@@ -133,17 +133,18 @@ class App extends Base {
 
     * start() {
         yield* this.runExtensions();
-        yield* this.connectDB();
 
         yield* this.initServer();
 
-        let args = [this, Client.routes];
+        // initial arguments for module mounter lib
+        let args = [this, Client.routes];   // default calling arguments (are passed into module router)
 
-        if (this.canUseDb()) {  // TODO: refactor db usage
-            args.push(this.db.getOrm().getAdapter().addCollection.bind(this.db.getOrm().getAdapter()));
+        if (this.canUseDb()) {
+            args.push(this.db.instance.addModel.bind(this.db.instance));
         }
-        // TODO: mount this.runAppFiles(); this.runModules();
-        this._modules.runMountedModules.apply(this._modules, args);   // TODO: run models
+        this._modules.runMountedModules.apply(this._modules, args);
+        // connect database when all modules are mounted, and models were collected
+        yield* this.connectDB();
     }
 
     * stop() {
@@ -226,11 +227,13 @@ class App extends Base {
         }
 
         yield* this.db.connect();
+        logger.success("Database connection is opened.");
     }
 
     * disconnectDB() {
-        if (this.canUseDb() && this.db.connected()) {
+        if (this.canUseDb() && this.db.isConnected()) {
             yield* this.db.disconnect();
+            logger.success("Database connection is closed.");
         }
     }
 
@@ -262,6 +265,20 @@ class App extends Base {
 
     get name() {    // TODO: rename to appName
         return this.config.get("name");
+    }
+
+    /**
+     * This getter returns arguments, with which module will be mounted (indes.js, router.js will receive this set of arguments)
+     * @returns {Array}
+     */
+    getRouterMountingArguments() {
+        let args = [Client.routes];   // default calling arguments (are passed into module router)
+
+        if (this.canUseDb()) {  // TODO: push db instance reference
+            args.push(this.db.instance);
+        }
+
+        return args;
     }
 }
 

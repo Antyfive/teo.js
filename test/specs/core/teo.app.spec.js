@@ -426,6 +426,56 @@ describe("Testing Teo App", () => {
 
             }));
 
+            describe("Module mounter arguments getter", () => {
+
+                let canUseDbStub;
+
+                beforeEach(() => {
+
+                    canUseDbStub = sinon.stub(app, "canUseDb");
+
+                    app.db = {
+                        instance: "test"
+                    };
+
+                });
+
+                afterEach(() => {
+
+                    canUseDbStub.restore();
+                    app.db = null;
+
+                });
+
+                it("Should return arguments for module mounter with db enabled", () => {
+
+                    canUseDbStub.returns(true);
+
+                    let args = app.getRouterMountingArguments();
+
+                    assert.isArray(args, "Arguments array should be returned");
+                    assert.equal(args.length, 2, "Should be two arguments in the array");
+
+                    assert.equal(args[0], Client.routes, "Clients.routes API should be the first argument");
+                    assert.equal(args[1], "test", "app.db.instance object should be the second argument");
+
+                });
+
+                it("Should return arguments for module mounter wihtout db enabled", () => {
+
+                    canUseDbStub.returns(false);
+
+                    let args = app.getRouterMountingArguments();
+
+                    assert.isArray(args, "Arguments array should be returned");
+                    assert.equal(args.length, 1, "Should be only one argument in the array");
+
+                    assert.equal(args[0], Client.routes, "Clients.routes API should be the first argument");
+
+                });
+
+            });
+
         });
 
         describe("Initial Req Dispatch", () => {
