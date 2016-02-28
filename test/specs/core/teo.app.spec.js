@@ -447,30 +447,30 @@ describe("Testing Teo App", () => {
 
                 });
 
-                it("Should return arguments for module mounter with db enabled", () => {
+                it("Should return mixed arguments for module mounter with db instance", () => {
 
                     canUseDbStub.returns(true);
 
-                    let args = app.getRouterMountingArguments();
+                    let args = app.mixinModuleMounterContextArguments("my router");
 
                     assert.isArray(args, "Arguments array should be returned");
                     assert.equal(args.length, 2, "Should be two arguments in the array");
 
-                    assert.equal(args[0], Client.routes, "Clients.routes API should be the first argument");
+                    assert.equal(args[0], "my router", "Clients.routes API should be the first argument");
                     assert.equal(args[1], "test", "app.db.instance object should be the second argument");
 
                 });
 
-                it("Should return arguments for module mounter wihtout db enabled", () => {
+                it("Should return arguments for module mounter without db enabled", () => {
 
                     canUseDbStub.returns(false);
 
-                    let args = app.getRouterMountingArguments();
+                    let args = app.mixinModuleMounterContextArguments("my router");
 
                     assert.isArray(args, "Arguments array should be returned");
                     assert.equal(args.length, 1, "Should be only one argument in the array");
 
-                    assert.equal(args[0], Client.routes, "Clients.routes API should be the first argument");
+                    assert.equal(args[0], "my router", "Clients.routes API should be the first argument");
 
                 });
 

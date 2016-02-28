@@ -268,13 +268,13 @@ class App extends Base {
     }
 
     /**
-     * This getter returns arguments, with which module will be mounted (indes.js, router.js will receive this set of arguments)
+     * This mixin returns arguments, with which module will be mounted (index.js, router.js will receive this set of arguments)
      * @returns {Array}
      */
-    getRouterMountingArguments() {
-        let args = [Client.routes];   // default calling arguments (are passed into module router)
+    mixinModuleMounterContextArguments(moduleRouterMiddleware) {
+        let args = [moduleRouterMiddleware];   // default calling arguments (are passed into module router)
 
-        if (this.canUseDb()) {  // TODO: push db instance reference
+        if (this.canUseDb()) {
             args.push(this.db.instance);
         }
 
