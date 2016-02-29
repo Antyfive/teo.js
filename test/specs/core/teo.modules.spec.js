@@ -106,4 +106,15 @@ describe("Testing Teo Modules", () => {
 
     });
 
+    it("Should parse model file names and return only files with .js extension and absolute file path", () => {
+
+        let models = ["first.js", "second.png", "third", "fourth.js"];
+
+        let parsedModels = modules.parseModelsFileNames(models, "/abs/path/to");
+
+        assert.isArray(parsedModels, "Should be an array");
+        assert.deepEqual(parsedModels, ["/abs/path/to/models/first.js", "/abs/path/to/models/fourth.js"]);
+
+    });
+
 });

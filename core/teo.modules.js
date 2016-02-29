@@ -60,7 +60,7 @@ module.exports = class Modules extends Base {
         try {
             modelFiles = yield readdir(path.join(absoluteModulePath, "models"));
             if (modelFiles.length > 0) {
-                args.push(this._setModelsAbsPath(modelFiles, absoluteModulePath));
+                args.push(this.parseModelsFileNames(modelFiles, absoluteModulePath));
             }
         } catch(e) {
             logger.error(e);
@@ -70,14 +70,14 @@ module.exports = class Modules extends Base {
     }
 
     /**
-     * Set models absolute path
+     * Parses module files, and sets absolute path to each model
      * @param modelFiles
      * @param absoluteModulePath
      * @returns {Array|*}
      * @private
      */
-    _setModelsAbsPath(modelFiles, absoluteModulePath) {
-        return modelFiles.map(fileName => path.join(absoluteModulePath, "models", fileName));
+    parseModelsFileNames(modelFiles, absoluteModulePath) {
+        return modelFiles.filter(fileName => fileName.endsWith(".js")).map(fileName => path.join(absoluteModulePath, "models", fileName));
     }
 
     mountModules(context) {
