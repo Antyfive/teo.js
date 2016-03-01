@@ -13,8 +13,9 @@
 [![npm](https://img.shields.io/npm/v/npm.svg)](https://github.com/Antyfive/teo.js)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/Antyfive/teo.js/master/LICENSE)
 
-**Teo.JS** is a next generation web framework, built using new **ECMAScript 2015 (ES6)**. 
-[Wiki](https://github.com/Antyfive/teo.js/wiki).
+**Teo.JS** is a next generation web framework, built with **ECMAScript 2015 (ES6)**. 
+
+## [Wiki](https://github.com/Antyfive/teo.js/wiki)
 
 ## Requirements
 * node >= **4.x**
@@ -27,6 +28,11 @@ $ npm i teo.js -g
 ```
 
 ## Quick Start
+**Demo application**
+
+Please, take a look at [demo application](https://github.com/Antyfive/teo-demo-app).
+
+**Generate project manually**
 
 * `mkdir myproject`
 * `cd myproject/`
@@ -38,9 +44,10 @@ If `teo` executable is not working, update your PATH variable:
 
 `export PATH="$PATH:./node_modules/.bin"`
 
+# License
 The MIT License (MIT)
 
-Copyright (c) 2015 Antyfive
+Copyright (c) 2016 Antyfive
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
