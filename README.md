@@ -27,6 +27,11 @@ $ npm i teo.js -g
 ```
 
 ## Quick Start
+**Demo application**
+
+Please, take a look at [demo application](https://github.com/Antyfive/teo-demo-app).
+
+**Generate project manually**
 
 * `mkdir myproject`
 * `cd myproject/`
