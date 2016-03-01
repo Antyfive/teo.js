@@ -44,9 +44,10 @@ If `teo` executable is not working, update your PATH variable:
 
 `export PATH="$PATH:./node_modules/.bin"`
 
+# License
 The MIT License (MIT)
 
-Copyright (c) 2015 Antyfive
+Copyright (c) 2016 Antyfive
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
