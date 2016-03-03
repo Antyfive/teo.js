@@ -8,7 +8,9 @@
 "use strict";
 
 const fs = require("fs"),
-    fileReader = require(`${teoLibDir}/fileReader`);
+    fileReader = require(`${teoLibDir}/fileReader`),
+    EventEmitter = require("events").EventEmitter,
+    util = require("util");
 
 describe("Testing fileReader", () => {
 
@@ -175,7 +177,71 @@ describe("Testing fileReader", () => {
 
             });
 
+        });
+
+    });
+
+    describe("readFile", () => {
+
+        let path, readStub, readStreamStubInstance;
+
+        beforeEach(() => {
+
+            readStub = sinon.stub();
+            readStub.returns(new Buffer(123));
+
+            let StubClass = function () {readStreamStubInstance = this;};
+
+            util.inherits(StubClass, EventEmitter);
+
+            StubClass.prototype.read = readStub;
+
+            sinon.stub(fs, "ReadStream", StubClass);
+
+            path = "/123";
 
         });
+
+        afterEach(() => {
+
+            fs.ReadStream.restore();
+            readStub = null;
+            path = null;
+            readStreamStubInstance = null;
+
+        });
+
+        it("Should read and push chunk on readable event", (done) => {
+
+            fileReader.readFile(path, (err, dataBuffer) => {
+
+                assert.isTrue(readStub.calledOnce);
+                assert.isNull(err, "Error should be null");
+                assert.isTrue(Buffer.isBuffer(dataBuffer), "Buffer should be returned after read");
+                done();
+
+            });
+
+            readStreamStubInstance.emit("readable");
+            readStreamStubInstance.emit("end");
+
+        });
+
+        it("Should handle error event", (done) => {
+
+            let error = new Error("my error");
+            fileReader.readFile(path, (err, dataBuffer) => {
+
+                assert.isFalse(readStub.called);
+                assert.equal(err, error, "Emitted error should be passed");
+
+                done();
+
+            });
+
+            readStreamStubInstance.emit("error", error);
+
+        });
+
     });
 });
