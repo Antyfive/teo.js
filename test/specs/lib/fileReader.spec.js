@@ -102,4 +102,80 @@ describe("Testing fileReader", () => {
         });
 
     });
+
+    describe("fileReader.readFile", () => {
+
+        let fsStatStub, isFileStub, errorStub, path, readFileStub, readFileErrorStub, readFileDataBufferStub;
+
+        beforeEach(() => {
+
+            path = "/test";
+            errorStub = sinon.stub();
+            errorStub.returns(null);
+
+            isFileStub = sinon.stub();
+            isFileStub.returns(true);
+
+            fsStatStub = sinon.stub(fs, "stat", (file, callback) => {
+                callback(errorStub(), {isFile: isFileStub});
+            });
+
+            readFileErrorStub = sinon.stub();
+            readFileErrorStub.returns(null);
+
+            readFileDataBufferStub = sinon.stub();
+            readFileDataBufferStub.returns(new Buffer("test"));
+
+            readFileStub = sinon.stub(fileReader, "readFile", (path, callback) => {
+                callback(readFileErrorStub(), readFileDataBufferStub());
+            });
+
+        });
+
+        afterEach(() => {
+
+            fsStatStub.restore();
+            isFileStub = null;
+            errorStub = null;
+            path = null;
+            readFileStub.restore();
+
+        });
+
+        it("Should return error immediately if read file callback returned with an error", (done) => {
+
+            let error = new Error("my error");
+            readFileErrorStub.returns(error);
+
+
+            fileReader.readFileSafely(path, (err) => {
+
+                assert.isTrue(isFileStub.calledOnce);
+                assert.isTrue(readFileStub.calledOnce);
+                assert.equal(err, error, "Error should be returned");
+
+                done();
+
+            });
+
+        });
+
+        it("Should return data buffer if file was read without an error", (done) => {
+
+            fileReader.readFileSafely(path, (err, dataBuffer) => {
+
+                assert.isTrue(isFileStub.calledOnce);
+                assert.isTrue(readFileStub.calledOnce);
+                assert.isNull(err, "Error should null");
+
+                assert.isTrue(Buffer.isBuffer(dataBuffer), "Buffer should be returned");
+
+                done();
+
+
+            });
+
+
+        });
+    });
 });
