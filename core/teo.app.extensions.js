@@ -29,7 +29,7 @@ module.exports = class Extensions extends Base {
      * @param {Array|Object} extensions
      */
     add(extensions) {
-        let _extensions = _.isArray(extensions) ? extensions : [extensions];
+        let _extensions = Array.isArray(extensions) ? extensions : [extensions];
 
         _extensions.forEach((extension) => {
             this._resolveExtension(extension);
@@ -68,7 +68,7 @@ module.exports = class Extensions extends Base {
      * @private
      */
     __requireExtension(path) {
-        var _extension;
+        let _extension;
 
         try {
             _extension = require(path);
@@ -126,7 +126,7 @@ module.exports = class Extensions extends Base {
      * @param {Object} context :: context in what to run extension
      */
     * runSingle(name, context) {
-        var _extension = this._findLoadedByName(name);
+        let _extension = this._findLoadedByName(name);
 
         if (!_.isObject(_extension)) {
             throw new Error(`Extension '${name}' should be an object`);
