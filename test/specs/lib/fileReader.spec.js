@@ -14,14 +14,6 @@ const fs = require("fs"),
 
 describe("Testing fileReader", () => {
 
-    beforeEach(() => {
-
-    });
-
-    afterEach(() => {
-
-    });
-
     it("Should catch an error whilst decodeURIComponent and return it", (done) => {
 
         let notAllowedCharacter = "%91%92"; // quotes characters
