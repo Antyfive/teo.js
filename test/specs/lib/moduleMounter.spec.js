@@ -9,7 +9,7 @@
 
 const ModuleMounter = require(`${teoLibDir}/moduleMounter`);
 
-describe.only("Testing moduleMounter", () => {
+describe("Testing moduleMounter", () => {
 
     let moduleName, indexFileAbsPath, routerFilePath, modelFiles, originalRequire = module.parent.__proto__.require,
         requireStub;
@@ -78,6 +78,38 @@ describe.only("Testing moduleMounter", () => {
             assert.equal(handlerMounterStub.args[0][0], "/my/index", "Should load module index file as first");
             assert.equal(handlerMounterStub.args[1][0], "/my/router", "Should load router file as second");
             assert.equal(handlerMounterStub.args[2][0], "/my/path/to/model", "Should load model as third");
+
+        });
+
+        describe("Run wrapped models and router", () => {
+
+            let routerStub, modelRegisterStub, mountedModule;
+
+            beforeEach(() => {
+
+                modelRegisterStub = sinon.stub();
+                routerStub = sinon.stub();
+                mountedModule = moduleMounter(contextMock);
+
+            });
+
+            afterEach(() => {
+
+                modelRegisterStub = null;
+                routerStub = null;
+                mountedModule = null;
+
+            });
+
+            it("Should run mounted module", () => {
+
+                indexModuleStub.reset();
+
+                mountedModule(contextMock, routerStub, modelRegisterStub);
+
+                assert.isTrue(indexModuleStub.calledTwice, "Should run wrapped model and router");
+
+            });
 
         });
 
