@@ -7,31 +7,41 @@
 
 "use strict";
 
-const renderer = require(`${teoLibDir}/renderer`),
+let renderer = require(`${teoLibDir}/renderer`),
     consolidate = require("consolidate");
 
 describe("Testing Teo.JS Rendererer Lib", () => {
 
-    let hoganStub;
+    let getRendererEngineStub, hoganStub;
 
     beforeEach(() => {
 
-        hoganStub = sinon.stub(consolidate, "hogan", function* () {});
+        hoganStub = sinon.stub();
+        hoganStub.returns(
+            co(function* () {
+                return "html"
+            })
+        );
+
+        getRendererEngineStub = sinon.stub(renderer, "getRendererEngine");
+        getRendererEngineStub.withArgs("hogan").returns(hoganStub);
 
     });
 
     afterEach(() => {
 
-        hoganStub.restore();
+        getRendererEngineStub.restore();
+        hoganStub = null;
 
     });
 
     it("Should render module template", async(function* () {
 
-        yield* consolidate.hogan("template", {test: true});
+        let result = yield* renderer.render("tplAbsPath", "hogan", {test: true}, {options: true});
 
         assert.isTrue(hoganStub.calledOnce);
-        assert.deepEqual(hoganStub.args[0], ["template", {test: true}]);
+        assert.deepEqual(hoganStub.args[0], ["tplAbsPath", {"options": true, "test": true}]);
+        assert.equal(result, "html", "Return string should be correct");
 
     }));
 
