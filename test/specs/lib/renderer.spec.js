@@ -10,7 +10,7 @@
 let renderer = require(`${teoLibDir}/renderer`),
     consolidate = require("consolidate");
 
-describe("Testing Teo.JS Rendererer Lib", () => {
+describe("Testing Teo.JS Renderer Lib", () => {
 
     let getRendererEngineStub, hoganStub;
 
@@ -35,7 +35,7 @@ describe("Testing Teo.JS Rendererer Lib", () => {
 
     });
 
-    it("Should render module template", async(function* () {
+    it("Should render template", async(function* () {
 
         let result = yield* renderer.render("tplAbsPath", "hogan", {test: true}, {options: true});
 
