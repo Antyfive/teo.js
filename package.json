@@ -68,8 +68,7 @@
     "moment": "^2.11.2",
     "path-to-regexp-wrap": "*",
     "teo-base": "^1.0.1",
-    "teo-db": "^1.0.4",
-    "throttle": "^1.0.3"
+    "teo-db": "^1.0.4"
   },
   "devDependencies": {
     "chai": "^3.5.0",

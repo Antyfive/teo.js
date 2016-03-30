@@ -14,7 +14,6 @@ const
     Routes = require("./teo.client.routes"),
     path = require("path"),
     fs = require("fs"),
-    streamer = require("./teo.client.streamer"),
     ClientContext = require("./teo.client.context"),
     fileReader = require("../lib/fileReader");
 
@@ -115,10 +114,6 @@ class Client extends Base {
                 logger.error(e);
                 this.res.send(500);
             }
-        }
-        else if (this.req.headers.range) {
-            let contentType = mime.lookup(this.extension || this.req.headers.accept || "html") ;
-            streamer.stream(this.req, this.res, this.config, path.normalize(path.join(this.config.get("appDir"), this.pathname)), contentType);
         }
         else {
             // TODO: cache, read from cache

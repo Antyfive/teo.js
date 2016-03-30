@@ -17,7 +17,6 @@ const
     ClientContext = require(`${teoBase}/teo.client.context`),
     ClientContextRes = require(`${teoBase}/teo.client.context.res`),
     ClientContextReq = require(`${teoBase}/teo.client.context.req`),
-    streamer = require(`${teoBase}/teo.client.streamer`),
     _ = require(`${teoBase}/teo.utils`),
     fileReader = require(`${teoLibDir}/fileReader`);
 
@@ -268,28 +267,6 @@ describe("Testing Teo Client", () => {
             assert.equal(resSendStub.args[0][0], 500);
 
             handlerStub.restore();
-
-        }));
-
-        it("Should stream if range header exisits", async(function* () {
-
-            client.req.headers.range = true;
-
-            let streamStub = sinon.stub(streamer, "stream", function() {}),
-                mimeLookup = sinon.stub(mime, "lookup");
-
-            yield* client.dispatch();
-
-            assert.isTrue(streamStub.calledOnce);
-            assert.isTrue(mimeLookup.calledOnce);
-
-            assert.equal(mimeLookup.args[0][0], "html");
-            assert.deepEqual(streamStub.args[0], [client.req, client.res, client.config, `${params.appDir}/`, undefined]);
-
-            delete client.req.headers.range;
-
-            streamStub.restore();
-            mimeLookup.restore();
 
         }));
 

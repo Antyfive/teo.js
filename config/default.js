@@ -56,15 +56,5 @@ module.exports = {
             // if you want to provide your personal, local extension
             "file": "myFileName"
         },*/
-    ],
-    // config for streaming. (videos etc.)
-    streamer: {
-        // download file instead of streaming
-        forceDownload: false,
-        // max age for Cache-Control
-        maxAge: 3600,
-        cors: false,
-        // (limit) server bandwidth (bytes/second). See https://www.npmjs.com/package/throttle
-        throttle: false
-    }
+    ]
 };
