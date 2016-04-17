@@ -1,5 +1,5 @@
 /*!
- * 
+ * teo.app.extensions.spec
  * @author Andrew Teologov <teologov.and@gmail.com>
  * @date 11/15/15
  */
@@ -198,7 +198,7 @@ describe("Testing Teo App Extensions", () => {
 
     });
 
-    describe("Testing run of extension", function() {
+    describe("Testing run of extension", () => {
 
         let requireStub;
 
@@ -292,6 +292,27 @@ describe("Testing Teo App Extensions", () => {
 
             extensionSpy.restore();
             runSingleSpy.restore();
+
+        }));
+
+        it("Should pass extensions's config to the extension", async(function* () {
+
+            let extensionSpy = sinon.spy(extensions._findLoadedByName("my-extension-1"), "extension");
+            let context = {test: true};
+            let getExtensionConfigStub = sinon.stub(extensions, "getExtensionConfig");
+
+            getExtensionConfigStub.returns({testParam: true});
+
+            yield* extensions.runSingle("my-extension-1", context);
+
+            assert.isTrue(getExtensionConfigStub.calledOnce, "Should get extension's config");
+            assert.isTrue(extensionSpy.calledOnce, "Extension method should be called once");
+            assert.equal(extensionSpy.args[0][0], context, "Context should be passed to extension");
+            assert.deepEqual(extensionSpy.args[0][1], {testParam: true}, "Extension's config should be passed to extension");
+
+
+            extensionSpy.restore();
+            getExtensionConfigStub.restore();
 
         }));
 

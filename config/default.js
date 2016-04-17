@@ -54,7 +54,8 @@ module.exports = {
             "name": "powered-by",   // name in registry of extensions
             "module": "teo-powered-by-extension"    // npm module
             // if you want to provide your personal, local extension
-            "file": "myFileName"
+            "file": "myFileName",
+            config: {myParam: true} // extensions' configuration. Will be passed to the extension, as a second argument
         },*/
     ]
 };

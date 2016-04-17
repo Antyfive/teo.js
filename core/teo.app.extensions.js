@@ -126,8 +126,9 @@ module.exports = class Extensions extends Base {
      * @param {Object} context :: context in what to run extension
      */
     * runSingle(name, context) {
-        let _extension = this._findLoadedByName(name);
-
+        let _extension = this._findLoadedByName(name),
+            extensionConfig = this.getExtensionConfig(name);
+        
         if (!_.isObject(_extension)) {
             throw new Error(`Extension '${name}' should be an object`);
         }
@@ -138,14 +139,26 @@ module.exports = class Extensions extends Base {
 
         try {
             if (_.isGenerator(_extension.extension)) {
-                yield* _extension.extension.call(context, context);
+                yield* _extension.extension.call(context, context, extensionConfig);
             }
             else {
-                _extension.extension.call(context, context);
+                _extension.extension.call(context, context, extensionConfig);
             }
             this._installedExtensions.push(name);
         } catch(err) {
             logger.error(`Extension ${name} error:`, err);
         }
+    }
+
+    /**
+     * Extension's config getter by it's name
+     * @param {String} name :: extension name
+     * @returns {*}
+     */
+    getExtensionConfig(name) {
+        let extensionsList = this.config.get("extensions");
+        let extension = _.find(extensionsList, {name}) || {};
+
+        return extension.config;
     }
 };
