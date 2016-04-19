@@ -113,7 +113,7 @@ class Teo extends Base {
         let actions = ["start", "stop", "restart", "shutdown"];
 
         if (actions.indexOf(action) === -1) {
-            throw new Error("Not supported action '" +action+ "' was received");
+            throw new Error(`Not supported action '${action}' was received`);
         }
 
         yield* this.core[action](appName);

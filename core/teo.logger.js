@@ -11,8 +11,6 @@ const moment = require("moment"),
     util = require("util"),
     cluster = require("cluster");
 
-
-
 /**
  * Parses errors. Expects Error instance, or string with message
  * @returns {Array}
