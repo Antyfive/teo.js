@@ -17,10 +17,10 @@ class Routes extends Base {
         super(config);
 
         this.routes = {
-            "get": {},
-            "post": {},
-            "put": {},
-            "patch": {},
+            "get"   : {},
+            "post"  : {},
+            "put"   : {},
+            "patch" : {},
             "delete": {}
         };
     }
