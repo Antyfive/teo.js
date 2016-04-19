@@ -7,7 +7,6 @@
 "use strict";
 
 const
-    _ = require("lodash"),
     Base = require("teo-base"),
     ResContext = require("./teo.client.context.res"),
     ReqContext = require("./teo.client.context.req"),
@@ -61,7 +60,7 @@ class ClientContext extends Base {
     }
 
     mixinContext() {
-        _.extend(this, clientContextMixins);
+        Object.assign(this, clientContextMixins);
     }
 }
 

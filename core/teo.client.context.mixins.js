@@ -6,8 +6,7 @@
 
 "use strict";
 
-const _ = require("lodash"),
-    path = require("path"),
+const path = require("path"),
     renderer = require("../lib/renderer");
 
 module.exports = {
@@ -29,7 +28,7 @@ module.exports = {
             layoutHTML = yield* renderer.render(
                 layoutAbsPath,
                 this.config.get("templateSettings").engine,
-                _.extend({}, layoutData || {}, {[this.activeModuleName]: modulePartialHTML})
+                Object.assign({}, layoutData || {}, {[this.activeModuleName]: modulePartialHTML})
             );
         } catch(err) {
             logger.error(err);
