@@ -13,7 +13,7 @@ const
     fs = require("fs"),
     path = require("path"),
     cluster = require("cluster"),
-    _ = require("./teo.utils"),
+    _ = require("../lib/utils"),
     Base = require("teo-base"),
     App = require("./teo.app");
 

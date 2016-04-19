@@ -6,7 +6,7 @@
 
 "use strict";
 
-var _ = require("./teo.utils"),
+const _ = require("../lib/utils"),
     compose = require("composition");
 
 /**

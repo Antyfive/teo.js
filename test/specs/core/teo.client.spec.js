@@ -17,7 +17,7 @@ const
     ClientContext = require(`${teoBase}/teo.client.context`),
     ClientContextRes = require(`${teoBase}/teo.client.context.res`),
     ClientContextReq = require(`${teoBase}/teo.client.context.req`),
-    _ = require(`${teoBase}/teo.utils`),
+    _ = require(`${teoBase}/../lib/utils`),
     fileReader = require(`${teoLibDir}/fileReader`);
 
 describe("Testing Teo Client", () => {

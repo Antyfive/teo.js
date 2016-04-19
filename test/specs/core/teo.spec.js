@@ -8,7 +8,7 @@
 
 const Teo = require(teoBase + "/teo"),
 	TeoCore = require(teoBase + "/teo.core"),
-    _ = require(teoBase + "/teo.utils"),
+    _ = require(teoBase + "/../lib/utils"),
 	events = require("events"),
     co = require("co"),
     async = generator => done => co(generator).then(done, done);

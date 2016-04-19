@@ -13,7 +13,7 @@ const
     Client = require(teoBase + "/teo.client"),
     Extensions = require(teoBase + "/teo.app.extensions"),
     Db = require("teo-db"),
-    _ = require(teoBase + "/teo.utils"),
+    _ = require(teoBase + "/../lib/utils"),
     configLib = require(teoBase + "/../lib/config"),
     co = require("co"),
     fs = require("fs"),

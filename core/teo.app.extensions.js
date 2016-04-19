@@ -9,7 +9,7 @@
 
 const
     Base = require("teo-base"),
-    _ = require("./teo.utils"),
+    _ = require("../lib/utils"),
     Path = require("path");
 
 module.exports = class Extensions extends Base {

@@ -12,7 +12,7 @@ const
     http = require("http"),
     co = require("co"),
     Base = require("teo-base"),
-    _ = require("./teo.utils"),
+    _ = require("../lib/utils"),
     Client = require("./teo.client"),
     Middleware = require("./teo.middleware"),
     Extensions = require("./teo.app.extensions"),

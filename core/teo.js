@@ -6,7 +6,7 @@
 "use strict";
 
 const
-    _ = require("./teo.utils"),
+    _ = require("../lib/utils"),
     Base = require("teo-base"),
     Cluster = require("./teo.cluster"),
     Core = require("./teo.core");
