@@ -90,7 +90,7 @@
     "url": "git@github.com:Antyfive/teo.js.git"
   },
   "engines": {
-    "node": ">= 4"
+    "node": ">= 5"
   },
   "main": "./core/index"
 }
