@@ -88,6 +88,7 @@ class Client extends Base {
      * Process call on request end
      */
     * process() {
+        yield* this.parseMultipart();
         yield* this.dispatch();
     }
 
@@ -139,6 +140,25 @@ class Client extends Base {
 
             this.res.send(dataBuffer);
         });
+    }
+
+    /**
+     * Parses multipart
+     */
+    * parseMultipart() {
+        try {
+            yield* this.reqContextObject.parseForm();
+        } catch (err) {
+            this.res.send(500, err.message);
+        }
+    }
+
+    /**
+     * Returns req context object api
+     * @returns {*}
+     */
+    get reqContextObject() {
+        return this.context.reqContextObject;
     }
 }
 

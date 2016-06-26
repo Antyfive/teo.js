@@ -59,6 +59,14 @@ class ClientContext extends Base {
         this._res = val;
     }
 
+    /**
+     * Returns req context API
+     * @returns {*}
+     */
+    get reqContextObject() {
+        return this._req;
+    }
+
     mixinContext() {
         Object.assign(this, clientContextMixins);
     }

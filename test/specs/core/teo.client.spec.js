@@ -202,10 +202,12 @@ describe("Testing Teo Client", () => {
         it("Should process request", async(function* () {
 
             let dispatchStub = sinon.stub(client, "dispatch", function* () {});
+            let parseMultipartStub = sinon.stub(client, "parseMultipart", function* () {});
 
             yield* client.process();
 
             assert.isTrue(dispatchStub.calledOnce);
+            assert.isTrue(parseMultipartStub.calledOnce);
 
             dispatchStub.restore();
 
@@ -321,6 +323,41 @@ describe("Testing Teo Client", () => {
             })
 
         });
+
+    });
+
+    describe("Parse multipart", () => {
+
+        it("Should parse multipart", async(function* () {
+
+            let parseFormStub = sinon.stub(client.reqContextObject, "parseForm", function* () {});
+
+            yield * client.parseMultipart();
+
+            assert.isTrue(parseFormStub.calledOnce);
+
+            parseFormStub.restore();
+
+        }));
+
+        it("Should catch and respond if error on parsing", async(function* () {
+
+            let parseFormStub = sinon.stub(client.reqContextObject, "parseForm", function* () {
+                throw new Error("Test error");
+            });
+
+            let resSendStub = sinon.stub(client.res, "send", () => {});
+
+            yield * client.parseMultipart();
+
+            assert.isTrue(resSendStub.calledOnce, "Should send a response with error");
+            assert.equal(resSendStub.args[0][0], 500, "Error code should be 500");
+            assert.equal(resSendStub.args[0][1], "Test error", "Error message should be correct");
+
+            parseFormStub.restore();
+            resSendStub.restore();
+
+        }));
 
     });
 

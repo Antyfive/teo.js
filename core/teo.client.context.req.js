@@ -9,7 +9,9 @@
 const
     Base = require("teo-base"),
     url = require("url"),
-    querystring = require("querystring");
+    querystring = require("querystring"),
+    multiparty = require("multiparty"),
+    _ = require("../lib/utils");
 
 class ReqContext extends Base {
     constructor(config) {
@@ -18,7 +20,7 @@ class ReqContext extends Base {
         this.chunks = [];
         this.req.parsedUrl = this.parsedUrl = url.parse(this.req.url, true); // parse query string as well (second argument)
         this.req.pathname = this.pathname = this.parsedUrl.pathname;
-        this.req.contentType = this.contentType = this.req.headers["content-type"];
+        this.req.contentType = this.contentType = this.req.headers["content-type"] || "";
         this.req.query = this.query = this.parsedUrl.query;
 
         this.parseBody();
@@ -28,11 +30,16 @@ class ReqContext extends Base {
         return this.config.req;
     }
 
+    get contentType() {
+        return this._contentType || "";
+    }
+
+    set contentType(val) {
+        this._contentType = val || "";
+    }
+
     parseBody() {
-        if (this.contentType && this.contentType.startsWith("multipart")) {
-            this.parseForm();
-        }
-        else {
+        if (!this.contentType.startsWith("multipart")) {
             this.endListener = this.onEnd.bind(this);
             this.dataListener = this.onData.bind(this);
             this.req
@@ -41,8 +48,25 @@ class ReqContext extends Base {
         }
     }
 
-    parseForm() {// TODO: parse multipart/*
+    * parseForm() {
+        if (this.contentType.startsWith("multipart")) {
+            let form = ReqContext.createFormParser();
+            let parsedForm = yield _.promise((resolve, reject) => {
+                form.parse(this.req, (err, fields, files) => {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+                    
+                    this.req.fields = fields;
+                    this.req.files = files;
 
+                    resolve({fields, files});
+                });
+            });
+
+            return parsedForm;
+        }
     }
 
     onData(chunk) {
@@ -79,6 +103,10 @@ class ReqContext extends Base {
         this.req
             .removeListener("end", this.endListener)
             .removeListener("data", this.dataListener);
+    }
+    
+    static createFormParser() {
+        return new multiparty.Form();
     }
 }
 

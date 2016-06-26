@@ -10,7 +10,8 @@
 
 const http = require("http"),
     ReqContext = require(teoBase + "/teo.client.context.req"),
-    querystring = require("querystring");
+    querystring = require("querystring"),
+    multiparty = require("multiparty");
 
 describe("Testing teo.client.context.req", () => {
 
@@ -67,7 +68,7 @@ describe("Testing teo.client.context.req", () => {
         assert.isArray(reqContext.chunks);
         assert.isObject(reqContext.parsedUrl);
         assert.isString(reqContext.pathname);
-        assert.isUndefined(reqContext.contentType);
+        assert.isString(reqContext.contentType);
         assert.isObject(reqContext.query);
 
         assert.isTrue(parseBodySpy.calledOnce);
@@ -80,22 +81,9 @@ describe("Testing teo.client.context.req", () => {
 
     });
 
-    it("Should parse form if content type starts with 'multipart'", () => {
-
-        reqContext.parseBody();
-
-        assert.isFalse(parseFormSpy.called);
-
-        reqContext.contentType = "multipart/form";
-
-        reqContext.parseBody();
-
-        assert.isTrue(parseFormSpy.calledOnce);
-
-    });
 
     it("Should listen to 'end' & 'data' events if not multipart", () => {
-
+        
         reqOnSpy.reset();
 
         reqContext.contentType = "multipart/form";
@@ -195,4 +183,93 @@ describe("Testing teo.client.context.req", () => {
 
     });
 
+    it("Should create a form parser", () => {
+
+        let formParser = ReqContext.createFormParser();
+
+        assert.instanceOf(formParser, multiparty.Form, "Should be instance of multiparty.Form");
+
+    });
+
+    describe("Parse multipart", () => {
+
+        let createFormParserStub, parseStub, files, fields, apiStub;
+
+        beforeEach(() => {
+
+            parseStub = sinon.stub();
+
+            fields = ["testField"];
+            files = ["testFile"];
+
+            apiStub = {
+                parse(_req, callback) {
+                    assert.equal(_req, req, "Should pass request object");
+                    callback(null, fields, files);
+                }
+            };
+
+            createFormParserStub = sinon.stub(ReqContext, "createFormParser");
+            createFormParserStub.returns(apiStub);
+
+        });
+
+        afterEach(() => {
+
+            createFormParserStub.restore();
+            parseStub = null;
+            fields = null;
+            files = null;
+
+        });
+
+        it("Shouldn't parse form if content type isn't multipart", async(function* () {
+
+            let res = yield* reqContext.parseForm();
+
+            assert.isUndefined(res);
+
+        }));
+
+        it("Should parse request with multipart content type", async(function* () {
+
+            reqContext.contentType = "multipart/*";
+
+            let result = yield* reqContext.parseForm();
+
+            assert.deepEqual(req.fields, result.fields, "Fields should be saved in the req object");
+            assert.deepEqual(req.files, result.files, "Files should be saved in the req object");
+            assert.deepEqual(result, {fields, files}, "Promise should be resolved with fields and files");
+
+        }));
+
+        it("Should handle errors on parsing", async(function* () {
+
+            let parseError;
+
+            reqContext.contentType = "multipart/*";
+
+            apiStub.parse = (_req, callback) => {
+                assert.equal(_req, req, "Should pass request object");
+                callback(new Error("Test error"), fields, files);
+            };
+
+            createFormParserStub.returns(apiStub);
+
+            try {
+
+                yield* reqContext.parseForm();
+
+            } catch(err) {
+
+                parseError = err;
+
+            }
+
+            assert.equal(parseError.message, "Test error", "Promise should be rejected");
+
+        }));
+
+    });
+    
 });
