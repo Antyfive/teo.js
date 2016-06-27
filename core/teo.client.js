@@ -96,7 +96,7 @@ class Client extends Base {
      * Dispatch call after first process is finished
      */
     * dispatch() {
-        if (this.route != null && (this.route.handler && (typeof this.route.handler === "function"))) {
+        if (this.route != null && typeof this.route.handler === "function") {
             if (!_.isGenerator(this.route.handler)) {
                 throw new Error("Route handler should be a generator function!");
             }
