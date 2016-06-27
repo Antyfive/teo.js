@@ -25,7 +25,7 @@
 
 **Installation**
 ```bash
-$ npm i teo.js -g
+$ npm i teo.js@latest
 ```
 
 ## Quick Start
