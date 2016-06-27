@@ -19,7 +19,7 @@
 ## [Wiki](https://github.com/Antyfive/teo.js/wiki)
 
 ## Requirements
-* node >= **4.x**
+* node >= **5.x**
 
 ## Getting Started
 
