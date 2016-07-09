@@ -25,7 +25,9 @@ class ClientContext extends Base {
             req: this.req
         });
 
-        this._req.on("error", (e) => {});   // TODO: improve errors handling.
+        this._req.on("error", (e) => {
+            logger.error(e);
+        });   // TODO: improve errors handling.
         // mixin context with methods, which will be available inside route handler in controllers
         this.mixinContext();
     }

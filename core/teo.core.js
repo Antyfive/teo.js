@@ -107,7 +107,7 @@ class Core extends Base {
             cluster.on("online", function (worker) {
                 worker.on("message", function (msg) {
                     if (msg.type === "logging") {
-                        var message = "WorkerID: " + msg.data.workerID + " | " + msg.data.message;
+                        let message = "WorkerID: " + msg.data.workerID + " | " + msg.data.message;
                         logger.log(message);
                     }
                 });
@@ -116,14 +116,14 @@ class Core extends Base {
     }
 
     * loadApps() {
-        var self = this,
+        let self = this,
             appsDir = this.config.appsDir,
             readDir = _.thunkify(fs.readdir);
 
-        var apps = yield readDir(appsDir);
+        let apps = yield readDir(appsDir);
 
-        var l = apps.length;
-        for (var i = 0; i < l; i++) {
+        let l = apps.length;
+        for (let i = 0; i < l; i++) {
             let appName = apps[i];
             let appDir = path.join(appsDir, appName);
             let stat = yield _.thunkify(fs.lstat)(appDir);
@@ -217,7 +217,7 @@ class Core extends Base {
         }
 
         if (!_.isUndefined(name)) {  // perform action on single app
-            var app = this.getApp(name);
+            let app = this.getApp(name);
 
             if (app) {
                 yield* app[action]();
@@ -226,7 +226,7 @@ class Core extends Base {
             return app;
         }
         else {
-            for (var app in this.apps) {    // perform action on all apps
+            for (let app in this.apps) {    // perform action on all apps
                 yield* this.apps[app][action]();
             }
         }

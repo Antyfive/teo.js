@@ -39,7 +39,7 @@ class Client extends Base {
         if (this.route) {
             this.req.params = this.route.params;
         }
-        this.extension = _.getExtension(this.pathname);// TODO: improve
+        this.extension = _.getExtension(this.pathname);
         // ----
     }
 
