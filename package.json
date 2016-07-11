@@ -1,6 +1,6 @@
 {
   "name": "teo.js",
-  "description": "Teo.JS is a next generation HMVC web framework, built using ECMAScript 2015 (ES6)",
+  "description": "Teo.JS is a next generation HMVC RESTful web framework, built using ECMAScript 2015 (ES6)",
   "version": "1.0.0-beta.0",
   "author": {
     "name": "Andrew Teologov",
