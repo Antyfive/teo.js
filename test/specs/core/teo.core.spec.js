@@ -29,16 +29,18 @@ describe("Testing Teo Core", function () {
 
         let bindProcessEventsSpy, createCoreAppSpy, loadAppsSpy, registerAppSpy;
 
-        before(done => {
+        before(async(function* () {
 
             bindProcessEventsSpy = sinon.spy(Core.prototype, "_bindProcessEvents");
             createCoreAppSpy = sinon.spy(Core.prototype, "_createCoreApp");
             loadAppsSpy = sinon.spy(Core.prototype, "loadApps");
             registerAppSpy = sinon.spy(Core.prototype, "registerApp");
 
-            core = new Core(params, done);
+            core = new Core(params);
 
-        });
+            yield* core.initializeApps();
+
+        }));
 
         after(() => {
 
@@ -79,11 +81,12 @@ describe("Testing Teo Core", function () {
 
     describe("Apps registration", () => {
 
-        before(done => {
+        before(async(function* () {
 
-            core = new Core(params, done);
+            core = new Core(params);
+            yield* core.initializeApps();
 
-        });
+        }));
 
         after(() => {
 
@@ -123,13 +126,15 @@ describe("Testing Teo Core", function () {
 
         let lifeCircleActionSpy;
 
-        before(done => {
+        before(async(function* () {
 
-            core = new Core(params, done);
+            core = new Core(params);
 
             lifeCircleActionSpy = sinon.spy(core, "_lifeCircleAction");
 
-        });
+            yield* core.initializeApps();
+
+        }));
 
         after(() => {
 

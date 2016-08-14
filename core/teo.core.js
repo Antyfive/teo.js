@@ -9,7 +9,6 @@
 "use strict";
 
 const
-    co = require("co"),
     fs = require("fs"),
     path = require("path"),
     cluster = require("cluster"),
@@ -23,21 +22,12 @@ class Core extends Base {
 
         this.apps = {};
         this._bindProcessEvents();
-        _.generator(function* () {
-            yield* this._createCoreApp();
-            yield* this.loadApps();
-
-            return this;
-        }.bind(this), (err, res) => {
-            if (err) {
-                logger.error(err);
-                this.callback(err);
-            }
-            else {
-                this.callback(null, res);
-            }
-        });
 	}
+
+	* initializeApps() {
+        yield* this._createCoreApp();
+        yield* this.loadApps();
+    }
 
     _bindProcessEvents() {
         // Kill off the process
@@ -47,16 +37,15 @@ class Core extends Base {
             }
         });
         // do something when app is closing
-        process.on("exit", this._exitHandler.bind(null,{cleanup:true}));
+        process.on("exit", (err) => Core.processsExitHandler({cleanup: true}, err));
         // catches ctrl+c event
-        process.on("SIGINT", this._exitHandler.bind(null, {exit:true}));
+        process.on("SIGINT", (err) => Core.processsExitHandler({exit: true}));
         // catches uncaught exceptions // TODO: check if NODE_ENV != "development"
-        process.on("uncaughtException", this._exitHandler.bind(null, {exit:true}));
+        process.on("uncaughtException", (err) => Core.processsExitHandler({exit: true}, err));
     }
 
-    _exitHandler(options, err) {
+    static processsExitHandler(options, err) {
         options = options || {};
-
         if (options.cleanup) {  // TODO: cleanup
             logger.info("cleanup");
         }
@@ -95,8 +84,8 @@ class Core extends Base {
      * @private
      */
     _createApp(options) {
-        return _.promise(function(resolve, reject) {
-            new App(options, function(err, res) {
+        return _.promise((resolve, reject) => {
+            new App(options, (err, res) => {
                 err ? reject(err) : resolve(res);
             });
         });
@@ -194,7 +183,7 @@ class Core extends Base {
         // Stop all apps
         yield* this.stop();
         // exit with cleanup
-        this._exitHandler({cleanup: true});
+        Core.processsExitHandler({cleanup: true});
     }
 
     /**

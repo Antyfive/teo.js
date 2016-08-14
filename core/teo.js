@@ -21,24 +21,7 @@ class Teo extends Base {
 		super(config, callback);
 
 		this._parseOptions();
-
-        _.async(this.createCore.bind(this))
-            .catch(err => {
-                logger.error(err.message, err.stack);
-                throw err;
-            })
-            .then(() => {
-                _.isGenerator(this.callback) ?
-                    _.async(this.callback, this) :
-                        this.callback.call(this, this);
-
-                process.nextTick(() => {
-                    this.emit("ready", this);
-                    if (this.mode !== "test") {
-                        logger.showLogo();
-                    }
-                });
-            });
+        this.startCore();
 	}
 
 	_parseOptions() {
@@ -48,21 +31,53 @@ class Teo extends Base {
         this.confDir = this.homeDir + "/config";    // config dir
 	}
 
-    * createCore() {
-        return _.promise((resolve, reject) => {
-            this.core = new Core({
-                mode: this.mode,
-                homeDir: this.homeDir,
-                appsDir: this.appsDir,
-                confDir: this.confDir
-            }, (err, res) => {
-                if (err) {
-                    reject(err);
-                    return;
+    /**
+     * Starts Teo.JS core
+     */
+	startCore() {
+        _.generator(function* () {
+            yield* this.initializeCore();
+        }.bind(this), (err) => {
+            if (err) {
+                logger.fatal(err);
+                throw err;
+            }
+            _.isGenerator(this.callback) ? _.async(this.callback, this) : this.callback.call(this, this);
+
+            process.nextTick(() => {
+                this.emit("ready", this);
+                if (this.mode !== "test") {
+                    logger.showLogo();
                 }
-                resolve(res);
             });
         });
+    }
+
+    /**
+     * Creates & initializes a Teo.JS core
+     */
+    * initializeCore() {
+        yield* this.createCore();
+        yield* this.initializeApps();
+    }
+
+    /**
+     * Creates new core instance
+     */
+    * createCore() {
+        this.core = new Core({
+            mode: this.mode,
+            homeDir: this.homeDir,
+            appsDir: this.appsDir,
+            confDir: this.confDir
+        });
+    }
+
+    /**
+     * Initialize all apps
+     */
+    * initializeApps() {
+        yield* this.core.initializeApps();
     }
 
     /**
