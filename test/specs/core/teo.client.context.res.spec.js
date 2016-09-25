@@ -20,7 +20,7 @@ describe("Testing teo.client.context.res", () => {
         server = http.createServer((_req, _res) => {
             req = _req;
             res = _res;
-
+            req.pathname = "";
             res.end();
         }).listen(3210);
 

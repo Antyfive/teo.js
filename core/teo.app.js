@@ -172,7 +172,7 @@ class App extends Base {
     }
 
     * closeServer() {
-        logger.info(`Closing ${this.name} app server.`);
+        logger.info(`Closing ${this.appName} app server.`);
 
         yield function(callback) {
             this.server.close(() => {
@@ -263,8 +263,8 @@ class App extends Base {
 
     // getters & setters ----
 
-    get name() {    // TODO: rename to appName
-        return this.config.get("name");
+    get appName() {
+        return this.config.get("appName");
     }
 
     /**

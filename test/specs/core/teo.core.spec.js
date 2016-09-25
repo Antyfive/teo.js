@@ -107,14 +107,14 @@ describe("Testing Teo Core", function () {
                 appDir: dir + "/apps/test",
                 confDir: dir + "/apps/test/config",
                 homeDir: dir,
-                name: "test",
+                appName: "test",
                 mode: "development",
                 coreConfig: core.coreAppConfig
             }, "Passed config should be correct");
 
             assert.equal(Object.keys(core.apps).length, 1, "Apps should be loaded");
             assert.instanceOf(core.apps.test, App);
-            assert.equal(core.apps.test.name, 'test', "App should have name");
+            assert.equal(core.apps.test.appName, "test", "App should have name");
 
             createAppSpy.restore();
 

@@ -47,7 +47,7 @@ class Core extends Base {
     static processsExitHandler(options, err) {
         options = options || {};
         if (options.cleanup) {  // TODO: cleanup
-            logger.info("cleanup");
+            logger.info("Cleanup");
         }
         if (err) {
             logger.error(err);
@@ -139,8 +139,7 @@ class Core extends Base {
             appDir: appDir,
             confDir: path.join(appDir, "/config"),
             homeDir: this.config.homeDir,
-            // TODO: rename "name" to appName
-            name: appName,
+            appName,
             mode: this.config.mode,
             coreConfig: this.coreAppConfig
         });
