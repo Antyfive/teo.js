@@ -17,11 +17,11 @@ class ClientContext extends Base {
         super(config);
 
         this.req = new ReqContext({
-            req: this.initialConfig.req // pass pure req
+            req: this.initialConfig.reqObject // pass pure req
         });
 
         this.res = new ResContext({
-            res: this.initialConfig.res, // pass pure res
+            res: this.initialConfig.resObject, // pass pure res
             req: this.req
         });
 
@@ -37,24 +37,23 @@ class ClientContext extends Base {
         this.config = config.config;
 
         this.initialConfig = {
-            req: config.req,
-            res: config.res
+            reqObject: config.req,
+            resObject: config.res
         };
     }
 
     // getters setters ---- ---- ---- ---- ---- ---- ---- ----
 
-    get req() {
-        // TODO: improve
-        return this._req.req;
+    get req() { // returns the mixed req
+        return this.initialConfig.reqObject;
     }
 
     set req(val) {
         this._req = val;
     }
 
-    get res() {
-        return this._res.res;
+    get res() { // // returns the mixed res
+        return this.initialConfig.resObject;
     }
 
     set res(val) {
@@ -67,6 +66,14 @@ class ClientContext extends Base {
      */
     get reqContextObject() {
         return this._req;
+    }
+
+    /**
+     * Returns res context API
+     * @returns {*}
+     */
+    get resContextObject() {
+        return this._res;
     }
 
     mixinContext() {

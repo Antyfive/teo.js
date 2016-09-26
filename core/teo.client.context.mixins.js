@@ -17,9 +17,9 @@ module.exports = {
      * @param {Object} [layoutData] :: additional data to compile with layout. E.g. header / footer partials etc.
      */
     * render(tpl, moduleData, layoutData) {
-        let tplExtension = this.config.get("templateSettings").extension;
-        let tplAbsPath = path.join(this.config.get("appDir"), this.moduleTemplatesDir, `${tpl}.${tplExtension}`);
-        let layoutAbsPath = path.join(this.config.get("appDir"), `/templates/layout.${tplExtension}`);
+        const tplExtension = this.config.get("templateSettings").extension,
+            tplAbsPath = path.join(this.config.get("appDir"), this.moduleTemplatesDir, `${tpl}.${tplExtension}`),
+            layoutAbsPath = path.join(this.config.get("appDir"), `/templates/layout.${tplExtension}`);
 
         let modulePartialHTML, layoutHTML;
 

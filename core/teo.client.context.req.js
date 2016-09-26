@@ -49,7 +49,7 @@ class ReqContext extends Base {
     }
 
     * parseForm() {
-        if (this.contentType.startsWith("multipart")) {
+        if (this.contentType.startsWith("multipart")) { // TODO: implement a middleware based on https://github.com/Antyfive/teo-busboy
             let form = ReqContext.createFormParser();
             let parsedForm = yield _.promise((resolve, reject) => {
                 form.parse(this.req, (err, fields, files) => {

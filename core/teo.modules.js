@@ -25,7 +25,7 @@ module.exports = class Modules extends Base {
     }
 
     * collect() {
-        if (!this.config.get("name")) {     // means, core app
+        if (!this.config.get("appName")) {     // means, it's a core app
             return;
         }
         let modulesDirName = this.config.get("modulesDirName");
