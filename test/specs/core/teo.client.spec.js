@@ -23,21 +23,12 @@ const
 describe("Testing Teo Client", () => {
 
     let client,
-        appDir = process.cwd().replace( /\\/g, "/"),
-        params = {
-            homeDir : appDir,
-            appDir  : appDir + "/apps/test",
-            confDir : appDir + "/config",
-            mode    : "test"
-        },
-        paramsStub = {
-            "config": {
-                "get": sinon.stub()
-            }
-        },
+        appDir,
+        params,
+        paramsStub,
         server, req, res, matchRouteStub;
 
-    before((done) => {
+    beforeEach(async(function* () {
 
         matchRouteStub = sinon.stub(Client.routes, "matchRoute");
         matchRouteStub.returns({
@@ -45,6 +36,24 @@ describe("Testing Teo Client", () => {
                 testParam: true
             }
         });
+
+        appDir = process.cwd().replace(/\\/g, "/");
+
+        params = {
+            homeDir : appDir,
+            appDir  : appDir + "/apps/test",
+            confDir : appDir + "/config",
+            mode    : "test"
+        };
+
+        paramsStub = {
+            "config": {
+                "get": sinon.stub()
+            }
+        };
+
+        paramsStub.config.get.withArgs("appDir").returns(params.appDir);
+
         server = http.createServer((_req, _res) => {
             paramsStub.req = _req;
             paramsStub.res = _res;
@@ -52,34 +61,28 @@ describe("Testing Teo Client", () => {
             _res.end();
         }).listen(3210);
 
-        paramsStub.config.get.withArgs("appDir").returns(params.appDir);
+        yield function(callback) {
+            server.once("listening", () => {
 
-        server.once("listening", done);
+                http.get("http://localhost:3210", () => {
+                    client = new Client(paramsStub);
+                    callback();
+                });
+            });
+        }
 
-    });
+    }));
 
-    beforeEach((done) => {
+    afterEach(async(function* () {
 
-        http.get("http://localhost:3210", () => {
-            client = new Client(paramsStub);
-            done();
-        });
-
-    });
-
-    afterEach(() => {
-
-        client = null;
-
-    });
-
-    after((done) => {
-
-        req = res = params = appDir = paramsStub = null;
+        req = res = params = appDir = paramsStub = client = null;
         matchRouteStub.restore();
-        server.close(done);
 
-    });
+        yield function(done) {
+            server.close(done);
+        };
+
+    }));
 
     describe("Initialize", () => {
 

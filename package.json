@@ -61,7 +61,6 @@
     "composition": "^2.2.1",
     "config": "^1.19.0",
     "consolidate": "^0.14.0",
-    "cookies": "^0.5.1",
     "lodash": "^4.5.0",
     "mime": "*",
     "mkdirp": "^0.5.1",
@@ -83,8 +82,7 @@
     "semver": "^5.1.0",
     "sinon": "^1.17.3",
     "sinon-chai": "^2.8.0",
-    "supertest": "^1.2.0",
-    "yargs": "^4.1.0"
+    "yargs": "^5.0.0"
   },
   "repository": {
     "type": "git",
