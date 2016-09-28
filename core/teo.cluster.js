@@ -24,7 +24,7 @@ module.exports = class Cluster {
             // Listen exit event
             cluster.on("exit", (worker) => {
                 // replace the dead worker
-                logger.log("Worker " + worker.id + " died");
+                logger.log(`Worker ${worker.id} died`);
                 cluster.fork();
             });
             // Code to run if we're in a worker process

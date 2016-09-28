@@ -66,12 +66,9 @@ class Core extends Base {
             mode: this.config.mode,
             coreApp: true
         });
-        // TODO:
-        /*
-         this.config = this._app.config;
-        if (this.config.get("cluster").enabled) {
-            this.setupWorkersLogging();
-        }*/
+        if (this.app.config.get("cluster").enabled) {
+            this._setupWorkersLogging();
+        }
         this.coreAppConfig = this.app.config;
 
         return this.app;
@@ -93,11 +90,10 @@ class Core extends Base {
 
     _setupWorkersLogging() {
         if (cluster.isMaster) {
-            cluster.on("online", function (worker) {
-                worker.on("message", function (msg) {
+            cluster.on("online", (worker) => {
+                worker.on("message", (msg) => {
                     if (msg.type === "logging") {
-                        let message = "WorkerID: " + msg.data.workerID + " | " + msg.data.message;
-                        logger.log(message);
+                        logger.log(`WorkerID: ${msg.data.workerID} | ${msg.data.message}`);
                     }
                 });
             });
