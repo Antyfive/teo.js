@@ -109,7 +109,7 @@ describe("Testing Teo Core", function () {
                 homeDir: dir,
                 appName: "test",
                 mode: "development",
-                coreConfig: core.coreAppConfig
+                coreConfig: core.app.config
             }, "Passed config should be correct");
 
             assert.equal(Object.keys(core.apps).length, 1, "Apps should be loaded");
@@ -182,7 +182,7 @@ describe("Testing Teo Core", function () {
             let coreAppStartStub = sinon.stub(core.app, "start", function* (){});
             let appStartStub = sinon.stub(core.apps.test, "start", function* () {});
 
-            let coreAppConfigStub = sinon.stub(core.coreAppConfig, "get");
+            let coreAppConfigStub = sinon.stub(core.app.config, "get");
 
             coreAppConfigStub.withArgs("coreAppEnabled").returns(true);
 
@@ -249,7 +249,7 @@ describe("Testing Teo Core", function () {
             let coreAppStopStub = sinon.stub(core.app, "stop", function* (){});
             let appStopStub = sinon.stub(core.apps.test, "stop", function* () {});
 
-            let coreAppConfigStub = sinon.stub(core.coreAppConfig, "get");
+            let coreAppConfigStub = sinon.stub(core.app.config, "get");
 
             coreAppConfigStub.withArgs("coreAppEnabled").returns(true);
 
@@ -316,7 +316,7 @@ describe("Testing Teo Core", function () {
             let coreAppRestartStub = sinon.stub(core.app, "restart", function* (){});
             let appRestartStub = sinon.stub(core.apps.test, "restart", function* () {});
 
-            let coreAppConfigStub = sinon.stub(core.coreAppConfig, "get");
+            let coreAppConfigStub = sinon.stub(core.app.config, "get");
 
             coreAppConfigStub.withArgs("coreAppEnabled").returns(true);
 

@@ -85,10 +85,10 @@ class Teo extends Base {
      * @param [appName] :: name of the application to start (or alternatively, start all)
      */
     * start(appName) {
-        if (this.core.coreAppConfig.get("cluster").enabled) {
-            yield _.promise((resolve, reject) => {
-                new Cluster(resolve);
-            });
+        if (this.core.app.config.get("cluster").enabled) {
+            yield function(callback) {
+                new Cluster(callback);
+            };
         }
         yield* this._runAppLifeCircleAction(appName, "start");
     }

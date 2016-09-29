@@ -25,8 +25,10 @@ describe("Testing Teo Main Entry Point", () => {
             homeDir: dir
 		});
 
-        teo.core.coreAppConfig = {
-            get: sinon.stub()
+        teo.core.app = {
+            config: {
+                get: sinon.stub()
+            }
         };
 
 	});
@@ -89,7 +91,7 @@ describe("Testing Teo Main Entry Point", () => {
 
 	it("Should start application", async(function* () {
 
-        teo.core.coreAppConfig.get.withArgs("cluster").returns({
+        teo.core.app.config.get.withArgs("cluster").returns({
             enabled: false
         });
 

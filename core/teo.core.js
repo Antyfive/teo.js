@@ -31,7 +31,7 @@ class Core extends Base {
 
     _bindProcessEvents() {
         // Kill off the process
-        process.on("message", function(msg) {
+        process.on("message", (msg) => {
             if (msg.cmd && msg.cmd == "kill") {
                 process.exit();
             }
@@ -62,14 +62,13 @@ class Core extends Base {
         this.app = yield this._createApp({
             homeDir: this.config.homeDir,
             appDir: this.config.appsDir,
-            confDir: path.normalize(__dirname + "/../config"),
+            confDir: path.normalize(path.join(__dirname, "../config")),
             mode: this.config.mode,
             coreApp: true
         });
         if (this.app.config.get("cluster").enabled) {
             this._setupWorkersLogging();
         }
-        this.coreAppConfig = this.app.config;
 
         return this.app;
     }
@@ -130,14 +129,13 @@ class Core extends Base {
             application,
             apps = this.apps;
 
-
         application = yield this._createApp({
             appDir: appDir,
             confDir: path.join(appDir, "/config"),
             homeDir: this.config.homeDir,
             appName,
             mode: this.config.mode,
-            coreConfig: this.coreAppConfig
+            coreConfig: this.app.config
         });
         apps[appName] = application;
 
@@ -195,8 +193,7 @@ class Core extends Base {
             throw new Error(`Not supported action ${action} was received`);
         }
 
-        // TODO: dead code
-        if (this.coreAppConfig.get("coreAppEnabled") === true) {
+        if (this.app.config.get("coreAppEnabled") === true) {  // core app for admin purposes. No any web layout for it yet
             yield this.app[action]();
         }
 
@@ -232,30 +229,6 @@ class Core extends Base {
      */
     getApp(name) {
         return this.apps[name];
-    }
-
-    /**
-     * Core app getter
-     * @returns {*}
-     */
-    get app() {
-        return this._app;
-    }
-
-    /**
-     * Core app setter
-     * @param app
-     */
-    set app(app) {
-        this._app = app;
-    }
-
-    get coreAppConfig() {   // todo: rename
-        return this._config;
-    }
-
-    set coreAppConfig(val) {
-        this._config = val;
     }
 }
 
