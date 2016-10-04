@@ -30,6 +30,7 @@ class Core extends Base {
     }
 
     _bindProcessEvents() {
+        const process = Core.getProcess();
         // Kill off the process
         process.on("message", (msg) => {
             if (msg.cmd && msg.cmd == "kill") {
@@ -37,14 +38,14 @@ class Core extends Base {
             }
         });
         // do something when app is closing
-        process.on("exit", (err) => Core.processsExitHandler({cleanup: true}, err));
+        process.on("exit", (err) => Core.processExitHandler({cleanup: true}, err));
         // catches ctrl+c event
-        process.on("SIGINT", (err) => Core.processsExitHandler({exit: true}));
+        process.on("SIGINT", (err) => Core.processExitHandler({exit: true}));
         // catches uncaught exceptions // TODO: check if NODE_ENV != "development"
-        process.on("uncaughtException", (err) => Core.processsExitHandler({exit: true}, err));
+        process.on("uncaughtException", (err) => Core.processExitHandler({exit: true}, err));
     }
 
-    static processsExitHandler(options, err) {
+    static processExitHandler(options, err) {
         options = options || {};
         if (options.cleanup) {  // TODO: cleanup
             logger.info("Cleanup");
@@ -176,7 +177,7 @@ class Core extends Base {
         // Stop all apps
         yield* this.stop();
         // exit with cleanup
-        Core.processsExitHandler({cleanup: true});
+        Core.processExitHandler({cleanup: true});
     }
 
     /**
@@ -215,11 +216,6 @@ class Core extends Base {
         return this.apps;
     }
 
-    // getters  ----
-    getApps() {
-        return this.apps;
-    }
-
     // getters / setters ----
 
     /**
@@ -229,6 +225,10 @@ class Core extends Base {
      */
     getApp(name) {
         return this.apps[name];
+    }
+
+    static getProcess() {
+        return process;
     }
 }
 

@@ -8,6 +8,7 @@
 "use strict";
 
 const
+    events = require("events"),
     Core = require(teoBase + "/teo.core"),
     App = require(teoBase + "/teo.app"),
     co = require("co"),
@@ -171,7 +172,6 @@ describe("Testing Teo Core", function () {
             assert.isTrue(appStartStub.calledOnce);
             assert.isTrue(lifeCircleActionSpy.calledOnce);
             assert.deepEqual(lifeCircleActionSpy.args[0], [undefined, "start"]);
-
 
             appStartStub.restore();
 
@@ -346,6 +346,65 @@ describe("Testing Teo Core", function () {
             appRestartStub.restore();
 
         }));
+
+    });
+
+    describe("Process Events Handling", () => {
+
+        let processExitHandlerStub, getProcessStub, processStub;
+
+        beforeEach(() => {
+
+            processExitHandlerStub = sinon.stub(Core, "processExitHandler", () => {});
+            getProcessStub = sinon.stub(Core, "getProcess");
+            processStub = new events.EventEmitter();
+            getProcessStub.returns(processStub);
+
+            core = new Core(params);
+
+        });
+
+        afterEach(() => {
+
+            processExitHandlerStub.restore();
+            core = processStub = null;
+            getProcessStub.restore();
+
+        });
+
+        it("Should handle 'exit' event", () => {
+
+            assert.isFalse(processExitHandlerStub.called, "Shouldn't be called");
+
+            processStub.emit("exit", "my error");
+
+            assert.isTrue(processExitHandlerStub.called, "Should be called once");
+            assert.deepEqual(processExitHandlerStub.args[0][0], {cleanup: true});
+            assert.equal(processExitHandlerStub.args[0][1], "my error");
+
+        });
+
+        it("Should handle 'SIGINT' event", () => {
+
+            assert.isFalse(processExitHandlerStub.called, "Shouldn't be called");
+
+            processStub.emit("SIGINT", "my error");
+
+            assert.isTrue(processExitHandlerStub.called, "Should be called once");
+            assert.deepEqual(processExitHandlerStub.args[0][0], {exit: true});
+
+        });
+
+        it("Should handle 'uncaughtException' event", () => {
+
+            assert.isFalse(processExitHandlerStub.called, "Shouldn't be called");
+
+            processStub.emit("uncaughtException");
+
+            assert.isTrue(processExitHandlerStub.calledOnce, "Should be called once");
+            assert.deepEqual(processExitHandlerStub.args[0][0], {exit: true});
+
+        });
 
     });
 });
