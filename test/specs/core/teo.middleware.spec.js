@@ -62,4 +62,10 @@ describe("Testing Teo Middleware", () => {
 
     }));
 
+    it("Should throw an error if not a function is added", () => {
+
+        assert.throws(middleware.add, undefined, "Trying to add not a function as a middleware!");
+
+    });
+
 });
