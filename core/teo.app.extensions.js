@@ -90,15 +90,6 @@ module.exports = class Extensions extends Base {
     }
 
     /**
-     * Getter of installed extensions
-     * @returns {{}|*}
-     * @private
-     */
-    _getInstalled() {
-        return this._installedExtensions;
-    }
-
-    /**
      * Getter of loaded extension by name
      * @param {String} name
      * @returns {*}

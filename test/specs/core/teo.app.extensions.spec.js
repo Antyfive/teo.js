@@ -21,7 +21,7 @@ describe("Testing Teo App Extensions", () => {
                 config: {
                     "myParam": "1"
                 },
-                extension: function(app) {
+                extension: (app) => {
                     app.middleware(function* (next) {
                         this.req.setHeader("X-Powered-By", "Teo.js");
                         yield next;
@@ -189,7 +189,7 @@ describe("Testing Teo App Extensions", () => {
 
     it("Should throw error if extension was not loaded", () => {
 
-        assert.throw(function() {
+        assert.throw(() => {
             extensions.add({
                 "name": "my-extension-1",
                 "file": "my-file-name-1"
@@ -213,9 +213,7 @@ describe("Testing Teo App Extensions", () => {
                 config: {
                     "myParam": "1"
                 },
-                "extension": function() {
-
-                }
+                "extension": () => {}
             });
 
             extensions.add({
@@ -272,7 +270,45 @@ describe("Testing Teo App Extensions", () => {
 
         }));
 
-        it("Should run all loaded extensions", async(function* (done) {
+        it("Should run single extension", async(function* () {
+
+            let runExtension = false;
+            let findLoadedByNameStub = sinon.stub(extensions, "_findLoadedByName", () => {
+                return {
+                    extension: function* () {
+                        runExtension = true;
+                    }
+                };
+            });
+
+
+            yield* extensions.runSingle("my-extension-1");
+
+            assert.isTrue(runExtension, "Extension should be executed");
+
+            findLoadedByNameStub.restore();
+
+        }));
+
+        it("Should catch an error when running extension",  async(function* () {
+
+            let runExtension = false;
+            let findLoadedByNameStub = sinon.stub(extensions, "_findLoadedByName", () => {
+                return {
+                    extension: function* () {
+                        throw new Error("Test error");
+                    }
+                };
+            });
+
+
+            yield* extensions.runSingle("my-extension-1");
+
+            findLoadedByNameStub.restore();
+
+        }));
+
+        it("Should run all loaded extensions", async(function* () {
 
             let extensionSpy = sinon.spy(extensions._findLoadedByName("my-extension-1"), "extension");
             let runSingleSpy = sinon.spy(extensions, "runSingle");
