@@ -21,7 +21,7 @@ class Core extends Base {
 		super(config, callback);
 
         this.apps = {};
-        this._bindProcessEvents();
+        this.bindProcessEvents();
 	}
 
 	* initializeApps() {
@@ -29,7 +29,7 @@ class Core extends Base {
         yield* this.loadApps();
     }
 
-    _bindProcessEvents() {
+    bindProcessEvents() {
         const process = Core.getProcess();
         // Kill off the process
         process.on("message", (msg) => {
@@ -43,20 +43,6 @@ class Core extends Base {
         process.on("SIGINT", (err) => Core.processExitHandler({exit: true}));
         // catches uncaught exceptions // TODO: check if NODE_ENV != "development"
         process.on("uncaughtException", (err) => Core.processExitHandler({exit: true}, err));
-    }
-
-    static processExitHandler(options, err) {
-        options = options || {};
-        if (options.cleanup) {  // TODO: cleanup
-            logger.info("Cleanup");
-        }
-        if (err) {
-            logger.error(err);
-        }
-        if (options.exit) {
-            logger.info("Closing Teo.JS");
-            process.exit(err ? 1 : 0);
-        }
     }
 
     * _createCoreApp() {
@@ -225,6 +211,20 @@ class Core extends Base {
      */
     getApp(name) {
         return this.apps[name];
+    }
+
+    static processExitHandler(options, err) {
+        options = options || {};
+        if (options.cleanup) {  // TODO: cleanup
+            logger.info("Cleanup");
+        }
+        if (err) {
+            logger.error(err);
+        }
+        if (options.exit) {
+            logger.info("Closing Teo.JS");
+            process.exit(err ? 1 : 0);
+        }
     }
 
     static getProcess() {

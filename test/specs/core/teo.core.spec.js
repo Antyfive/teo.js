@@ -28,14 +28,15 @@ describe("Testing Teo Core", function () {
 
     describe("Initialize", () => {
 
-        let bindProcessEventsSpy, createCoreAppSpy, loadAppsSpy, registerAppSpy;
+        let bindProcessEventsSpy, createCoreAppSpy, loadAppsSpy, registerAppSpy, setupWorkersLoggingStub;
 
         before(async(function* () {
 
-            bindProcessEventsSpy = sinon.spy(Core.prototype, "_bindProcessEvents");
+            bindProcessEventsSpy = sinon.spy(Core.prototype, "bindProcessEvents");
             createCoreAppSpy = sinon.spy(Core.prototype, "_createCoreApp");
             loadAppsSpy = sinon.spy(Core.prototype, "loadApps");
             registerAppSpy = sinon.spy(Core.prototype, "registerApp");
+            setupWorkersLoggingStub = sinon.spy(Core.prototype, "_setupWorkersLogging");
 
             core = new Core(params);
 
@@ -50,6 +51,7 @@ describe("Testing Teo Core", function () {
             createCoreAppSpy.restore();
             loadAppsSpy.restore();
             registerAppSpy.restore();
+            setupWorkersLoggingStub.restore();
 
         });
 
@@ -63,6 +65,7 @@ describe("Testing Teo Core", function () {
 
             assert.isTrue(createCoreAppSpy.calledOnce);
             assert.instanceOf(core.app, App);
+            assert.isFalse(setupWorkersLoggingStub.called, "Shouldn't call _setupWorkersLogging by default");
 
         });
 
@@ -77,6 +80,28 @@ describe("Testing Teo Core", function () {
             assert.instanceOf(core.apps.test, App);
 
         });
+
+        it("Should setup workers logging if cluster is enabled", async(function* () {
+
+            let _createAppStub = sinon.stub(core, "_createApp", function* () {
+                return {
+                    config: {
+                        get: getStub
+                    }
+                }
+            });
+
+            let getStub = sinon.stub();
+
+            getStub.withArgs("cluster").returns({enabled: true});
+
+            yield* core._createCoreApp();
+
+            assert.isTrue(setupWorkersLoggingStub.calledOnce, "Should be called once if cluster is enabled");
+
+            _createAppStub.restore();
+
+        }));
 
     });
 
@@ -358,6 +383,7 @@ describe("Testing Teo Core", function () {
             processExitHandlerStub = sinon.stub(Core, "processExitHandler", () => {});
             getProcessStub = sinon.stub(Core, "getProcess");
             processStub = new events.EventEmitter();
+            processStub.exit = sinon.stub();
             getProcessStub.returns(processStub);
 
             core = new Core(params);
@@ -403,6 +429,16 @@ describe("Testing Teo Core", function () {
 
             assert.isTrue(processExitHandlerStub.calledOnce, "Should be called once");
             assert.deepEqual(processExitHandlerStub.args[0][0], {exit: true});
+
+        });
+
+        it("Should handle 'message' event with 'kill' command", () => {
+
+            assert.isFalse(processStub.exit.called, "Shouldn't be called");
+
+            processStub.emit("message", {cmd: "kill"});
+
+            assert.isTrue(processStub.exit.calledOnce, "Should call .exit once");
 
         });
 
