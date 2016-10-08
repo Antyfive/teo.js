@@ -87,8 +87,8 @@ class Teo extends Base {
     * start(appName) {
         if (this.core.app.config.get("cluster").enabled) {
             yield function(callback) {
-                new Cluster(callback);
-            };
+                this._createCluster(callback);
+            }.bind(this);
         }
         yield* this._runAppLifeCircleAction(appName, "start");
     }
@@ -132,6 +132,16 @@ class Teo extends Base {
         }
 
         yield* this.core[action](appName);
+    }
+
+    /**
+     * Creates a cluster instance
+     * @param {Function} callback
+     * @returns {*}
+     * @private
+     */
+    _createCluster(callback) {
+        return new Cluster(callback);
     }
 }
 

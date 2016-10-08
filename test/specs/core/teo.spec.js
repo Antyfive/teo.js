@@ -9,6 +9,8 @@
 const Teo = require(teoBase + "/teo"),
 	TeoCore = require(teoBase + "/teo.core"),
     _ = require(teoBase + "/../lib/utils"),
+    TeoCluster = require(teoBase + "/teo.cluster"),
+    cluster = require("cluster"),
 	events = require("events"),
     co = require("co"),
     async = generator => done => co(generator).then(done, done);
@@ -20,6 +22,7 @@ describe("Testing Teo Main Entry Point", () => {
 	beforeEach(() => {
 
         dir = process.cwd().replace(/\\/g, "/");
+
 		teo = new Teo({
 			mode: "test",
             homeDir: dir
@@ -97,6 +100,7 @@ describe("Testing Teo Main Entry Point", () => {
 
         let runAppLifeCircleActionSpy = sinon.spy(teo, "_runAppLifeCircleAction");
         let startCoreSpy = sinon.spy(teo.core, "start");
+        let _createClusterSpy = sinon.spy(teo, "_createCluster");
 
         yield* teo.start("test");
 
@@ -105,9 +109,35 @@ describe("Testing Teo Main Entry Point", () => {
         assert.equal(runAppLifeCircleActionSpy.args[0][0], "test", "App's name should be correct");
         assert.equal(runAppLifeCircleActionSpy.args[0][1], "start", "Action name should be correct");
 
+        assert.isFalse(_createClusterSpy.called, "Shouldn't call ._createClusterSpy");
+
         runAppLifeCircleActionSpy.restore();
         startCoreSpy.restore();
+        _createClusterSpy.restore();
 
+    }));
+
+    it("Should start application and initialize cluster", async(function* () {
+
+        teo.core.app.config.get.withArgs("cluster").returns({enabled: true});
+
+        let _createClusterStub = sinon.stub(teo, "_createCluster", (callback) => callback());
+
+        let runAppLifeCircleActionSpy = sinon.spy(teo, "_runAppLifeCircleAction");
+        let startCoreSpy = sinon.spy(teo.core, "start");
+
+        yield* teo.start("test");
+
+        assert.isTrue(runAppLifeCircleActionSpy.calledOnce);
+        assert.isTrue(startCoreSpy.calledOnce);
+        assert.equal(runAppLifeCircleActionSpy.args[0][0], "test", "App's name should be correct");
+        assert.equal(runAppLifeCircleActionSpy.args[0][1], "start", "Action name should be correct");
+
+        assert.isTrue(_createClusterStub.calledOnce, "Should call ._createClusterSpy");
+
+        _createClusterStub.restore();
+        runAppLifeCircleActionSpy.restore();
+        startCoreSpy.restore();
 
     }));
 
@@ -168,6 +198,18 @@ describe("Testing Teo Main Entry Point", () => {
 
             done();
         })
+    });
+
+    it("Should create a cluster", () => {
+
+        cluster.isMaster = false;
+
+        let clusterInstance = teo._createCluster(() => {});
+
+        assert.instanceOf(clusterInstance, TeoCluster, "Should be instance of TeoCluster");
+
+        cluster.isMaster = true;
+
     });
 
 });
