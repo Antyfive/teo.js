@@ -9,7 +9,6 @@
 const
     fs = require("fs"),
     path = require("path"),
-    http = require("http"),
     co = require("co"),
     Base = require("teo-base"),
     _ = require("../lib/utils"),
@@ -18,7 +17,8 @@ const
     Extensions = require("./teo.app.extensions"),
     Db = require("teo-db"),
     Modules = require("./teo.modules"),
-    configLib = require("../lib/config");
+    configLib = require("../lib/config"),
+    serverProvider = require("./teo.server.provider");
 
 class App extends Base {
     constructor(config, callback) {
@@ -164,7 +164,8 @@ class App extends Base {
      * Inits server
      */
     * initServer() {
-        this.server = http.createServer(this.getDispatcher());
+        // this.server = http.createServer(this.getDispatcher());
+        this.server = yield* this.createServer(this.getDispatcher());
 
         yield function(callback) {
             this.server.listen(this.config.get("port"), this.config.get("host"), callback);
@@ -279,6 +280,40 @@ class App extends Base {
         }
 
         return args;
+    }
+
+    /**
+     * Creates server bases on protocol from config
+     */
+    * createServer(dispatcher) {
+        const protocol = this.config.get("protocol");
+        const server = serverProvider.getServer(protocol);
+
+        switch (protocol) {
+            case "http":
+                return server.createServer(dispatcher);
+            case "https":
+                const serverConfig = this.config.get("server");
+                if (!_.isObject(serverConfig)) {
+                    throw new Error("HTTPS server config object is not set");
+                }
+                const keyPath = serverConfig.keyPath;
+                const certPath = serverConfig.certPath;
+                if (!keyPath || !certPath) {
+                    throw new Error(`Not all required config properties are available. Key path: ${keyPath}; Certificate path: ${certPath}`);
+                }
+                const readFile = _.thunkify(fs.readFile);
+                const appDir = this.config.get("appDir");
+                const keyFile = yield readFile(path.join(appDir, keyPath));
+                const certFile = yield readFile(path.join(appDir, certPath));
+
+                return server.createServer({
+                    key: keyFile,
+                    cert: certFile
+                }, dispatcher);
+            default:
+                return server.createServer(dispatcher);
+        }
     }
 }
 

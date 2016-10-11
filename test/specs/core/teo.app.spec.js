@@ -15,12 +15,14 @@ const
     Db = require("teo-db"),
     _ = require(teoBase + "/../lib/utils"),
     configLib = require(teoBase + "/../lib/config"),
+    serverProvider = require(teoBase + "/teo.server.provider"),
     co = require("co"),
     fs = require("fs"),
     path = require("path"),
     // generator test case
     async = generator => done => co(generator).then(done, done),
-    http = require("http");
+    http = require("http"),
+    https = require("https");
 
 describe("Testing Teo App", () => {
 
@@ -310,20 +312,22 @@ describe("Testing Teo App", () => {
 
         describe("Start Stop", () => {
 
-            let runExtensionsStub, connectDBStub, createServerSpy, listenStub, closeStub, getDispatcherSpy;
+            let runExtensionsStub, connectDBStub, httpCreateServerSpy, httpListenStub, httpCloseStub, getDispatcherSpy,
+                createServerSpy;
 
             beforeEach(() => {
 
                 runExtensionsStub = sinon.stub(app, "runExtensions", function* () {});
                 connectDBStub = sinon.stub(app, "connectDB", function* () {});
-                createServerSpy = sinon.spy(http, "createServer");
-                listenStub = sinon.stub(http.Server.prototype, "listen", (port, host, callback) => {
+                httpCreateServerSpy = sinon.spy(http, "createServer");
+                httpListenStub = sinon.stub(http.Server.prototype, "listen", (port, host, callback) => {
                     callback();
                 });
-                closeStub = sinon.stub(http.Server.prototype, "close", (callback) => {
+                httpCloseStub = sinon.stub(http.Server.prototype, "close", (callback) => {
                     callback();
                 });
                 getDispatcherSpy = sinon.spy(app, "getDispatcher");
+                createServerSpy = sinon.spy(app, "createServer");
 
             });
 
@@ -331,10 +335,11 @@ describe("Testing Teo App", () => {
 
                 runExtensionsStub.restore();
                 connectDBStub.restore();
-                createServerSpy.restore();
-                listenStub.restore();
-                closeStub.restore();
+                httpCreateServerSpy.restore();
+                httpListenStub.restore();
+                httpCloseStub.restore();
                 getDispatcherSpy.restore();
+                createServerSpy.restore();
 
             });
 
@@ -403,13 +408,14 @@ describe("Testing Teo App", () => {
 
                 yield* app.initServer();
 
-                assert.isTrue(createServerSpy.calledOnce);
+                assert.isTrue(createServerSpy.calledOnce, "Should call .createServer once");
+                assert.isTrue(httpCreateServerSpy.calledOnce);
                 assert.isTrue(getDispatcherSpy.calledOnce, "Dispatcher getter should be called");
 
 
-                assert.equal(listenStub.args[0][0], "3100", "Post should be correct");
-                assert.equal(listenStub.args[0][1], "localhost", "Host should be correct");
-                assert.isFunction(listenStub.args[0][2], "Callback for yieldable function should be passed");
+                assert.equal(httpListenStub.args[0][0], "3100", "Post should be correct");
+                assert.equal(httpListenStub.args[0][1], "localhost", "Host should be correct");
+                assert.isFunction(httpListenStub.args[0][2], "Callback for yieldable function should be passed");
 
             }));
 
@@ -417,11 +423,11 @@ describe("Testing Teo App", () => {
 
                 yield* app.initServer();
 
-                assert.isFalse(closeStub.called, "Close method should not be closed");
+                assert.isFalse(httpCloseStub.called, "Close method should not be closed");
 
                 yield* app.closeServer();
 
-                assert.isTrue(closeStub.calledOnce);
+                assert.isTrue(httpCloseStub.calledOnce);
 
 
             }));
@@ -597,6 +603,177 @@ describe("Testing Teo App", () => {
 
         });
 
+
+    });
+
+    describe("Create Server", () => {
+
+        let configGetStub, getServerStub, serverStub, readFileStub;
+
+        beforeEach(() => {
+
+            configGetStub = sinon.stub(app.config, "get");
+            getServerStub = sinon.stub(serverProvider, "getServer");
+            serverStub = {
+                createServer: sinon.stub()
+            };
+            getServerStub.returns(serverStub);
+            readFileStub = sinon.stub(fs, "readFile", (file, cb) => {
+                if (file === "appDir/keyPath") {
+                    cb(null, "keyFileContent");
+                }
+                if (file === "appDir/certPath") {
+                    cb(null, "certFileContent");
+                }
+            });
+
+        });
+
+        afterEach(() => {
+
+            configGetStub.restore();
+            serverStub = null;
+            getServerStub.restore();
+            readFileStub.restore();
+
+        });
+
+        it("Should throw an error if protocol is HTTPS and no server object config", async(function* () {
+
+            const dispatcher = sinon.stub();
+            let errorCaught = false;
+            configGetStub.withArgs("protocol").returns("https");
+
+            try {
+                yield* app.createServer(dispatcher);
+            } catch(e) {
+                errorCaught = true;
+                assert.equal(e.message, "HTTPS server config object is not set")
+            }
+
+            assert.isTrue(errorCaught);
+            assert.isTrue(configGetStub.calledTwice, "Should call config.get three times");
+            assert.isFalse(readFileStub.called, "Shouldn't call fs.readFile");
+
+            assert.isFalse(serverStub.createServer.called, "Shouldn't call .createServer once");
+
+        }));
+
+
+        it("Should throw an error if protocol is HTTPS and no server.keyPath set in config", async(function* () {
+
+            const dispatcher = sinon.stub();
+            let errorCaught = false;
+            configGetStub.withArgs("protocol").returns("https");
+            configGetStub.withArgs("server").returns({
+                certPath: "certPath"
+            });
+
+            try {
+                yield* app.createServer(dispatcher);
+            } catch(e) {
+                errorCaught = true;
+                assert.equal(e.message, "Not all required config properties are available. Key path: undefined; Certificate path: certPath");
+            }
+
+            assert.isTrue(errorCaught);
+            assert.isTrue(configGetStub.calledTwice, "Should call config.get three times");
+            assert.isFalse(readFileStub.called, "Shouldn't call fs.readFile");
+
+            assert.isFalse(serverStub.createServer.called, "Shouldn't call .createServer once");
+
+        }));
+
+        it("Should throw an error if protocol is HTTPS and no server.certPath set in config", async(function* () {
+
+            const dispatcher = sinon.stub();
+            let errorCaught = false;
+            configGetStub.withArgs("protocol").returns("https");
+            configGetStub.withArgs("server").returns({
+                keyPath: "keyPath"
+            });
+
+            try {
+                yield* app.createServer(dispatcher);
+            } catch(e) {
+                errorCaught = true;
+                assert.equal(e.message,
+                    "Not all required config properties are available. Key path: keyPath; Certificate path: undefined"
+                );
+            }
+
+            assert.isTrue(errorCaught);
+            assert.isTrue(configGetStub.calledTwice, "Should call config.get three times");
+            assert.isFalse(readFileStub.called, "Shouldn't call fs.readFile");
+
+            assert.isFalse(serverStub.createServer.called, "Shouldn't call .createServer once");
+
+        }));
+
+        it("Should create HTTP server", async(function* () {
+
+            const dispatcher = sinon.stub();
+            configGetStub.withArgs("protocol").returns("http");
+
+            yield* app.createServer(dispatcher);
+
+            assert.isTrue(configGetStub.calledOnce, "Should call config.get once");
+            assert.isTrue(getServerStub.calledOnce, "Should call server provider");
+            assert.isTrue(serverStub.createServer.calledOnce, "Should call [server].createServer");
+            assert.isFunction(serverStub.createServer.args[0][0], "Should pass a stub a second argument");
+
+        }));
+
+        it("Should create HTTPS server", async(function* () {
+
+            const dispatcher = sinon.stub();
+            configGetStub.withArgs("protocol").returns("https");
+            configGetStub.withArgs("server").returns({
+                keyPath: "keyPath",
+                certPath: "certPath"
+            });
+            configGetStub.withArgs("appDir").returns("appDir");
+
+            yield* app.createServer(dispatcher);
+
+            assert.isTrue(configGetStub.calledThrice, "Should call config.get three times");
+            assert.isTrue(readFileStub.calledTwice, "Should call twice fs.readFile");
+            assert.equal(readFileStub.args[0][0], "appDir/keyPath", "Path to key file should be correct");
+            assert.equal(readFileStub.args[1][0], "appDir/certPath", "Path to cert should be correct");
+
+            assert.isTrue(serverStub.createServer.calledOnce, "Should call .createServer once");
+            assert.deepEqual(serverStub.createServer.args[0][0], {key: "keyFileContent", cert: "certFileContent"});
+            assert.isFunction(serverStub.createServer.args[0][1], "Should pass a stub a second argument");
+
+        }));
+
+        it("Should create HTTP server by default", async(function* () {
+
+            const dispatcher = sinon.stub();
+            configGetStub.withArgs("protocol").returns("http");
+
+            yield* app.createServer(dispatcher);
+
+            assert.isTrue(configGetStub.calledOnce, "Should call config.get once");
+            assert.isTrue(getServerStub.calledOnce, "Should call server provider");
+            assert.isTrue(serverStub.createServer.calledOnce, "Should call [server].createServer");
+            assert.isFunction(serverStub.createServer.args[0][0], "Should pass a stub a second argument");
+
+        }));
+
+        it("Should create HTTP server by default", async(function* () {
+
+            const dispatcher = sinon.stub();
+            configGetStub.withArgs("protocol").returns("smth");
+
+            yield* app.createServer(dispatcher);
+
+            assert.isTrue(configGetStub.calledOnce, "Should call config.get once");
+            assert.isTrue(getServerStub.calledOnce, "Should call server provider");
+            assert.isTrue(serverStub.createServer.calledOnce, "Should call [server].createServer");
+            assert.isFunction(serverStub.createServer.args[0][0], "Should pass a stub a second argument");
+
+        }));
 
     });
 
