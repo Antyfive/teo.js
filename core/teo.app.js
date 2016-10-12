@@ -164,7 +164,6 @@ class App extends Base {
      * Inits server
      */
     * initServer() {
-        // this.server = http.createServer(this.getDispatcher());
         this.server = yield* this.createServer(this.getDispatcher());
 
         yield function(callback) {
