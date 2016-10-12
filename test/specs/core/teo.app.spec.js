@@ -313,7 +313,7 @@ describe("Testing Teo App", () => {
         describe("Start Stop", () => {
 
             let runExtensionsStub, connectDBStub, httpCreateServerSpy, httpListenStub, httpCloseStub, getDispatcherSpy,
-                createServerSpy;
+                createServerSpy, configGetStub;
 
             beforeEach(() => {
 
@@ -328,6 +328,10 @@ describe("Testing Teo App", () => {
                 });
                 getDispatcherSpy = sinon.spy(app, "getDispatcher");
                 createServerSpy = sinon.spy(app, "createServer");
+                configGetStub = sinon.stub(app.config, "get");
+                configGetStub.withArgs("db").returns({enabled: false});
+                configGetStub.withArgs("port").returns(3100);
+                configGetStub.withArgs("host").returns("localhost");
 
             });
 
@@ -340,6 +344,7 @@ describe("Testing Teo App", () => {
                 httpCloseStub.restore();
                 getDispatcherSpy.restore();
                 createServerSpy.restore();
+                configGetStub.restore();
 
             });
 
@@ -406,6 +411,8 @@ describe("Testing Teo App", () => {
 
             it("Should init server", async(function* () {
 
+                configGetStub.withArgs("protocol").returns("http");
+
                 yield* app.initServer();
 
                 assert.isTrue(createServerSpy.calledOnce, "Should call .createServer once");
@@ -420,6 +427,8 @@ describe("Testing Teo App", () => {
             }));
 
             it("Should close listening server", async(function* () {
+
+                configGetStub.withArgs("protocol").returns("http");
 
                 yield* app.initServer();
 
