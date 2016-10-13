@@ -131,7 +131,12 @@ class Teo extends Base {
             throw new Error(`Not supported action '${action}' was received`);
         }
 
-        yield* this.core[action](appName);
+        try {
+            yield* this.core[action](appName);
+        } catch (e) {
+            logger.fatal(e);
+            throw e;
+        }
     }
 
     /**

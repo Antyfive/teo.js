@@ -255,7 +255,7 @@ describe("Testing Teo App", () => {
 
         it("Should return parameter by key", () => {
 
-            assert.equal(app.config.get("port"), 3100, "Port should be equal to value defined in app's development config");
+            assert.equal(app.config.get("server").port, 3100, "Port should be equal to value defined in app's development config");
 
         });
 
@@ -313,7 +313,7 @@ describe("Testing Teo App", () => {
         describe("Start Stop", () => {
 
             let runExtensionsStub, connectDBStub, httpCreateServerSpy, httpListenStub, httpCloseStub, getDispatcherSpy,
-                createServerSpy, configGetStub;
+                createServerSpy;
 
             beforeEach(() => {
 
@@ -328,10 +328,7 @@ describe("Testing Teo App", () => {
                 });
                 getDispatcherSpy = sinon.spy(app, "getDispatcher");
                 createServerSpy = sinon.spy(app, "createServer");
-                configGetStub = sinon.stub(app.config, "get");
-                configGetStub.withArgs("db").returns({enabled: false});
-                configGetStub.withArgs("port").returns(3100);
-                configGetStub.withArgs("host").returns("localhost");
+
 
             });
 
@@ -344,7 +341,6 @@ describe("Testing Teo App", () => {
                 httpCloseStub.restore();
                 getDispatcherSpy.restore();
                 createServerSpy.restore();
-                configGetStub.restore();
 
             });
 
@@ -411,8 +407,6 @@ describe("Testing Teo App", () => {
 
             it("Should init server", async(function* () {
 
-                configGetStub.withArgs("protocol").returns("http");
-
                 yield* app.initServer();
 
                 assert.isTrue(createServerSpy.calledOnce, "Should call .createServer once");
@@ -427,8 +421,6 @@ describe("Testing Teo App", () => {
             }));
 
             it("Should close listening server", async(function* () {
-
-                configGetStub.withArgs("protocol").returns("http");
 
                 yield* app.initServer();
 
@@ -647,35 +639,16 @@ describe("Testing Teo App", () => {
 
         });
 
-        it("Should throw an error if protocol is HTTPS and no server object config", async(function* () {
-
-            const dispatcher = sinon.stub();
-            let errorCaught = false;
-            configGetStub.withArgs("protocol").returns("https");
-
-            try {
-                yield* app.createServer(dispatcher);
-            } catch(e) {
-                errorCaught = true;
-                assert.equal(e.message, "HTTPS server config object is not set")
-            }
-
-            assert.isTrue(errorCaught);
-            assert.isTrue(configGetStub.calledTwice, "Should call config.get three times");
-            assert.isFalse(readFileStub.called, "Shouldn't call fs.readFile");
-
-            assert.isFalse(serverStub.createServer.called, "Shouldn't call .createServer once");
-
-        }));
-
 
         it("Should throw an error if protocol is HTTPS and no server.keyPath set in config", async(function* () {
 
             const dispatcher = sinon.stub();
             let errorCaught = false;
-            configGetStub.withArgs("protocol").returns("https");
             configGetStub.withArgs("server").returns({
-                certPath: "certPath"
+                certPath: "certPath",
+                protocol: "https",
+                host: "localhost",
+                port: 3000
             });
 
             try {
@@ -686,7 +659,7 @@ describe("Testing Teo App", () => {
             }
 
             assert.isTrue(errorCaught);
-            assert.isTrue(configGetStub.calledTwice, "Should call config.get three times");
+            assert.isTrue(configGetStub.calledOnce, "Should call config.get once");
             assert.isFalse(readFileStub.called, "Shouldn't call fs.readFile");
 
             assert.isFalse(serverStub.createServer.called, "Shouldn't call .createServer once");
@@ -697,9 +670,11 @@ describe("Testing Teo App", () => {
 
             const dispatcher = sinon.stub();
             let errorCaught = false;
-            configGetStub.withArgs("protocol").returns("https");
             configGetStub.withArgs("server").returns({
-                keyPath: "keyPath"
+                keyPath: "keyPath",
+                protocol: "https",
+                host: "localhost",
+                port: 3000
             });
 
             try {
@@ -712,7 +687,7 @@ describe("Testing Teo App", () => {
             }
 
             assert.isTrue(errorCaught);
-            assert.isTrue(configGetStub.calledTwice, "Should call config.get three times");
+            assert.isTrue(configGetStub.calledOnce, "Should call config.get once");
             assert.isFalse(readFileStub.called, "Shouldn't call fs.readFile");
 
             assert.isFalse(serverStub.createServer.called, "Shouldn't call .createServer once");
@@ -722,7 +697,11 @@ describe("Testing Teo App", () => {
         it("Should create HTTP server", async(function* () {
 
             const dispatcher = sinon.stub();
-            configGetStub.withArgs("protocol").returns("http");
+            configGetStub.withArgs("server").returns({
+                protocol: "http",
+                host: "localhost",
+                port: 3000
+            });
 
             yield* app.createServer(dispatcher);
 
@@ -736,16 +715,18 @@ describe("Testing Teo App", () => {
         it("Should create HTTPS server", async(function* () {
 
             const dispatcher = sinon.stub();
-            configGetStub.withArgs("protocol").returns("https");
             configGetStub.withArgs("server").returns({
                 keyPath: "keyPath",
-                certPath: "certPath"
+                certPath: "certPath",
+                protocol: "https",
+                host: "localhost",
+                port: 3000
             });
             configGetStub.withArgs("appDir").returns("appDir");
 
             yield* app.createServer(dispatcher);
 
-            assert.isTrue(configGetStub.calledThrice, "Should call config.get three times");
+            assert.isTrue(configGetStub.calledTwice, "Should call config.get twice");
             assert.isTrue(readFileStub.calledTwice, "Should call twice fs.readFile");
             assert.equal(readFileStub.args[0][0], "appDir/keyPath", "Path to key file should be correct");
             assert.equal(readFileStub.args[1][0], "appDir/certPath", "Path to cert should be correct");
@@ -759,7 +740,11 @@ describe("Testing Teo App", () => {
         it("Should create HTTP server by default", async(function* () {
 
             const dispatcher = sinon.stub();
-            configGetStub.withArgs("protocol").returns("http");
+            configGetStub.withArgs("server").returns({
+                protocol: "http",
+                host: "localhost",
+                port: 3000
+            });
 
             yield* app.createServer(dispatcher);
 
@@ -773,7 +758,11 @@ describe("Testing Teo App", () => {
         it("Should create HTTP server by default", async(function* () {
 
             const dispatcher = sinon.stub();
-            configGetStub.withArgs("protocol").returns("smth");
+            configGetStub.withArgs("server").returns({
+                protocol: "smth",
+                host: "localhost",
+                port: 3000
+            });
 
             yield* app.createServer(dispatcher);
 

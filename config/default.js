@@ -4,13 +4,14 @@
  * @date 12/5/15
  */
 module.exports = {
-    protocol: "http",
     server: {
+        protocol: "http",
+        host: "localhost",
+        port: 3000,
+        // in case of HTTPS
         keyPath: "",
         certPath: ""
     },
-    host: "localhost",
-    port: 3000,
     //coreAppEnabled: false,  // core app for administrator purposes (in future)
     modulesDirName: "modules",
     // this module namespace will be replaced with an empty string. I.e. "http://mysite.com/index" module will be available as "http://mysite.com/" instead.

@@ -165,18 +165,23 @@ class App extends Base {
      */
     * initServer() {
         this.server = yield* this.createServer(this.getDispatcher());
-
+        const serverConfig = this.config.get("server");
         yield function(callback) {
-            this.server.listen(this.config.get("port"), this.config.get("host"), callback);
+            this.server.listen(serverConfig.port, serverConfig.host, callback);
         }.bind(this);
+
+        logger.log(
+            `${this.config.get("appName")} app is listening at ` +
+            `${serverConfig.protocol}://${serverConfig.host}:${serverConfig.port}`
+        );
     }
 
     * closeServer() {
         logger.info(`Closing ${this.appName} app server.`);
-
+        const server = this.config.get("server");
         yield function(callback) {
             this.server.close(() => {
-                logger.info(`Connection closed, port: ${this.config.get("port")} host: ${this.config.get("host")}`);
+                logger.info(`Connection closed,host: ${server.host} port: ${server.port}`);
                 callback();
             });
         }.bind(this);
@@ -227,13 +232,13 @@ class App extends Base {
         }
 
         yield* this.db.connect();
-        logger.success("Database connection is opened.");
+        logger.log("Database connection is opened.");
     }
 
     * disconnectDB() {
         if (this.canUseDb() && this.db.isConnected()) {
             yield* this.db.disconnect();
-            logger.success("Database connection is closed.");
+            logger.log("Database connection is closed.");
         }
     }
 
@@ -285,17 +290,18 @@ class App extends Base {
      * Creates server bases on protocol from config
      */
     * createServer(dispatcher) {
-        const protocol = this.config.get("protocol");
+        const serverConfig = this.config.get("server");
+        const protocol = serverConfig.protocol;
         const server = serverProvider.getServer(protocol);
+
+        if (!serverConfig.protocol || !serverConfig.host || !serverConfig.port) {
+            throw new Error("HTTPS server config object is not set");
+        }
 
         switch (protocol) {
             case "http":
                 return server.createServer(dispatcher);
             case "https":
-                const serverConfig = this.config.get("server");
-                if (!_.isObject(serverConfig)) {
-                    throw new Error("HTTPS server config object is not set");
-                }
                 const keyPath = serverConfig.keyPath;
                 const certPath = serverConfig.certPath;
                 if (!keyPath || !certPath) {
