@@ -5,6 +5,12 @@
  */
 
 module.exports = {
-    host: "localhost",
-    port: 3100
+    server: {
+        protocol: "http",
+        host: "localhost",
+        port: 3100,
+        // in case of HTTPS
+        keyPath: "",
+        certPath: ""
+    },
 };
