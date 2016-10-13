@@ -1,9 +1,10 @@
 // framework's main config
 module.exports = {
-    protocol: "http",
-    host: "localhost",
-    port: 3000,
     server: {
+        protocol: "http",
+        host: "localhost",
+        port: 3000,
+        // in case of HTTPS
         keyPath: "",
         certPath: ""
     },
