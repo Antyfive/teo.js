@@ -1,5 +1,5 @@
 /*!
- * Client routes implementation
+ * Client router implementation
  * @author Andrew Teologov <teologov.and@gmail.com>
  * @date 6/7/15
  */
@@ -12,7 +12,7 @@ const
     _ = require("../lib/utils"),
     path = require("path");
 
-class Routes extends Base {
+class Router extends Base {
     constructor(config) {
         super(config);
 
@@ -172,4 +172,4 @@ class Routes extends Base {
     }
 }
 
-module.exports = Routes;
+module.exports = Router;

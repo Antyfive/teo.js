@@ -137,7 +137,9 @@ class App extends Base {
         yield* this.initServer();
 
         // initial arguments for module mounter lib
-        let args = [this, Client.routes];   // default calling arguments (are passed into module router)
+        // each app should have it's own instance of router
+        this.appClientRouter = Client.router();
+        let args = [this, this.appClientRouter];   // default calling arguments (are passed into module router)
 
         if (this.canUseDb()) {
             args.push(this.db.instance.addModel.bind(this.db.instance));
@@ -211,7 +213,8 @@ class App extends Base {
         return Client.Factory({
             req: req,
             res: res,
-            config: this.config
+            config: this.config,
+            appClientRouter: this.appClientRouter
         });
     }
 

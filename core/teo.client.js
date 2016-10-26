@@ -11,7 +11,7 @@ const
     mime = require("mime"),
     Base = require("teo-base"),
     _ = require("../lib/utils"),
-    Routes = require("./teo.client.routes"),
+    Router = require("./teo.client.router"),
     path = require("path"),
     fs = require("fs"),
     ClientContext = require("./teo.client.context"),
@@ -22,8 +22,8 @@ const
  */
 
 class Client extends Base {
-    constructor(config, callback) {
-        super(config, callback);
+    constructor(config) {
+        super(config);
 
         // ---- ----
         this.context = new ClientContext({
@@ -34,7 +34,7 @@ class Client extends Base {
         // bind events ---- ----
         this.req.on("error", this.onReqError.bind(this));
         // ---- ----
-        this.route = Client.routes.matchRoute(this.req.method, this.pathname);
+        this.route = this.config.appClientRouter.matchRoute(this.req.method, this.pathname);
         // set req route params
         if (this.route) {
             this.req.params = this.route.params;
@@ -47,6 +47,7 @@ class Client extends Base {
         this.config = config.config;    // receiving app's config
         this.config.req = config.req;
         this.config.res = config.res;
+        this.config.appClientRouter = config.appClientRouter;
     }
 
     // error handlers ---- ----
@@ -161,7 +162,7 @@ class Client extends Base {
         return this.context.reqContextObject;
     }
 }
-
-Client.routes = new Routes();
+// router provider
+Client.router = () => new Router();
 
 module.exports = Client;

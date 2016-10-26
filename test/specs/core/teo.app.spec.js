@@ -310,6 +310,18 @@ describe("Testing Teo App", () => {
 
     describe("Life circle", () => {
 
+        beforeEach(() => {
+
+            app.appClientRouter = Client.router();
+
+        });
+
+        afterEach(() => {
+
+            app.appClientRouter = null;
+
+        });
+
         describe("Start Stop", () => {
 
             let runExtensionsStub, connectDBStub, httpCreateServerSpy, httpListenStub, httpCloseStub, getDispatcherSpy,
@@ -463,7 +475,7 @@ describe("Testing Teo App", () => {
                     assert.isArray(args, "Arguments array should be returned");
                     assert.equal(args.length, 2, "Should be two arguments in the array");
 
-                    assert.equal(args[0], "my router", "Clients.routes API should be the first argument");
+                    assert.equal(args[0], "my router", "Client.router API should be the first argument");
                     assert.equal(args[1], "test", "app.db.instance object should be the second argument");
 
                 });
@@ -477,7 +489,7 @@ describe("Testing Teo App", () => {
                     assert.isArray(args, "Arguments array should be returned");
                     assert.equal(args.length, 1, "Should be only one argument in the array");
 
-                    assert.equal(args[0], "my router", "Clients.routes API should be the first argument");
+                    assert.equal(args[0], "my router", "Client.router API should be the first argument");
 
                 });
 

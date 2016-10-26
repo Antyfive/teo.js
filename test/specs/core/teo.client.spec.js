@@ -26,11 +26,12 @@ describe("Testing Teo Client", () => {
         appDir,
         params,
         paramsStub,
-        server, req, res, matchRouteStub;
+        server, req, res, matchRouteStub, appClientRouter;
 
     beforeEach(async(function* () {
 
-        matchRouteStub = sinon.stub(Client.routes, "matchRoute");
+        appClientRouter = Client.router();
+        matchRouteStub = sinon.stub(appClientRouter, "matchRoute");
         matchRouteStub.returns({
             params: {
                 testParam: true
@@ -49,7 +50,8 @@ describe("Testing Teo Client", () => {
         paramsStub = {
             "config": {
                 "get": sinon.stub()
-            }
+            },
+            appClientRouter
         };
 
         paramsStub.config.get.withArgs("appDir").returns(params.appDir);
@@ -75,7 +77,7 @@ describe("Testing Teo Client", () => {
 
     afterEach(async(function* () {
 
-        req = res = params = appDir = paramsStub = client = null;
+        req = res = params = appDir = paramsStub = client = appClientRouter = null;
         matchRouteStub.restore();
 
         yield function(done) {

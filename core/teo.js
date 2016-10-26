@@ -44,7 +44,7 @@ class Teo extends Base {
             }
             _.isGenerator(this.callback) ? _.async(this.callback, this) : this.callback.call(this, this);
 
-            process.nextTick(() => {
+            setImmediate(() => {
                 this.emit("ready", this);
                 if (this.mode !== "test") {
                     logger.showLogo();

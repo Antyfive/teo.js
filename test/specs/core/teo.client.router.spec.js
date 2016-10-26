@@ -7,7 +7,7 @@
 
 "use strict";
 
-const Routes = require(`${teoBase}/teo.client.routes`);
+const Routes = require(`${teoBase}/teo.client.router`);
 
 describe("Testing Teo Client Routes", () => {
 
