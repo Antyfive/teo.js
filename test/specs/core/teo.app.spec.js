@@ -49,7 +49,7 @@ describe("Testing Teo App", () => {
 
     describe("Initialization", () => {
 
-        let initAppSpy, loadConfigSpy, initDbSpy, initExtensionsSpy;
+        let initAppSpy, loadConfigSpy, initDbSpy, initExtensionsSpy, initServerSpy;
 
         beforeEach((done) => {
 
@@ -57,6 +57,7 @@ describe("Testing Teo App", () => {
             loadConfigSpy = sinon.spy(App.prototype, "loadConfig");
             initDbSpy = sinon.spy(App.prototype, "initDb");
             initExtensionsSpy = sinon.spy(App.prototype, "_initExtensions");
+            initServerSpy = sinon.spy(App.prototype, "initServer");
 
             app = new App(params, done);
 
@@ -70,6 +71,7 @@ describe("Testing Teo App", () => {
             loadConfigSpy.restore();
             initDbSpy.restore();
             initExtensionsSpy.restore();
+            initServerSpy.restore();
 
         });
 
@@ -79,6 +81,7 @@ describe("Testing Teo App", () => {
             assert.isTrue(loadConfigSpy.calledOnce);
             assert.isTrue(initAppSpy.calledOnce);
             assert.isTrue(initExtensionsSpy.calledOnce);
+            assert.isTrue(initServerSpy.calledOnce);
 
         });
 
@@ -129,6 +132,41 @@ describe("Testing Teo App", () => {
             assert.isTrue(configStub.calledOnce);
 
         });
+
+    });
+
+    describe("Init server", () => {
+
+        let createServerSpy, httpCreateServerSpy, getDispatcherSpy;
+
+        beforeEach(() => {
+
+            createServerSpy = sinon.spy(app, "createServer");
+            httpCreateServerSpy = sinon.spy(http, "createServer");
+            getDispatcherSpy = sinon.spy(app, "getDispatcher");
+
+        });
+
+        afterEach(() => {
+
+            createServerSpy.restore();
+            httpCreateServerSpy.restore();
+            getDispatcherSpy.restore();
+
+        });
+
+        it("Should init server", async(function* () {
+
+            yield* app.initServer();
+
+            assert.isTrue(createServerSpy.calledOnce, "Should call .createServer once");
+            assert.isTrue(httpCreateServerSpy.calledOnce);
+            assert.isTrue(getDispatcherSpy.calledOnce, "Dispatcher getter should be called");
+
+            assert.isObject(app.server, "Should be an object");
+            assert.instanceOf(app.server, http.Server, "Should be an instanceof http.Server");
+
+        }));
 
     });
 
@@ -324,23 +362,18 @@ describe("Testing Teo App", () => {
 
         describe("Start Stop", () => {
 
-            let runExtensionsStub, connectDBStub, httpCreateServerSpy, httpListenStub, httpCloseStub, getDispatcherSpy,
-                createServerSpy;
+            let runExtensionsStub, connectDBStub, httpListenStub, httpCloseStub;
 
             beforeEach(() => {
 
                 runExtensionsStub = sinon.stub(app, "runExtensions", function* () {});
                 connectDBStub = sinon.stub(app, "connectDB", function* () {});
-                httpCreateServerSpy = sinon.spy(http, "createServer");
                 httpListenStub = sinon.stub(http.Server.prototype, "listen", (port, host, callback) => {
                     callback();
                 });
                 httpCloseStub = sinon.stub(http.Server.prototype, "close", (callback) => {
                     callback();
                 });
-                getDispatcherSpy = sinon.spy(app, "getDispatcher");
-                createServerSpy = sinon.spy(app, "createServer");
-
 
             });
 
@@ -348,24 +381,21 @@ describe("Testing Teo App", () => {
 
                 runExtensionsStub.restore();
                 connectDBStub.restore();
-                httpCreateServerSpy.restore();
                 httpListenStub.restore();
                 httpCloseStub.restore();
-                getDispatcherSpy.restore();
-                createServerSpy.restore();
 
             });
 
             it("Should start app", async(function* () {
 
-                let initServerStub = sinon.stub(app, "initServer", function* () {});
+                let listenServerStub = sinon.stub(app, "listenServer", function* () {});
 
                 yield* app.start();
 
-                assert.isTrue(initServerStub.calledOnce);
+                assert.isTrue(listenServerStub.calledOnce);
                 assert.isTrue(runExtensionsStub.calledOnce);
 
-                initServerStub.restore();
+                listenServerStub.restore();
 
             }));
 
@@ -417,14 +447,9 @@ describe("Testing Teo App", () => {
 
             }));
 
-            it("Should init server", async(function* () {
+            it("Should listen server", async(function* () {
 
-                yield* app.initServer();
-
-                assert.isTrue(createServerSpy.calledOnce, "Should call .createServer once");
-                assert.isTrue(httpCreateServerSpy.calledOnce);
-                assert.isTrue(getDispatcherSpy.calledOnce, "Dispatcher getter should be called");
-
+                yield* app.listenServer();
 
                 assert.equal(httpListenStub.args[0][0], "3100", "Post should be correct");
                 assert.equal(httpListenStub.args[0][1], "localhost", "Host should be correct");
@@ -434,7 +459,7 @@ describe("Testing Teo App", () => {
 
             it("Should close listening server", async(function* () {
 
-                yield* app.initServer();
+                yield* app.listenServer();
 
                 assert.isFalse(httpCloseStub.called, "Close method should not be closed");
 

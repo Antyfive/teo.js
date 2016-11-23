@@ -42,7 +42,7 @@ class App extends Base {
         if (this.initialConfig.coreApp === true) {
             return;
         }
-
+        yield* this.initServer();
         this.initDb();
         this._initExtensions();
         // init app.js
@@ -133,9 +133,6 @@ class App extends Base {
 
     * start() {
         yield* this.runExtensions();
-
-        yield* this.initServer();
-
         // initial arguments for module mounter lib
         // each app should have it's own instance of router
         this.appClientRouter = Client.router();
@@ -145,8 +142,9 @@ class App extends Base {
             args.push(this.db.instance.addModel.bind(this.db.instance));
         }
         this._modules.runMountedModules.apply(this._modules, args);
-        // connect database when all modules are mounted, and models were collected
+        // connect database when all models were collected, and mounted
         yield* this.connectDB();
+        yield* this.listenServer();
     }
 
     * stop() {
@@ -167,6 +165,9 @@ class App extends Base {
      */
     * initServer() {
         this.server = yield* this.createServer(this.getDispatcher());
+    }
+
+    * listenServer() {
         const serverConfig = this.config.get("server");
         yield function(callback) {
             this.server.listen(serverConfig.port, serverConfig.host, callback);
@@ -183,7 +184,7 @@ class App extends Base {
         const server = this.config.get("server");
         yield function(callback) {
             this.server.close(() => {
-                logger.info(`Connection closed,host: ${server.host} port: ${server.port}`);
+                logger.info(`Connection closed, host: ${server.host} port: ${server.port}`);
                 callback();
             });
         }.bind(this);
@@ -235,13 +236,13 @@ class App extends Base {
         }
 
         yield* this.db.connect();
-        logger.log("Database connection is opened.");
+        logger.success("database connection is opened.");
     }
 
     * disconnectDB() {
         if (this.canUseDb() && this.db.isConnected()) {
             yield* this.db.disconnect();
-            logger.log("Database connection is closed.");
+            logger.success("database connection is closed.");
         }
     }
 
