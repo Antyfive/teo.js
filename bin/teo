@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 
-var program = require("commander");
-var package = require(__dirname + "/../package.json");
-var childProcess = require("child_process");
-var homeDir = process.cwd().replace( /\\/g, "/" );
-var colors = require("colors");
+const program = require("commander");
+const package = require("../package.json");
+const childProcess = require("child_process");
+const homeDir = process.cwd().replace( /\\/g, "/" );
 
 program
     .version(package.version)
