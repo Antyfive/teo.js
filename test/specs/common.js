@@ -8,5 +8,12 @@ global.co = require("co");
 global.teoBase = "../../../core";
 global.teoLibDir = "../../../lib";
 global.async = generator => done => co(generator).then(done, done);
-
-// TODO: test coverage
+// logger stub
+global.logger = {
+    success() {},
+    info() {},
+    warn() {},
+    error() {},
+    fatal() {},
+    log() {}
+};

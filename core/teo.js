@@ -14,12 +14,29 @@ const
 // ----
 global.version = require("../package.json").version;
 global.copyright = "Powered by Teo.JS";
-global.logger = require("./teo.logger");
 
 class Teo extends Base {
+    static showLogo() {
+        console.log(
+            '\n'+
+            '████████╗███████╗ ██████╗         ██╗███████╗\n' +
+            '╚══██╔══╝██╔════╝██╔═══██╗        ██║██╔════╝\n' +
+            '   ██║   █████╗  ██║   ██║        ██║███████╗\n' +
+            '   ██║   ██╔══╝  ██║   ██║   ██   ██║╚════██║\n' +
+            '   ██║   ███████╗╚██████╔╝██╗╚█████╔╝███████║\n' +
+            '   ╚═╝   ╚══════╝ ╚═════╝ ╚═╝ ╚════╝ ╚══════╝\n' +
+            '\n'
+        );
+    }
+
+    static applyGlobalLogger() {
+        global.logger = require("teo-logger");
+    }
+
 	constructor(config, callback) {
 		super(config, callback);
 
+		Teo.applyGlobalLogger();
 		this._parseOptions();
         this.startCore();
 	}
@@ -47,7 +64,7 @@ class Teo extends Base {
             setImmediate(() => {
                 this.emit("ready", this);
                 if (this.mode !== "test") {
-                    logger.showLogo();
+                    Teo.showLogo();
                 }
             });
         });
