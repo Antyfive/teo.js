@@ -11,7 +11,7 @@ const
     App = require(teoBase + "/teo.app"),
     Middleware = require(teoBase + "/teo.middleware"),
     Client = require(teoBase + "/teo.client"),
-    Extensions = require(teoBase + "/teo.app.extensions"),
+    ResContext = require(teoBase + "/teo.client.context.res"),
     Db = require("teo-db"),
     _ = require(teoBase + "/../lib/utils"),
     configLib = require(teoBase + "/../lib/config"),
@@ -462,6 +462,30 @@ describe("Testing Teo App", () => {
 
             }));
 
+            it("Should add addModel method to set of arguments for mounting modules", async(function* () {
+
+                const canUseDbStub = sinon.stub(app, "canUseDb");
+                const runMountedModulesStub = sinon.stub(app._modules, "runMountedModules", () => {});
+
+                canUseDbStub.returns(true);
+
+
+                app.db = {
+                    instance: {
+                        addModel: function() {}
+                    }
+                };
+
+                yield* app.start();
+
+                assert.equal(runMountedModulesStub.args[0].length, 3, "Should pass three arguments");
+
+                canUseDbStub.restore();
+                runMountedModulesStub.restore();
+                app.db = null;
+
+            }));
+
             it("Should run extensions", async(function* () {
 
                 runExtensionsStub.restore();
@@ -654,13 +678,14 @@ describe("Testing Teo App", () => {
                 middlewareRunSpy.restore();
 
                 let runMiddlewareStub = sinon.stub(app._middleware, "run");
-                let resSendStub = sinon.stub(res, "end", () => {});
+                let resSendStub = sinon.stub(ResContext.prototype, "send", () => {});
 
                 runMiddlewareStub.returns(Promise.reject());
                 dispatcher(req, res);
 
                 setImmediate(() => {
                     assert.isTrue(resSendStub.calledOnce);
+                    assert.equal(resSendStub.args[0][0], 500, "Should be 500 code");
                     runMiddlewareStub.restore();
                     resSendStub.restore();
                     done();
