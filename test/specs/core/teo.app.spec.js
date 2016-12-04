@@ -649,7 +649,7 @@ describe("Testing Teo App", () => {
 
         });
 
-        describe.skip("Db life circle", () => { // TODO: refactor
+        describe("Db life circle", () => {
 
             let connectDbStub, canUseDbStub, connectedDbStub, disconnectDbStub;
 
@@ -657,7 +657,7 @@ describe("Testing Teo App", () => {
 
                 connectDbStub = sinon.stub(app.db, "connect", function* () {});
                 canUseDbStub = sinon.stub(app, "canUseDb");
-                connectedDbStub = sinon.stub(app.db, "connected");
+                connectedDbStub = sinon.stub(app.db, "isConnected");
                 disconnectDbStub = sinon.stub(app.db, "disconnect", function* () {});
 
             });
