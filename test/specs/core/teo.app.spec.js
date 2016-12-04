@@ -655,6 +655,12 @@ describe("Testing Teo App", () => {
 
             beforeEach(() => {
 
+                app.db = {
+                    isConnected() {},
+                    * connect() {},
+                    * disconnect() {}
+                };
+
                 connectDbStub = sinon.stub(app.db, "connect", function* () {});
                 canUseDbStub = sinon.stub(app, "canUseDb");
                 connectedDbStub = sinon.stub(app.db, "isConnected");
