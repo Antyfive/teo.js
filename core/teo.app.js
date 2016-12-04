@@ -295,14 +295,22 @@ class App extends Base {
      */
     * createServer(dispatcher) {
         const serverConfig = this.config.get("server");
-        const protocol = serverConfig.protocol;
-        const server = serverProvider.getServer(protocol);
 
-        if (!serverConfig.protocol || !serverConfig.host || !serverConfig.port) {
-            throw new Error("HTTPS server config object is not set");
+        if (!serverConfig.protocol) {
+            throw new Error("Protocol is not set in the server config");
         }
 
-        switch (protocol) {
+        if (!serverConfig.host) {
+            throw new Error("Host is not set in the server config");
+        }
+
+        if (!serverConfig.port) {
+            throw new Error("Port is not set in the server config");
+        }
+
+        const server = serverProvider.getServer(serverConfig.protocol);
+
+        switch (serverConfig.protocol) {
             case "http":
                 return server.createServer(dispatcher);
             case "https":

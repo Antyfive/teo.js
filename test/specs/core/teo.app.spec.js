@@ -168,6 +168,69 @@ describe("Testing Teo App", () => {
 
         }));
 
+        describe("Error throwing in create server", () => {
+
+            let configStub;
+
+            beforeEach(() => {
+
+                configStub = sinon.stub(app.config, "get");
+
+            });
+
+            afterEach(() => {
+
+                configStub.restore();
+
+            });
+
+            it("Should throw an error if no protocol", async(function* () {
+
+                configStub.withArgs("server").returns({
+                    protocol: undefined
+                });
+
+                try {
+                    yield* app.createServer();
+                } catch(e) {
+                    assert.equal(e.message, "Protocol is not set in the server config");
+                }
+
+            }));
+
+            it("Should throw an error if no host", async(function* () {
+
+                configStub.withArgs("server").returns({
+                    protocol: "smth",
+                    host: undefined
+                });
+
+                try {
+                    yield* app.createServer();
+                } catch(e) {
+                    assert.equal(e.message, "Host is not set in the server config");
+                }
+
+            }));
+
+            it("Should throw an error if no port", async(function* () {
+
+                configStub.withArgs("server").returns({
+                    protocol: "http",
+                    host: 'localhost',
+                    port: undefined
+                });
+
+                try {
+                    yield* app.createServer();
+                } catch(e) {
+                    assert.equal(e.message, "Port is not set in the server config");
+                }
+
+            }));
+
+        });
+
     });
 
     describe("App sources loading", () => {
