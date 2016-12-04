@@ -618,8 +618,6 @@ describe("Testing Teo App", () => {
 
             afterEach(async(function* () {
 
-                assert.isTrue(clientProcessSpy.calledOnce);
-
                 dispatcher = null;
                 createClientContextSpy.restore();
                 middlewareRunSpy.restore();
@@ -636,7 +634,7 @@ describe("Testing Teo App", () => {
 
             }));
 
-            it("Should dispatch request", () => {
+            it("Should dispatch request", (done) => {
 
                 // emulate dispatching of the request
                 dispatcher(req, res);
@@ -644,6 +642,29 @@ describe("Testing Teo App", () => {
                 assert.isTrue(createClientContextSpy.calledOnce);
                 assert.isTrue(middlewareRunSpy.calledOnce);
                 assert.isTrue(respondSpy.calledOnce);
+
+                setImmediate(() => {
+                    assert.isTrue(clientProcessSpy.calledOnce);
+                    done();
+                });
+
+            });
+
+            it("Should handle dispatch error and end request with 500 code", (done) => {
+                middlewareRunSpy.restore();
+
+                let runMiddlewareStub = sinon.stub(app._middleware, "run");
+                let resSendStub = sinon.stub(res, "end", () => {});
+
+                runMiddlewareStub.returns(Promise.reject());
+                dispatcher(req, res);
+
+                setImmediate(() => {
+                    assert.isTrue(resSendStub.calledOnce);
+                    runMiddlewareStub.restore();
+                    resSendStub.restore();
+                    done();
+                });
 
             });
 
