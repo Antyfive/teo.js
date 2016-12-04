@@ -14,7 +14,7 @@
 [![npm](https://img.shields.io/npm/v/npm.svg)](https://github.com/Antyfive/teo.js)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/Antyfive/teo.js/master/LICENSE)
 
-**Teo.JS** is a next generation HMVC RESTful web framework, built with **ECMAScript 2015 (ES6)**. 
+**Teo.JS** is a minimalistic, next generation HMVC RESTful web framework, built with **ECMAScript 2015 (ES6)**. 
 
 ## [Wiki](https://github.com/Antyfive/teo.js/wiki)
 
