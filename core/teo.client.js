@@ -122,7 +122,7 @@ class Client extends Base {
                 }
             } catch(e) {
                 logger.error(e);
-                this.res.send(e.code || 500);
+                this.res.send(e.status || 500, e.message);
             }
         }
         else {
