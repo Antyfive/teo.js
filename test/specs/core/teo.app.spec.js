@@ -680,7 +680,7 @@ describe("Testing Teo App", () => {
                 let runMiddlewareStub = sinon.stub(app._middleware, "run");
                 let resSendStub = sinon.stub(ResContext.prototype, "send", () => {});
 
-                runMiddlewareStub.returns(Promise.reject());
+                runMiddlewareStub.returns(Promise.reject(new Error('Smth')));
                 dispatcher(req, res);
 
                 setImmediate(() => {

@@ -35,7 +35,7 @@ describe("Testing routerMounter", () => {
             ns: nsStub
         };
 
-        sinon.stub(methodsObject, "get", (route, handler) => {
+        sinon.stub(methodsObject, "get", (route, middleware, handler) => {
             co(function* () {
                 yield* handler.call(contextStub, "req", "res");
             })
@@ -66,7 +66,7 @@ describe("Testing routerMounter", () => {
 
     });
 
-    it("Should wrap single method", (done) => {
+    it("Should wrap a single method", (done) => {
 
         let mounted = routerMounter(routerObject, moduleName);
         let routeHandler = function* () {

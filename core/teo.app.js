@@ -199,7 +199,7 @@ class App extends Base {
             let client = this.createClientContext(req, res);
             this._middleware.run(this.respond, client).catch((error) => {
                 logger.error(error);
-                client.res.send(500);
+                client.res.send(error.code || 500);
             });
         };
     }

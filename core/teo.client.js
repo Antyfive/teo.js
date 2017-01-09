@@ -15,7 +15,9 @@ const
     path = require("path"),
     fs = require("fs"),
     ClientContext = require("./teo.client.context"),
-    fileReader = require("../lib/fileReader");
+    fileReader = require("../lib/fileReader"),
+    co = require("co"),
+    compose = require("../lib/compose");
 
 /**
  * Client layers: app => client => context => req & res
@@ -103,18 +105,24 @@ class Client extends Base {
             }
             try {
                 //let context = yield* this.route.handler.apply(this, [this.req, this.res]);
-                let handler = composition([function* (next) {
-                    this.body = yield* this.route.handler.apply(this.context, [this.req, this.res, next]);
-                }.bind(this)]);
+                let chain = [];
+                if (Array.isArray(this.route.middleware)) {
+                    chain = this.route.middleware;
+                }
+                chain.push(function* (req, res, next) {
+                    this.body = yield* this.route.handler.apply(this.context, [].slice.call(arguments));
+                });
+                
+                let handler = compose(chain, this.req, this.res);
 
                 yield handler.call(this);
 
-                if (this.body != null) {
+                if (this.body !== null && this.body !== undefined) {
                     this.res.send(this.body);
                 }
             } catch(e) {
                 logger.error(e);
-                this.res.send(500);
+                this.res.send(e.code || 500);
             }
         }
         else {

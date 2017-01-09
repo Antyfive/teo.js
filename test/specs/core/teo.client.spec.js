@@ -249,7 +249,6 @@ describe("Testing Teo Client", () => {
             assert.equal(handlerStub.args[0].length, 3);
             assert.instanceOf(handlerStub.args[0][0], http.IncomingMessage);
             assert.instanceOf(handlerStub.args[0][1], http.ServerResponse);
-            assert.instanceOf(handlerStub.args[0][2], composition.Wrap);
 
             assert.isTrue(resSendStub.calledOnce);
             assert.equal(resSendStub.args[0][0], "123");

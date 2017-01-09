@@ -10,7 +10,8 @@ const
     Base = require("teo-base"),
     pathToRegexp = require("path-to-regexp-wrap")({end: true}),
     _ = require("../lib/utils"),
-    path = require("path");
+    path = require("path"),
+    isFunction = require("lodash/isFunction");
 
 class Router extends Base {
     constructor(config) {
@@ -29,18 +30,29 @@ class Router extends Base {
      * Add new route
      * @param {String} type
      * @param {String} route
-     * @param {Function} handler
+     * @param {Function} middleware
+     * @param {Function} [handler] :: handler can be the last argument, in case if middleware was passed as a second arg.
      */
-    addRoute(type, route, handler) { // /get/:id
+    addRoute(type, route, middleware, handler) { // /get/:id
         let routes = this.routes[type.toLowerCase()];
 
         if (routes === undefined || routes.hasOwnProperty(route)) {
             return;
         }
 
+        if (!isFunction(handler)) {
+            var handler = middleware;
+            middleware = null;
+        }
+
+        if (isFunction(middleware)) {
+            var middleware = [middleware];
+        }
+
         routes[route] = {
             "match": pathToRegexp(route),
-            "handler": handler
+            "handler": handler,
+            "middleware": middleware
         };
 
         return routes[route];
@@ -62,7 +74,13 @@ class Router extends Base {
         for (let r in routes) {
             let match = routes[r].match(path);
             if (match) {
-                return {params: match, handler: routes[r].handler, route: r, path: path};
+                return {
+                    params: match, 
+                    handler: routes[r].handler, 
+                    route: r, 
+                    path: path, 
+                    middleware: routes[r].middleware
+                };
             }
         }
     }
@@ -74,60 +92,65 @@ class Router extends Base {
      * @param {Function} handler
      * @returns {*}
      */
-    newRoute(type, route, handler) {
+    newRoute(type, route, middleware, handler) {
         if ((this.routes[type.toLowerCase()].hasOwnProperty(route)))     // ? use multiple handlers for one route ?
             return;
 
-        return this.addRoute(type, route, handler);
+        return this.addRoute(type, route, middleware, handler);
     }
 
     /**
      * Get type handler
      * @param route :: regexp route
+     * @param {Function} middleware             
      * @param handler :: handler
      */
-    get(route, handler) {
-        return this.newRoute("get", route, handler);
+    get(route, middleware, handler) {
+        return this.newRoute("get", route, middleware, handler);
     }
 
     /**
      * POST
      * @param {String} route
+     * @param {Function} middleware             
      * @param {Function} handler
      * @returns {*}
      */
-    post(route, handler) {
-        return this.newRoute("post", route, handler);
+    post(route, middleware, handler) {
+        return this.newRoute("post", route, middleware, handler);
     }
 
     /**
      * PUT
      * @param {String} route
+     * @param {Function} middleware             
      * @param {Function} handler
      * @returns {*}
      */
-    put(route, handler) {
-        return this.newRoute("put", route, handler);
+    put(route, middleware, handler) {
+        return this.newRoute("put", route, middleware, handler);
     }
 
     /**
      * PATCH
      * @param {String} route
+     * @param {Function} middleware             
      * @param {Function} handler
      * @returns {*}
      */
-    patch(route, handler) {
-        return this.newRoute("patch", route, handler);
+    patch(route, middleware, handler) {
+        return this.newRoute("patch", route, middleware, handler);
     }
 
     /**
      * DELETE
      * @param {String} route
+     * @param {Function} middleware             
      * @param {Function} handler
      * @returns {*}
      */
-    delete(route, handler) {
-        return this.newRoute("delete", route, handler);
+    delete(route, middleware, handler) {
+        return this.newRoute("delete", route, middleware, handler);
     }
 
     // getters ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
@@ -148,24 +171,24 @@ class Router extends Base {
     ns(namespace) {
         let self = this;
         return {
-            get(_path, handler) {
-                self.get(path.join(namespace, _path), handler);
+            get(_path, middleware, handler) {   // can call(path, handler) or (path, [middlewares], handler) 
+                self.get(path.join(namespace, _path), middleware, handler);
                 return this;
             },
-            post(_path, handler) {
-                self.post(path.join(namespace, _path), handler);
+            post(_path, middleware, handler) {
+                self.post(path.join(namespace, _path), middleware, handler);
                 return this;
             },
-            put(_path, handler) {
-                self.put(path.join(namespace, _path), handler);
+            put(_path, middleware, handler) {
+                self.put(path.join(namespace, _path), middleware, handler);
                 return this;
             },
-            patch(_path, handler) {
-                self.patch(path.join(namespace, _path), handler);
+            patch(_path, middleware, handler) {
+                self.patch(path.join(namespace, _path), middleware, handler);
                 return this;
             },
-            delete(_path, handler) {
-                self.delete(path.join(namespace, _path), handler);
+            delete(_path, middleware, handler) {
+                self.delete(path.join(namespace, _path), middleware, handler);
                 return this;
             }
         }
