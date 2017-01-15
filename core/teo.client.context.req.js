@@ -17,13 +17,10 @@ class ReqContext extends Base {
     constructor(config) {
         super(config);
 
-        this.chunks = [];
         this.req.parsedUrl = this.parsedUrl = url.parse(this.req.url, true); // parse query string as well (second argument)
         this.req.pathname = this.pathname = this.parsedUrl.pathname;
         this.req.contentType = this.contentType = this.req.headers["content-type"] || "";
         this.req.query = this.query = this.parsedUrl.query;
-
-        this.parseBody();
     }
 
     get req() {
@@ -36,16 +33,6 @@ class ReqContext extends Base {
 
     set contentType(val) {
         this._contentType = val || "";
-    }
-
-    parseBody() {
-        if (!this.contentType.startsWith("multipart")) {
-            this.endListener = this.onEnd.bind(this);
-            this.dataListener = this.onData.bind(this);
-            this.req
-                .on("data", this.dataListener)
-                .on("end", this.endListener);
-        }
     }
 
     * parseForm() {
@@ -69,24 +56,6 @@ class ReqContext extends Base {
         }
     }
 
-    onData(chunk) {
-        this.chunks.push(chunk);
-    }
-
-    onEnd() {
-        let bodyChunks = Buffer.concat(this.chunks).toString();
-
-        try {
-            if (bodyChunks.length > 0) {
-                this.req.body = (this.contentType && this.contentType.startsWith("application/json")) ? JSON.parse(bodyChunks) : querystring.parse(bodyChunks);
-            }
-        } catch(e) {
-            logger.error(e);
-        }
-
-        this.cleanup();
-    }
-
     /**
      * Set route's parsed params to request
      * E.g. /route/:id => id: *
@@ -94,15 +63,6 @@ class ReqContext extends Base {
      */
     set params(val) {
         this.req.params = val;
-    }
-
-    /**
-     * Remove listeners
-     */
-    cleanup() {
-        this.req
-            .removeListener("end", this.endListener)
-            .removeListener("data", this.dataListener);
     }
     
     static createFormParser() {
