@@ -101,7 +101,7 @@ class TeoRes extends Base {
             logger.warn("Sending not a object as JSON body response:", body);
         }
 
-        let response = sendJson ?
+        let response = sendJson && !Buffer.isBuffer(body) ?
             TeoRes.buildRespObject(code, body) :
             (_.isString(body) || Buffer.isBuffer(body) ? body : http.STATUS_CODES[code]);
 

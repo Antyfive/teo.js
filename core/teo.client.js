@@ -99,7 +99,7 @@ class Client extends Base {
      * Dispatch call after first process is finished
      */
     * dispatch() {
-        if (this.route != null && typeof this.route.handler === "function") {
+        if (!this.pathname.startsWith("/public") && this.route != null && typeof this.route.handler === "function") {
             if (!_.isGenerator(this.route.handler)) {
                 throw new Error("Route handler should be a generator function!");
             }
@@ -124,14 +124,13 @@ class Client extends Base {
                 logger.error(e);
                 this.res.send(e.status || 500, e.message);
             }
+            return;
         }
-        else {
-            // TODO: cache, read from cache
-            this.readFileSafely(this.pathname.startsWith("/public") ?
-                this.pathname :
-                    path.join("/public", this.pathname)
-            );
-        }
+        // TODO: cache, read from cache
+        this.readFileSafely(this.pathname.startsWith("/public") ?
+            this.pathname :
+                path.join("/public", this.pathname)
+        );
     }
 
     /**
