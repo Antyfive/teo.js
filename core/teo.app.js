@@ -170,7 +170,7 @@ class App extends Base {
     * listenServer() {
         const serverConfig = this.config.get("server");
         yield function(callback) {
-            this.server.listen(serverConfig.port, serverConfig.host, callback);
+            this.server.listen(process.env.PORT || serverConfig.port, serverConfig.host, callback);
         }.bind(this);
 
         logger.log(
