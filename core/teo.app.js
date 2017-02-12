@@ -169,13 +169,14 @@ class App extends Base {
 
     * listenServer() {
         const serverConfig = this.config.get("server");
+        const port = process.env.PORT || serverConfig.port;
         yield function(callback) {
-            this.server.listen(process.env.PORT || serverConfig.port, serverConfig.host, callback);
+            this.server.listen(port, serverConfig.host, callback);
         }.bind(this);
 
         logger.log(
             `${this.config.get("appName")} app is listening at ` +
-            `${serverConfig.protocol}://${serverConfig.host}:${serverConfig.port}`
+            `${serverConfig.protocol}://${serverConfig.host}:${port}`
         );
     }
 
