@@ -301,10 +301,6 @@ class App extends Base {
             throw new Error("Protocol is not set in the server config");
         }
 
-        if (!serverConfig.host) {
-            throw new Error("Host is not set in the server config");
-        }
-
         if (!serverConfig.port) {
             throw new Error("Port is not set in the server config");
         }

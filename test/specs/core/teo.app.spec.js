@@ -198,21 +198,6 @@ describe("Testing Teo App", () => {
 
             }));
 
-            it("Should throw an error if no host", async(function* () {
-
-                configStub.withArgs("server").returns({
-                    protocol: "smth",
-                    host: undefined
-                });
-
-                try {
-                    yield* app.createServer();
-                } catch(e) {
-                    assert.equal(e.message, "Host is not set in the server config");
-                }
-
-            }));
-
             it("Should throw an error if no port", async(function* () {
 
                 configStub.withArgs("server").returns({
